@@ -1,0 +1,397 @@
+/* ═══════════════════════════════════════════════════════════════════
+   products-data.js  —  NovaDrop Tech Product Catalog
+   Each product object:
+     id        : unique string
+     name      : product name
+     brand     : brand name (used for brand-filter pills)
+     type      : product type label shown on card (e.g. "Smartphone")
+     category  : top-level category slug — "phones" | "earphones" | "powerbanks" | "laptops"
+     price     : number (USD)
+     desc      : one-sentence description
+     specs     : array of short spec strings (shown as bullet badges)
+     image     : Unsplash URL (600×400, relevant query)
+     imageAlt  : accessible alt text
+     trending  : boolean
+     badge     : optional label string shown as a pill over image (e.g. "New", "Sale")
+═══════════════════════════════════════════════════════════════════ */
+
+const PRODUCTS = [
+
+  /* ─────────────── PHONES ─────────────── */
+  {
+    id: "ph-01",
+    name: "iPhone 15 Pro Max",
+    brand: "Apple",
+    type: "Smartphone",
+    category: "phones",
+    price: 1199,
+    desc: "Titanium design with A17 Pro chip, 48MP ProRAW camera system, and USB-C.",
+    specs: ["A17 Pro", "48MP", "USB-C", "Titanium"],
+    image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&q=80",
+    imageAlt: "iPhone 15 Pro Max in natural titanium finish on a clean white surface",
+    trending: true,
+    badge: "New"
+  },
+  {
+    id: "ph-02",
+    name: "iPhone 14",
+    brand: "Apple",
+    type: "Smartphone",
+    category: "phones",
+    price: 799,
+    desc: "Supercharged A15 Bionic chip, Crash Detection, and all-day battery life.",
+    specs: ["A15 Bionic", "12MP", "5G", "Face ID"],
+    image: "https://images.unsplash.com/photo-1667372335937-d03be6fb0a9c?w=600&q=80",
+    imageAlt: "iPhone 14 in midnight color displayed on gradient background",
+    trending: false,
+    badge: null
+  },
+  {
+    id: "ph-03",
+    name: "Galaxy S24 Ultra",
+    brand: "Samsung",
+    type: "Smartphone",
+    category: "phones",
+    price: 1299,
+    desc: "200MP camera, built-in S Pen, Snapdragon 8 Gen 3, and 5000mAh battery.",
+    specs: ["200MP", "S Pen", "Snapdragon 8 Gen 3", "AI"],
+    image: "https://images.unsplash.com/photo-1706220612290-b9b8ce0a6f59?w=600&q=80",
+    imageAlt: "Samsung Galaxy S24 Ultra with S Pen against dark background",
+    trending: true,
+    badge: "Hot"
+  },
+  {
+    id: "ph-04",
+    name: "Galaxy A54 5G",
+    brand: "Samsung",
+    type: "Smartphone",
+    category: "phones",
+    price: 449,
+    desc: "50MP OIS camera, 5000mAh battery, and IP67 water resistance at a great price.",
+    specs: ["50MP OIS", "5000mAh", "IP67", "5G"],
+    image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=600&q=80",
+    imageAlt: "Samsung Galaxy A54 5G in awesome violet color",
+    trending: false,
+    badge: "Sale"
+  },
+  {
+    id: "ph-05",
+    name: "Xiaomi 14 Ultra",
+    brand: "Xiaomi",
+    type: "Smartphone",
+    category: "phones",
+    price: 999,
+    desc: "Leica Summilux optics, 1-inch Sony sensor, 90W HyperCharge, Snapdragon 8 Gen 3.",
+    specs: ["Leica optics", "1\" sensor", "90W charge", "Snapdragon 8 Gen 3"],
+    image: "https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=600&q=80",
+    imageAlt: "Xiaomi flagship smartphone showing camera module on clean background",
+    trending: true,
+    badge: "New"
+  },
+  {
+    id: "ph-06",
+    name: "Xiaomi Redmi Note 13 Pro",
+    brand: "Xiaomi",
+    type: "Smartphone",
+    category: "phones",
+    price: 329,
+    desc: "200MP camera, 5000mAh, 67W fast charge — exceptional mid-range value.",
+    specs: ["200MP", "5000mAh", "67W", "AMOLED"],
+    image: "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=600&q=80",
+    imageAlt: "Xiaomi Redmi smartphone with gradient back design",
+    trending: false,
+    badge: null
+  },
+
+  /* ─────────────── EARPHONES / HEADPHONES ─────────────── */
+  {
+    id: "ep-01",
+    name: "AirPods Pro 2",
+    brand: "Apple",
+    type: "TWS Earbuds",
+    category: "earphones",
+    price: 249,
+    desc: "Adaptive Audio, H2 chip, up to 30 hours total listening with case charging.",
+    specs: ["Adaptive ANC", "H2 chip", "30hr total", "MagSafe case"],
+    image: "https://images.unsplash.com/photo-1603351154351-5e2d0600bb77?w=600&q=80",
+    imageAlt: "Apple AirPods Pro 2 in white charging case on light background",
+    trending: true,
+    badge: "Best Seller"
+  },
+  {
+    id: "ep-02",
+    name: "AirPods Max",
+    brand: "Apple",
+    type: "Over-Ear Headphones",
+    category: "earphones",
+    price: 549,
+    desc: "Computational audio, custom acoustic mesh canopy, up to 20-hour battery.",
+    specs: ["Spatial Audio", "ANC", "20hr battery", "Aluminium cups"],
+    image: "https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?w=600&q=80",
+    imageAlt: "Apple AirPods Max over-ear headphones in silver on a minimal background",
+    trending: false,
+    badge: null
+  },
+  {
+    id: "ep-03",
+    name: "Galaxy Buds3 Pro",
+    brand: "Samsung",
+    type: "TWS Earbuds",
+    category: "earphones",
+    price: 229,
+    desc: "Blade-shaped fit, 360° Audio, intelligent ANC adapts to your environment.",
+    specs: ["360° Audio", "ANC", "30hr total", "Galaxy AI"],
+    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80",
+    imageAlt: "Samsung Galaxy Buds in small charging case on colored background",
+    trending: true,
+    badge: "New"
+  },
+  {
+    id: "ep-04",
+    name: "Sony WH-1000XM5",
+    brand: "Sony",
+    type: "Over-Ear Headphones",
+    category: "earphones",
+    price: 349,
+    desc: "Industry-leading noise cancellation with 8 mics, 30-hour battery, multipoint.",
+    specs: ["8-mic ANC", "30hr", "LDAC", "Multipoint"],
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80",
+    imageAlt: "Sony WH-1000XM5 over-ear headphones in black on a white surface",
+    trending: true,
+    badge: "Top Rated"
+  },
+  {
+    id: "ep-05",
+    name: "Sony WF-1000XM5",
+    brand: "Sony",
+    type: "TWS Earbuds",
+    category: "earphones",
+    price: 299,
+    desc: "World's smallest ANC earbuds with QN2e chip, LDAC, and 36-hour total life.",
+    specs: ["QN2e chip", "LDAC", "36hr total", "IPX4"],
+    image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&q=80",
+    imageAlt: "Sony WF-1000XM5 earbuds with charging case on gradient background",
+    trending: false,
+    badge: null
+  },
+  {
+    id: "ep-06",
+    name: "Anker Soundcore Q45",
+    brand: "Anker",
+    type: "Over-Ear Headphones",
+    category: "earphones",
+    price: 79,
+    desc: "Adaptive ANC, 50-hour playtime, Hi-Res Audio — premium sound at a budget price.",
+    specs: ["Adaptive ANC", "50hr", "Hi-Res", "Foldable"],
+    image: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600&q=80",
+    imageAlt: "Anker wireless headphones in black on a wood table",
+    trending: false,
+    badge: "Value Pick"
+  },
+  {
+    id: "ep-07",
+    name: "Anker Soundcore Liberty 4",
+    brand: "Anker",
+    type: "TWS Earbuds",
+    category: "earphones",
+    price: 99,
+    desc: "LDAC Hi-Res wireless, spatial audio, heart-rate monitoring, 9hr single charge.",
+    specs: ["LDAC", "Spatial Audio", "Heart Rate", "9hr"],
+    image: "https://images.unsplash.com/photo-1558089687-f282ffcbc126?w=600&q=80",
+    imageAlt: "Anker Soundcore Liberty earbuds in charging case",
+    trending: true,
+    badge: null
+  },
+
+  /* ─────────────── POWERBANKS ─────────────── */
+  {
+    id: "pb-01",
+    name: "Anker 733 GaNPrime",
+    brand: "Anker",
+    type: "Power Bank",
+    category: "powerbanks",
+    price: 89,
+    desc: "65W GaN charger + 10,000mAh bank in one compact device. Charge laptop and phone simultaneously.",
+    specs: ["65W PD", "10,000mAh", "GaN", "2-in-1"],
+    image: "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=600&q=80",
+    imageAlt: "Anker GaN power bank charger in black on a desk",
+    trending: true,
+    badge: "Best Seller"
+  },
+  {
+    id: "pb-02",
+    name: "Anker 737 Power Bank",
+    brand: "Anker",
+    type: "Power Bank",
+    category: "powerbanks",
+    price: 129,
+    desc: "26,800mAh with 140W output — recharge your MacBook in under 2 hours.",
+    specs: ["140W output", "26,800mAh", "2× USB-C", "Smart display"],
+    image: "https://images.unsplash.com/photo-1563208958-71f7b485dd77?w=600&q=80",
+    imageAlt: "Large capacity Anker power bank with digital display",
+    trending: false,
+    badge: null
+  },
+  {
+    id: "pb-03",
+    name: "Xiaomi 33W Power Bank 20000",
+    brand: "Xiaomi",
+    type: "Power Bank",
+    category: "powerbanks",
+    price: 39,
+    desc: "20,000mAh, 33W two-way fast charge, dual USB-A + USB-C output.",
+    specs: ["33W", "20,000mAh", "Dual output", "USB-C in/out"],
+    image: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=600&q=80",
+    imageAlt: "Xiaomi slim power bank in white on a light background",
+    trending: false,
+    badge: "Sale"
+  },
+  {
+    id: "pb-04",
+    name: "Xiaomi 10,000 PD 22.5W",
+    brand: "Xiaomi",
+    type: "Power Bank",
+    category: "powerbanks",
+    price: 25,
+    desc: "Pocket-sized 10,000mAh with 22.5W fast charging for phones and earbuds.",
+    specs: ["22.5W", "10,000mAh", "Slim design", "LED indicator"],
+    image: "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=600&q=80",
+    imageAlt: "Slim Xiaomi power bank showing LED charge indicator",
+    trending: true,
+    badge: null
+  },
+  {
+    id: "pb-05",
+    name: "Jtrust 20000mAh Pro",
+    brand: "Jtrust",
+    type: "Power Bank",
+    category: "powerbanks",
+    price: 45,
+    desc: "20,000mAh with triple output ports, intelligent charge distribution and safety protection.",
+    specs: ["20,000mAh", "3 outputs", "Auto-detect", "Safety OCP"],
+    image: "https://images.unsplash.com/photo-1563208958-71f7b485dd77?w=600&q=80",
+    imageAlt: "Jtrust power bank with multiple ports on neutral background",
+    trending: false,
+    badge: null
+  },
+  {
+    id: "pb-06",
+    name: "Jtrust Solar Power Bank 10000",
+    brand: "Jtrust",
+    type: "Solar Power Bank",
+    category: "powerbanks",
+    price: 35,
+    desc: "Dual solar panels + 10,000mAh, waterproof IPX5, perfect for outdoors and travel.",
+    specs: ["Solar panels", "10,000mAh", "IPX5", "LED torch"],
+    image: "https://images.unsplash.com/photo-1616348436168-de43ad0db179?w=600&q=80",
+    imageAlt: "Solar power bank with panel visible on outdoor background",
+    trending: false,
+    badge: "Eco"
+  },
+
+  /* ─────────────── LAPTOPS ─────────────── */
+  {
+    id: "lt-01",
+    name: "MacBook Pro 14\" M3 Pro",
+    brand: "Apple",
+    type: "Laptop",
+    category: "laptops",
+    price: 1999,
+    desc: "M3 Pro chip with 18GB memory, 18-hour battery, Liquid Retina XDR display.",
+    specs: ["M3 Pro", "18GB RAM", "512GB SSD", "18hr battery"],
+    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80",
+    imageAlt: "MacBook Pro 14 inch open on a clean desk showing Retina display",
+    trending: true,
+    badge: "New"
+  },
+  {
+    id: "lt-02",
+    name: "MacBook Air 15\" M3",
+    brand: "Apple",
+    type: "Laptop",
+    category: "laptops",
+    price: 1299,
+    desc: "Fanless M3 design, 15.3\" Liquid Retina, up to 18-hour battery in 1.51kg.",
+    specs: ["M3 chip", "8GB RAM", "256GB SSD", "Fanless"],
+    image: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=600&q=80",
+    imageAlt: "MacBook Air 15 inch in starlight finish on a minimalist desk",
+    trending: true,
+    badge: null
+  },
+  {
+    id: "lt-03",
+    name: "ASUS ROG Zephyrus G16",
+    brand: "Asus",
+    type: "Gaming Laptop",
+    category: "laptops",
+    price: 2499,
+    desc: "RTX 4090, Intel Core Ultra 9, 240Hz OLED display, MUX Switch, 16\" powerhouse.",
+    specs: ["RTX 4090", "Core Ultra 9", "240Hz OLED", "32GB DDR5"],
+    image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600&q=80",
+    imageAlt: "ASUS ROG gaming laptop with RGB keyboard backlight on dark surface",
+    trending: true,
+    badge: "Hot"
+  },
+  {
+    id: "lt-04",
+    name: "ASUS ZenBook 14 OLED",
+    brand: "Asus",
+    type: "Ultrabook",
+    category: "laptops",
+    price: 899,
+    desc: "2.8K OLED display, Intel Core Ultra 7, 32GB LPDDR5, all-day battery in 1.2kg.",
+    specs: ["2.8K OLED", "Core Ultra 7", "32GB RAM", "1.2kg"],
+    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80",
+    imageAlt: "ASUS ZenBook slim ultrabook open showing OLED display",
+    trending: false,
+    badge: null
+  },
+  {
+    id: "lt-05",
+    name: "Dell XPS 15 OLED",
+    brand: "Dell",
+    type: "Laptop",
+    category: "laptops",
+    price: 1799,
+    desc: "3.5K OLED touchscreen, Intel Core i9, RTX 4060, CNC machined aluminium chassis.",
+    specs: ["3.5K OLED", "Core i9", "RTX 4060", "32GB DDR5"],
+    image: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=600&q=80",
+    imageAlt: "Dell XPS 15 laptop with slim bezels and OLED display in use",
+    trending: false,
+    badge: null
+  },
+  {
+    id: "lt-06",
+    name: "Dell Inspiron 16 Plus",
+    brand: "Dell",
+    type: "Laptop",
+    category: "laptops",
+    price: 999,
+    desc: "16\" 2.5K display, Intel Core i7, 16GB RAM — the reliable everyday powerhouse.",
+    specs: ["2.5K display", "Core i7", "16GB RAM", "512GB SSD"],
+    image: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=600&q=80",
+    imageAlt: "Dell Inspiron 16 laptop open on a desk with bright display",
+    trending: false,
+    badge: "Sale"
+  }
+];
+
+/* ── Category metadata (drives the category-filter section) ── */
+const CATEGORIES = [
+  { slug: "phones",     label: "Phones",      icon: "📱", desc: "Apple · Samsung · Xiaomi" },
+  { slug: "earphones",  label: "Earphones",   icon: "🎧", desc: "Apple · Samsung · Sony · Anker" },
+  { slug: "powerbanks", label: "Power Banks", icon: "🔋", desc: "Anker · Xiaomi · Jtrust" },
+  { slug: "laptops",    label: "Laptops",     icon: "💻", desc: "Apple · Asus · Dell" },
+];
+
+/* ── Brand metadata (drives the brand-filter pills) ── */
+const BRANDS = [
+  { id: "apple",   label: "Apple"   },
+  { id: "samsung", label: "Samsung" },
+  { id: "xiaomi",  label: "Xiaomi"  },
+  { id: "sony",    label: "Sony"    },
+  { id: "anker",   label: "Anker"   },
+  { id: "jtrust",  label: "Jtrust"  },
+  { id: "asus",    label: "Asus"    },
+  { id: "dell",    label: "Dell"    },
+];

@@ -1,0 +1,8 @@
+<div class="contact-item">
+        <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+        <a href="https://maps.app.goo.gl/3568UAgzxBwvwL9S7" target="_blank">
+            <span class="contact-text">
+                    ផ្ទះលេខ 240B ផ្លូវ 132 ភូមិ06 សង្កាត់ទឹកល្អក់ទី01 ខណ្ឌទួលគោក រាជធានីភ្នំពេញ
+                </span>
+        </a>
+</div>

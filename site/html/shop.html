@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shop Tech — NovaDrop</title>
+  <meta name="description" content="Shop premium phones, earphones, power banks and laptops from Apple, Samsung, Sony, Xiaomi, Asus, Dell and more."/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { display: ['sans-serif'], body: ['sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
+
+    /* Card entrance animation */
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .product-card { animation: cardIn 0.35s ease both; }
+
+    /* Search focus ring */
+    #search-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
+      border-color: #a5b4fc;
+    }
+
+    /* Scrollable pill row on small screens */
+    .pill-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .pill-scroll::-webkit-scrollbar { display: none; }
+
+    /* Spec badge hover subtle lift */
+    .product-card:hover { box-shadow: 0 8px 32px rgba(99,102,241,0.10), 0 2px 8px rgba(0,0,0,0.06); }
+
+    /* Category card hover */
+    .cat-card { transition: all 0.2s ease; }
+    .cat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(99,102,241,0.12); }
+  </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 antialiased">
+
+<!-- ─── GLOBAL NAV (injected by script.js) ─────────────────────── -->
+<header
+  id="nd-nav"
+  role="banner"
+  class="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100/80 shadow-sm"
+></header>
+
+<div class="pt-16">
+
+  <!-- ════════════════════════════════════════════════════════════
+PAGE HEADER
+  ════════════════════════════════════════════════════════════ -->
+  <div class="bg-white/70 backdrop-blur-md border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-5 py-10">
+
+      <!-- Title + Search row -->
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 class="font-display font-extrabold text-4xl text-gray-900 mb-1">Shop Tech</h1>
+          <p class="text-gray-400 text-sm">
+            Phones · Earphones · Power Banks · Laptops — the best brands, curated.
+          </p>
+        </div>
+
+        <!-- Search bar -->
+        <div class="relative w-full sm:w-80" role="search">
+          <label for="search-input" class="sr-only">Search products by name, brand, or type</label>
+          <svg
+            class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search brand, name, spec…"
+            autocomplete="off"
+            class="w-full pl-10 pr-10 py-3 bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 transition-all"
+          />
+          <button
+            onclick="clearSearch()"
+            title="Clear search"
+            aria-label="Clear search"
+            class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-600 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── CATEGORY FILTER TABS (dynamically built by shop.js) ── -->
+      <div class="mt-5">
+        <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">Category</p>
+        <div
+          id="category-tabs"
+          class="pill-scroll flex gap-2 pb-1"
+          role="group"
+          aria-label="Filter by category"
+        >
+          <!-- Populated by buildFilterUI() in shop.js -->
+        </div>
+      </div>
+
+      <!-- ── BRAND FILTER PILLS (dynamically built by shop.js) ── -->
+      <div class="mt-3">
+        <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">Brand</p>
+        <div
+          id="brand-pills"
+          class="pill-scroll flex gap-2 pb-1"
+          role="group"
+          aria-label="Filter by brand"
+        >
+          <!-- Populated by buildFilterUI() in shop.js -->
+        </div>
+      </div>
+
+      <!-- ── TRENDING TOGGLE ── -->
+      <div class="mt-3 flex items-center gap-2">
+        <button
+          data-filter="trending"
+          onclick="setFilter('trending')"
+          aria-pressed="false"
+          class="filter-pill text-xs font-semibold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100"
+        >
+          🔥 Trending only
+        </button>
+        <button
+          onclick="clearAll()"
+          class="text-xs text-gray-400 hover:text-indigo-500 transition-colors px-2 py-2 focus:outline-none focus:underline"
+          aria-label="Clear all filters and search"
+        >
+          Reset all
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       CATEGORY SHOWCASE CARDS  (visual navigation strip)
+  ════════════════════════════════════════════════════════════ -->
+  <section aria-label="Browse by category" class="max-w-7xl mx-auto px-5 pt-8 pb-2">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+
+      <button
+        onclick="setCategory('phones')"
+        aria-label="Shop Phones"
+        class="cat-card bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200"
+      >
+        <span class="text-3xl mb-2 block" aria-hidden="true">📱</span>
+        <p class="font-display font-bold text-sm text-gray-900">Phones</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">Apple · Samsung · Xiaomi</p>
+      </button>
+
+      <button
+        onclick="setCategory('earphones')"
+        aria-label="Shop Earphones and Headphones"
+        class="cat-card bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200"
+      >
+        <span class="text-3xl mb-2 block" aria-hidden="true">🎧</span>
+        <p class="font-display font-bold text-sm text-gray-900">Earphones</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">Apple · Samsung · Sony · Anker</p>
+      </button>
+
+      <button
+        onclick="setCategory('powerbanks')"
+        aria-label="Shop Power Banks"
+        class="cat-card bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200"
+      >
+        <span class="text-3xl mb-2 block" aria-hidden="true">🔋</span>
+        <p class="font-display font-bold text-sm text-gray-900">Power Banks</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">Anker · Xiaomi · Jtrust</p>
+      </button>
+
+      <button
+        onclick="setCategory('laptops')"
+        aria-label="Shop Laptops"
+        class="cat-card bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200"
+      >
+        <span class="text-3xl mb-2 block" aria-hidden="true">💻</span>
+        <p class="font-display font-bold text-sm text-gray-900">Laptops</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">Apple · Asus · Dell</p>
+      </button>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+  PRODUCT GRID
+  ════════════════════════════════════════════════════════════ -->
+  <main
+    id="main-content"
+    class="max-w-7xl mx-auto px-5 py-6 pb-20"
+    aria-label="Product listing"
+  >
+    <!-- Results bar -->
+    <div class="flex items-center justify-between mb-5">
+      <p
+        id="product-count"
+        class="text-sm text-gray-400 font-medium"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      ></p>
+
+      <div class="flex items-center gap-2">
+        <label for="sort-select" class="text-xs text-gray-400 whitespace-nowrap">Sort:</label>
+        <select
+          id="sort-select"
+          onchange="sortProducts(this.value)"
+          class="text-sm bg-white/80 border border-gray-200 rounded-xl px-3 py-1.5 text-gray-700 outline-none cursor-pointer focus:ring-2 focus:ring-indigo-300"
+        >
+          <option value="default">Featured</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Grid — 2 cols mobile → 3 md → 4 lg -->
+    <div
+      id="product-grid"
+      class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
+      aria-label="Products"
+    ></div>
+  </main>
+
+</div><!-- /pt-16 -->
+
+<!-- ════════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════════ -->
+<footer class="bg-gray-50 border-t border-gray-100 py-8">
+  <div class="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+    <span class="font-display font-bold text-gray-900">
+    ICT<span class="text-indigo-500">Tech</span>
+    </span>
+    <span>© 2025 ICTTech. All rights reserved.</span>
+    <nav aria-label="Footer links" class="flex gap-5">
+      <a href="about.html"   class="hover:text-gray-700 transition-colors">About</a>
+      <a href="contact.html" class="hover:text-gray-700 transition-colors">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCRIPTS
+     Order matters: products-data.js → script.js → shop.js
+════════════════════════════════════════════════════════════ -->
+<script src="../js/products-data.js"></script>
+<script src="../js/script.js"></script>
+<script src="../js/shop.js"></script>
+<script>
+  // Inject the shared nav and mark "shop" as active
+  injectNav("shop");
+</script>
+
+</body>
+</html>

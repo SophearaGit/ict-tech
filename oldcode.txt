@@ -1,0 +1,45 @@
+<div id="auth-modal" 
+     class="fixed inset-0 bg-black/50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-lg shadow-lg p-8 w-96">
+    <h2 class="text-xl font-bold mb-4">Login / Register</h2>
+    <input type="email" placeholder="Email" class="w-full p-2 border rounded mb-3">
+    <input type="password" placeholder="Password" class="w-full p-2 border rounded mb-3">
+    <button class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-800">Login</button>
+    <p class="mt-4 text-sm text-gray-500">Don’t have an account? <a href="#" class="text-blue-600">Register</a></p>
+    <button id="close-auth" class="mt-4 text-gray-600 hover:text-gray-900">Close</button>
+  </div>
+</div>
+
+
+
+        <button id="user-btn" onclick="toggleCart()"
+          class="relative p-2 rounded-xl hover:bg-gray-100 transition-colors">
+          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <span id="cart-badge"
+            class="hidden absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
+        </button>'
+
+
+
+        function renderCartDrawer() {
+  const items = Cart.getItems();
+  const itemsEl = document.getElementById('cart-items');
+  const footerEl = document.getElementById('cart-footer');
+  if (!itemsEl) return;
+
+  if (items.length === 0) {
+    itemsEl.innerHTML = `
+      <div class="flex flex-col items-center justify-center h-full text-center py-16">
+        <div class="text-5xl mb-4">🛍️</div>
+        <p class="text-gray-500 text-sm">Your cart is empty.<br/>Start shopping to add items.</p>
+        <a href="shop.html" onclick="toggleCart()"
+          class="mt-5 bg-indigo-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-indigo-600 transition-colors">
+          Browse Shop
+        </a>
+      </div>`;
+    footerEl.innerHTML = '';
+    return;
+  }
