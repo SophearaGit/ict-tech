@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Admin Dashboard — NovaDrop</title>
+<title>Admin Dashboard — ICTTech</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script>tailwind.config={theme:{extend:{fontFamily:{display:['Syne','sans-serif'],body:['Inter','sans-serif']}}}}</script>
 <style>
   body{font-family:'Inter',sans-serif;background:#f8f9fc;}
@@ -53,16 +54,16 @@
 </style>
 </head>
 <body class="min-h-screen flex">
-
 <!-- ══════════════════════════════════════════════
-     SIDEBAR
+    SIDEBAR
 ══════════════════════════════════════════════ -->
-<aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-100 shadow-sm z-40 flex flex-col">
+<aside id="sidebar" class="idebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-100 shadow-sm z-40 flex flex-col">
   <!-- Logo -->
   <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-    <a href="index.html" class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-sm">👟</div>
-      <span class="font-display font-bold text-gray-900">Nova<span class="text-indigo-500">Drop</span></span>
+      <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-sm">
+        <img src="./assets/img/">
+      </div>
+      <span class="font-display font-bold text-gray-900">ICT<span class="text-indigo-500">Tech</span></span>
     </a>
     <span class="text-[10px] bg-indigo-100 text-indigo-600 font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide">Admin</span>
   </div>
@@ -111,10 +112,10 @@
 </aside>
 
 <!-- Mobile sidebar overlay -->
-<div id="mob-overlay" onclick="closeSidebar()" class="hidden fixed inset-0 bg-black/30 z-30 lg:hidden"></div>
+<div id="mob-overlay" onclick="closeSidebar()" clfass="hidden fixed inset-0 bg-black/30 z-30 lg:hidden"></div>
 
 <!-- ══════════════════════════════════════════════
-     MAIN CONTENT
+    MAIN CONTENT
 ══════════════════════════════════════════════ -->
 <div class="flex-1 ml-0 lg:ml-64 min-h-screen flex flex-col">
 
@@ -124,7 +125,13 @@
       <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors">
         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
+      <button>
+        <div id="sidebar-btn">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+      </button>
       <h2 id="page-title" class="font-display font-bold text-lg text-gray-900">Dashboard</h2>
+</button>
     </div>
     <div class="flex items-center gap-3">
       <div id="topbar-search" class="hidden sm:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 gap-2">
@@ -290,21 +297,24 @@
         <div class="grid sm:grid-cols-2 gap-5">
           <div class="sm:col-span-2">
             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Product Name *</label>
-            <input id="f-name" type="text" placeholder="e.g. Air Max 270" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+            <input id="f-name" type="text" placeholder="e.g. Iphone 17 pro max" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Brand *</label>
-            <input id="f-brand" type="text" placeholder="e.g. Nike" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+            <input id="f-brand" type="text" placeholder="e.g. Apple" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Category *</label>
             <select id="f-category" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all cursor-pointer">
               <option value="">Select category…</option>
-              <option value="Sneakers">Sneakers</option>
-              <option value="Running">Running</option>
-              <option value="Apparel">Apparel</option>
-              <option value="Bags">Bags</option>
-              <option value="Accessories">Accessories</option>
+              <option value="Sneakers">Apple</option>
+              <option value="Running">Sony</option>
+              <option value="Apparel">JTrust</option>
+              <option value="Apparel">Xiaomi</option>
+              <option value="Apparel">Asus</option>
+              <option value="Bags">Anker</option>
+              <option value="Apparel">Dell</option>
+              <option value="Accessories">Samsung</option>
             </select>
           </div>
           <div>
@@ -317,10 +327,6 @@
           <div>
             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Initial Quantity *</label>
             <input id="f-qty" type="number" min="0" placeholder="0" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Emoji Icon</label>
-            <input id="f-emoji" type="text" placeholder="👟" maxlength="2" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
           </div>
           <div class="sm:col-span-2">
             <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Description</label>
@@ -411,7 +417,7 @@
       </div>
       <div class="grid grid-cols-3 gap-2">
         <button onclick="setRestockQty(10)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded-lg transition-colors">+10</button>
-        <button onclick="setRestockQty(25)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded-lg transition-colors">+25</button>
+        <button onclick="setRestockQty(25)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded-lg transition-colors">+30</button>
         <button onclick="setRestockQty(50)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded-lg transition-colors">+50</button>
       </div>
     </div>
@@ -441,480 +447,6 @@
 <!-- ══════════════════════════════════════════════
      SCRIPT
 ══════════════════════════════════════════════ -->
-<script>
-/* ── Auth guard ── */
-if (sessionStorage.getItem('nd_admin') !== 'true') {
-  window.location.href = 'admin-login.html';
-}
-document.getElementById('admin-name').textContent = sessionStorage.getItem('nd_admin_user') || 'Admin';
-
-/* ── Default product seed (from shop.js data, now with qty) ── */
-const SEED_PRODUCTS = [
-  {id:'p1',  name:'Air Max 270',       brand:'Nike',        price:150, emoji:'👟', trending:true,  category:'Sneakers',   qty:42, desc:'Max Air cushioning for all-day comfort.'},
-  {id:'p2',  name:"Air Force 1 '07",   brand:'Nike',        price:110, emoji:'👟', trending:true,  category:'Sneakers',   qty:28, desc:'The classic low-top silhouette, reimagined.'},
-  {id:'p3',  name:'React Infinity Run', brand:'Nike',       price:160, emoji:'🏃', trending:false, category:'Running',    qty:5,  desc:'Designed to help reduce injury.'},
-  {id:'p4',  name:'Dri-FIT Tee',       brand:'Nike',        price:35,  emoji:'👕', trending:false, category:'Apparel',    qty:0,  desc:'Sweat-wicking fabric to keep you dry.'},
-  {id:'p5',  name:'Ultraboost 23',     brand:'Adidas',      price:190, emoji:'👟', trending:true,  category:'Running',    qty:19, desc:'Incredible energy return with BOOST midsole.'},
-  {id:'p6',  name:'Stan Smith',        brand:'Adidas',      price:90,  emoji:'👟', trending:true,  category:'Sneakers',   qty:33, desc:'Timeless tennis icon.'},
-  {id:'p7',  name:'Forum Low',         brand:'Adidas',      price:100, emoji:'👟', trending:false, category:'Sneakers',   qty:0,  desc:'Basketball heritage reborn.'},
-  {id:'p8',  name:'Tiro 23 Tracksuit', brand:'Adidas',      price:75,  emoji:'🧥', trending:false, category:'Apparel',    qty:7,  desc:'Lightweight warm-up set.'},
-  {id:'p9',  name:'990v5',             brand:'New Balance', price:185, emoji:'👟', trending:true,  category:'Sneakers',   qty:14, desc:'Made in the USA — premium suede and mesh.'},
-  {id:'p10', name:'574 Core',          brand:'New Balance', price:80,  emoji:'👟', trending:false, category:'Sneakers',   qty:25, desc:'Iconic chunky profile.'},
-  {id:'p11', name:'Fresh Foam 1080',   brand:'New Balance', price:165, emoji:'🏃', trending:false, category:'Running',    qty:3,  desc:'Ultra-soft Fresh Foam for high-mileage runners.'},
-  {id:'p12', name:'Suede Classic XXI', brand:'Puma',        price:70,  emoji:'👟', trending:true,  category:'Sneakers',   qty:22, desc:'The suede that started it all.'},
-  {id:'p13', name:'RS-X Reinvention',  brand:'Puma',        price:110, emoji:'👟', trending:false, category:'Sneakers',   qty:9,  desc:'Bold 80s running-inspired silhouette.'},
-  {id:'p14', name:'Chuck Taylor Hi',   brand:'Converse',    price:65,  emoji:'👟', trending:true,  category:'Sneakers',   qty:51, desc:'The most iconic canvas hi-top ever made.'},
-  {id:'p15', name:'Run Star Hike',     brand:'Converse',    price:110, emoji:'👟', trending:false, category:'Sneakers',   qty:0,  desc:'Platform hybrid with chunky rubber outsole.'},
-  {id:'p16', name:'Old Skool',         brand:'Vans',        price:65,  emoji:'👟', trending:true,  category:'Sneakers',   qty:38, desc:'The original skate shoe.'},
-  {id:'p17', name:'Sk8-Hi',            brand:'Vans',        price:75,  emoji:'👟', trending:false, category:'Sneakers',   qty:4,  desc:'High-top support with a padded collar.'},
-  {id:'p18', name:'Air Jordan 1 Retro High', brand:'Jordan',price:180, emoji:'👟', trending:true,  category:'Sneakers',   qty:12, desc:'The sneaker that changed basketball and culture.'},
-  {id:'p19', name:'Jordan 4 Retro',    brand:'Jordan',      price:210, emoji:'👟', trending:true,  category:'Sneakers',   qty:6,  desc:'Iconic windows and visible Air unit.'},
-  {id:'p20', name:'Sport Duffel Bag',  brand:'Nike',        price:55,  emoji:'🎒', trending:false, category:'Bags',       qty:17, desc:'Spacious gym bag with wet/dry separation.'},
-  {id:'p21', name:'Classic Cap',       brand:'Adidas',      price:28,  emoji:'🧢', trending:false, category:'Accessories',qty:0,  desc:'Adjustable structured 6-panel cap.'},
-  {id:'p22', name:'Running Socks 3pk', brand:'Puma',        price:18,  emoji:'🧦', trending:false, category:'Accessories',qty:60, desc:'Cushioned arch support for performance runs.'},
-];
-
-/* ── Storage helpers ── */
-const LS_KEY = 'nd_products';
-function loadProducts() {
-  const raw = localStorage.getItem(LS_KEY);
-  return raw ? JSON.parse(raw) : null;
-}
-function saveProducts(list) {
-  localStorage.setItem(LS_KEY, JSON.stringify(list));
-}
-function initProducts() {
-  if (!loadProducts()) saveProducts(SEED_PRODUCTS);
-}
-
-/* ── State ── */
-let products = [];
-let currentView = 'dashboard';
-let tableFilter = 'all';
-let searchQ = '';
-let editingId = null;
-let restockId = null;
-let deleteId = null;
-
-/* ── Status helpers ── */
-function statusOf(p) {
-  if (p.qty === 0) return 'out';
-  if (p.qty <= 10) return 'low';
-  return 'in';
-}
-function statusBadge(p) {
-  const s = statusOf(p);
-  if (s === 'out') return `<span class="badge-out text-[10px] font-semibold px-2 py-0.5 rounded-full">Out of Stock</span>`;
-  if (s === 'low') return `<span class="badge-low text-[10px] font-semibold px-2 py-0.5 rounded-full">Low Stock</span>`;
-  return `<span class="badge-in text-[10px] font-semibold px-2 py-0.5 rounded-full">In Stock</span>`;
-}
-
-/* ── Init ── */
-function init() {
-  initProducts();
-  products = loadProducts();
-  refreshAll();
-}
-
-function refreshAll() {
-  products = loadProducts();
-  updateStats();
-  renderRecentTable();
-  renderAlertsPanel();
-  renderProductsTable();
-  renderInventoryTable();
-  updateLowBadge();
-}
-
-/* ── Stats ── */
-function updateStats() {
-  const total = products.length;
-  const inS   = products.filter(p => statusOf(p) === 'in').length;
-  const low   = products.filter(p => statusOf(p) === 'low').length;
-  const out   = products.filter(p => statusOf(p) === 'out').length;
-  document.getElementById('stat-total').textContent   = total;
-  document.getElementById('stat-instock').textContent = inS;
-  document.getElementById('stat-low').textContent     = low;
-  document.getElementById('stat-out').textContent     = out;
-}
-
-function updateLowBadge() {
-  const cnt = products.filter(p => statusOf(p) !== 'in').length;
-  const b = document.getElementById('low-stock-badge');
-  b.textContent = cnt;
-  b.classList.toggle('hidden', cnt === 0);
-}
-
-/* ── Dashboard recent table ── */
-function renderRecentTable() {
-  const tbody = document.getElementById('recent-tbody');
-  const recent = [...products].slice(-6).reverse();
-  tbody.innerHTML = recent.map(p => `
-    <tr class="trow border-b border-gray-50 last:border-0">
-      <td class="px-5 py-3 flex items-center gap-3">
-        <span class="text-xl">${p.emoji}</span>
-        <span class="text-sm font-medium text-gray-800 truncate max-w-[140px]">${p.name}</span>
-      </td>
-      <td class="px-3 py-3 text-sm font-semibold text-gray-900">$${p.price}</td>
-      <td class="px-3 py-3 text-sm text-gray-600">${p.qty}</td>
-      <td class="px-3 py-3">${statusBadge(p)}</td>
-    </tr>`).join('');
-}
-
-/* ── Alerts panel ── */
-function renderAlertsPanel() {
-  const panel = document.getElementById('alerts-panel');
-  const alerts = products.filter(p => statusOf(p) !== 'in');
-  if (alerts.length === 0) {
-    panel.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">✅ All products are well stocked!</div>`;
-    return;
-  }
-  panel.innerHTML = alerts.map(p => `
-    <div class="flex items-center justify-between gap-2 bg-gray-50 rounded-xl px-3 py-2.5">
-      <div class="flex items-center gap-2 min-w-0">
-        <span class="text-base">${p.emoji}</span>
-        <div class="min-w-0">
-          <p class="text-xs font-semibold text-gray-800 truncate">${p.name}</p>
-          <p class="text-[10px] text-gray-400">${p.qty} left</p>
-        </div>
-      </div>
-      <button onclick="openRestock('${p.id}')"
-        class="flex-shrink-0 text-[10px] font-semibold bg-indigo-100 text-indigo-600 hover:bg-indigo-200 px-2.5 py-1 rounded-lg transition-colors">
-        Restock
-      </button>
-    </div>`).join('');
-}
-
-/* ── Products table ── */
-function renderProductsTable() {
-  let list = [...products];
-  if (tableFilter !== 'all') list = list.filter(p => statusOf(p) === tableFilter);
-  if (searchQ) {
-    const q = searchQ.toLowerCase();
-    list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
-  }
-
-  const empty = document.getElementById('products-empty');
-  const tbody = document.getElementById('products-tbody');
-
-  if (list.length === 0) {
-    tbody.innerHTML = '';
-    empty.classList.remove('hidden');
-    return;
-  }
-  empty.classList.add('hidden');
-
-  tbody.innerHTML = list.map(p => `
-    <tr class="trow border-b border-gray-50 last:border-0">
-      <td class="px-5 py-3.5">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">${p.emoji}</span>
-          <div>
-            <p class="text-sm font-medium text-gray-900">${p.name}</p>
-            ${p.trending ? `<span class="text-[10px] text-indigo-500 font-semibold">🔥 Trending</span>` : ''}
-          </div>
-        </div>
-      </td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 hidden sm:table-cell">${p.brand}</td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 hidden md:table-cell">${p.category}</td>
-      <td class="px-3 py-3.5 text-sm font-semibold text-gray-900">$${p.price}</td>
-      <td class="px-3 py-3.5">
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-gray-700 w-8 text-right">${p.qty}</span>
-          <div class="flex gap-1">
-            <button onclick="quickQty('${p.id}',-1)" title="Remove 1"
-              class="w-6 h-6 rounded-md bg-gray-100 hover:bg-red-100 hover:text-red-600 text-gray-600 flex items-center justify-center text-sm font-bold transition-colors">−</button>
-            <button onclick="quickQty('${p.id}',1)" title="Add 1"
-              class="w-6 h-6 rounded-md bg-gray-100 hover:bg-green-100 hover:text-green-600 text-gray-600 flex items-center justify-center text-sm font-bold transition-colors">+</button>
-          </div>
-        </div>
-      </td>
-      <td class="px-3 py-3.5">${statusBadge(p)}</td>
-      <td class="px-3 py-3.5">
-        <div class="flex items-center gap-1.5">
-          <button onclick="openEdit('${p.id}')" title="Edit"
-            class="p-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 text-gray-400 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-          </button>
-          <button onclick="openRestock('${p.id}')" title="Restock"
-            class="p-1.5 rounded-lg hover:bg-green-50 hover:text-green-600 text-gray-400 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          </button>
-          <button onclick="openDelete('${p.id}')" title="Delete"
-            class="p-1.5 rounded-lg hover:bg-red-50 hover:text-red-500 text-gray-400 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-          </button>
-        </div>
-      </td>
-    </tr>`).join('');
-}
-
-/* ── Inventory table ── */
-function renderInventoryTable() {
-  const tbody = document.getElementById('inventory-tbody');
-  const max = Math.max(...products.map(p => p.qty), 50);
-  tbody.innerHTML = [...products].sort((a,b) => a.qty - b.qty).map(p => {
-    const pct = Math.round((p.qty / max) * 100);
-    const barColor = statusOf(p) === 'out' ? 'bg-red-400' : statusOf(p) === 'low' ? 'bg-amber-400' : 'bg-green-400';
-    return `
-    <tr class="trow border-b border-gray-50 last:border-0">
-      <td class="px-5 py-3.5">
-        <div class="flex items-center gap-2">
-          <span class="text-lg">${p.emoji}</span>
-          <p class="text-sm font-medium text-gray-800">${p.name}</p>
-        </div>
-      </td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 hidden sm:table-cell">${p.brand}</td>
-      <td class="px-3 py-3.5 text-sm font-bold text-gray-900">${p.qty}</td>
-      <td class="px-3 py-3.5">${statusBadge(p)}</td>
-      <td class="px-3 py-3.5 w-36 hidden md:table-cell">
-        <div class="bg-gray-100 rounded-full h-2 overflow-hidden">
-          <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width:${pct}%"></div>
-        </div>
-      </td>
-      <td class="px-3 py-3.5">
-        <button onclick="openRestock('${p.id}')"
-          class="text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
-          Restock
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-/* ── Quick qty ── */
-function quickQty(id, delta) {
-  const p = products.find(x => x.id === id);
-  if (!p) return;
-  p.qty = Math.max(0, p.qty + delta);
-  saveProducts(products);
-  refreshAll();
-  toast(`${p.name} qty → ${p.qty}`);
-}
-
-/* ── Filter table ── */
-function filterByStatus(status) {
-  tableFilter = status;
-  document.querySelectorAll('.tab-btn').forEach(b => {
-    const active = b.dataset.tab === status;
-    b.classList.toggle('active-tab', active);
-    b.classList.toggle('text-indigo-600', active);
-    b.classList.toggle('text-gray-500', !active);
-  });
-  renderProductsTable();
-}
-
-function filterTable(q) {
-  searchQ = q;
-  renderProductsTable();
-  renderInventoryTable();
-}
-
-/* ── Edit modal ── */
-function openEdit(id) {
-  editingId = id;
-  const p = products.find(x => x.id === id);
-  document.getElementById('m-name').value = p.name;
-  document.getElementById('m-price').value = p.price;
-  document.getElementById('m-qty').value = p.qty;
-  document.getElementById('m-desc').value = p.desc || '';
-  document.getElementById('m-trending').checked = p.trending;
-  document.getElementById('edit-modal').classList.remove('hidden');
-}
-
-function closeModal() {
-  document.getElementById('edit-modal').classList.add('hidden');
-  editingId = null;
-}
-
-function saveModal() {
-  const p = products.find(x => x.id === editingId);
-  if (!p) return;
-  p.name = document.getElementById('m-name').value.trim() || p.name;
-  p.price = parseFloat(document.getElementById('m-price').value) || p.price;
-  p.qty = parseInt(document.getElementById('m-qty').value) || 0;
-  p.desc = document.getElementById('m-desc').value.trim();
-  p.trending = document.getElementById('m-trending').checked;
-  saveProducts(products);
-  refreshAll();
-  closeModal();
-  toast('Product updated successfully!');
-}
-
-/* ── Restock modal ── */
-function openRestock(id) {
-  restockId = id;
-  const p = products.find(x => x.id === id);
-  document.getElementById('rs-name').textContent = p.name;
-  document.getElementById('rs-current').textContent = p.qty;
-  document.getElementById('rs-qty').value = p.qty;
-  document.getElementById('restock-modal').classList.remove('hidden');
-}
-
-function closeRestockModal() {
-  document.getElementById('restock-modal').classList.add('hidden');
-  restockId = null;
-}
-
-function setRestockQty(add) {
-  const p = products.find(x => x.id === restockId);
-  if (!p) return;
-  document.getElementById('rs-qty').value = p.qty + add;
-}
-
-function confirmRestock() {
-  const p = products.find(x => x.id === restockId);
-  if (!p) return;
-  const newQty = parseInt(document.getElementById('rs-qty').value);
-  if (isNaN(newQty) || newQty < 0) return;
-  p.qty = newQty;
-  saveProducts(products);
-  refreshAll();
-  closeRestockModal();
-  toast(`✅ ${p.name} restocked to ${newQty} units`);
-}
-
-function showBulkRestock() {
-  const outOfStock = products.filter(p => statusOf(p) === 'out');
-  if (outOfStock.length === 0) { toast('No out-of-stock items to restock!'); return; }
-  outOfStock.forEach(p => { p.qty = 20; });
-  saveProducts(products);
-  refreshAll();
-  toast(`✅ Restocked ${outOfStock.length} items to 20 units each`);
-}
-
-/* ── Delete modal ── */
-function openDelete(id) {
-  deleteId = id;
-  const p = products.find(x => x.id === id);
-  document.getElementById('del-name').textContent = p.name;
-  document.getElementById('delete-modal').classList.remove('hidden');
-}
-
-function closeDeleteModal() {
-  document.getElementById('delete-modal').classList.add('hidden');
-  deleteId = null;
-}
-
-function confirmDelete() {
-  products = products.filter(x => x.id !== deleteId);
-  saveProducts(products);
-  refreshAll();
-  closeDeleteModal();
-  toast('Product deleted.');
-}
-
-/* ── Add product form ── */
-function showView(view) {
-  ['dashboard','products','inventory','add'].forEach(v => {
-    document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
-    const nav = document.getElementById(`nav-${v}`);
-    if (nav) nav.classList.toggle('active', v === view);
-  });
-  currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product'};
-  document.getElementById('page-title').textContent = titles[view] || '';
-  document.getElementById('topbar-search').classList.toggle('hidden', view !== 'products' && view !== 'inventory');
-
-  if (view === 'add' && !editingId) resetAddForm();
-  closeSidebar();
-}
-
-function resetAddForm() {
-  document.getElementById('edit-id').value = '';
-  document.getElementById('f-name').value = '';
-  document.getElementById('f-brand').value = '';
-  document.getElementById('f-category').value = '';
-  document.getElementById('f-price').value = '';
-  document.getElementById('f-qty').value = '';
-  document.getElementById('f-emoji').value = '👟';
-  document.getElementById('f-desc').value = '';
-  document.getElementById('f-trending').checked = false;
-  document.getElementById('form-title').textContent = 'Add New Product';
-  document.getElementById('form-btn-text').textContent = 'Add Product';
-  document.getElementById('form-error').classList.add('hidden');
-  editingId = null;
-}
-
-function cancelEdit() {
-  resetAddForm();
-  showView('products');
-}
-
-function submitProductForm() {
-  const name     = document.getElementById('f-name').value.trim();
-  const brand    = document.getElementById('f-brand').value.trim();
-  const category = document.getElementById('f-category').value;
-  const price    = parseFloat(document.getElementById('f-price').value);
-  const qty      = parseInt(document.getElementById('f-qty').value);
-  const emoji    = document.getElementById('f-emoji').value.trim() || '👟';
-  const desc     = document.getElementById('f-desc').value.trim();
-  const trending = document.getElementById('f-trending').checked;
-  const errEl    = document.getElementById('form-error');
-
-  if (!name || !brand || !category || isNaN(price) || isNaN(qty)) {
-    errEl.textContent = 'Please fill in all required fields (name, brand, category, price, qty).';
-    errEl.classList.remove('hidden');
-    return;
-  }
-  errEl.classList.add('hidden');
-
-  if (editingId) {
-    const p = products.find(x => x.id === editingId);
-    Object.assign(p, {name, brand, category, price, qty, emoji, desc, trending});
-    toast('Product updated!');
-  } else {
-    const newId = 'p' + Date.now();
-    products.push({id:newId, name, brand, category, price, qty, emoji, desc, trending});
-    toast('Product added to catalog!');
-  }
-
-  saveProducts(products);
-  refreshAll();
-  resetAddForm();
-  showView('products');
-}
-
-/* ── Sidebar toggle (mobile) ── */
-function toggleSidebar() {
-  const s = document.getElementById('sidebar');
-  const o = document.getElementById('mob-overlay');
-  s.classList.toggle('-translate-x-full');
-  o.classList.toggle('hidden');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.add('-translate-x-full');
-  document.getElementById('mob-overlay').classList.remove('hidden');
-  document.getElementById('mob-overlay').classList.add('hidden');
-}
-
-/* ── Toast ── */
-function toast(msg) {
-  const el = document.getElementById('admin-toast');
-  el.innerHTML = `<div class="toast-enter bg-gray-900 text-white text-sm px-5 py-3 rounded-full shadow-lg">${msg}</div>`;
-  setTimeout(() => el.innerHTML = '', 2800);
-}
-
-/* ── Logout ── */
-function logout() {
-  sessionStorage.removeItem('nd_admin');
-  sessionStorage.removeItem('nd_admin_user');
-  window.location.href = 'admin-login.html';
-}
-
-/* ── Fix sidebar on desktop ── */
-window.addEventListener('resize', () => {
-  if (window.innerWidth >= 1024) {
-    document.getElementById('sidebar').classList.remove('-translate-x-full');
-    document.getElementById('mob-overlay').classList.add('hidden');
-  }
-});
-if (window.innerWidth < 1024) {
-  document.getElementById('sidebar').classList.add('-translate-x-full');
-}
-
-/* ── Boot ── */
-init();
-</script>
+<script src="./assets/js/admin.js" defer></script>
 </body>
 </html>
