@@ -1,20 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════
-   products-data.js  —  NovaDrop Tech Product Catalog
-   Each product object:
-     id        : unique string
-     name      : product name
-     brand     : brand name (used for brand-filter pills)
-     type      : product type label shown on card (e.g. "Smartphone")
-     category  : top-level category slug — "phones" | "earphones" | "powerbanks" | "laptops"
-     price     : number (USD)
-     desc      : one-sentence description
-     specs     : array of short spec strings (shown as bullet badges)
-     image     : Unsplash URL (600×400, relevant query)
-     imageAlt  : accessible alt text
-     trending  : boolean
-     badge     : optional label string shown as a pill over image (e.g. "New", "Sale")
-═══════════════════════════════════════════════════════════════════ */
-
 const PRODUCTS = [
 
   /* ─────────────── PHONES ─────────────── */
