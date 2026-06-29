@@ -1,27 +1,27 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body>
-    <div id="register-box" class="fixed inset-0 bg-black/50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-xl shadow-lg w-96">
-            <div class="flex space-between justify-between items-center items-center ">
-                <h2 class="text-xl font-bold mb-5 mt-4">Register</h2>
-                <button onclick="closeRegister()" class="text-lg mb-3 mr-3">
-                    ❌
-                </button>
-            </div>
-            <form>
-                <input type="text" placeholder="Username" class="w-full border p-2 mb-3 rounded">
-                <input type="email" placeholder="Email" class="w-full border p-2 mb-3 rounded">
-                <input type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded">
-                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded mt-5">Sign Up</button>
-        </form>
-        </div>
-    </div>
-</body>
-</html>
+      
+      <div class="flex items-center gap-2">
+        <label for="sort-select" class="text-md text-gray-400 whitespace-nowrap">Sort:</label>
+        <select
+          id="sort-select"
+          onchange="sortProducts(this.value)"
+          class="text-md bg-white/80 border border-gray-200 rounded-xl px-3 py-1.5 text-gray-700 outline-none cursor-pointer focus:ring-2 focus:ring-indigo-300"
+        >
+          <option value="default">Featured</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+      <!-- Price range pills — separate row, NOT inside the <select> -->
+      <div class="flex items-center gap-2 flex-wrap" id="price-pills">
+        <button data-price="under500" class="price-pill text-sm font-bold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100 whitespace-nowrap" onclick="setPriceRange('under500')" aria-pressed="false">
+          Under $500
+        </button>
+        <button data-price="500to1000" class="price-pill text-sm font-bold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100 whitespace-nowrap" onclick="setPriceRange('500to1000')" aria-pressed="false">
+          $500 – $1000
+        </button>
+        <button data-price="above1000" class="price-pill text-sm font-bold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100 whitespace-nowrap" onclick="setPriceRange('above1000')" aria-pressed="false">
+          Above $1000
+        </button>
+      </div>

@@ -1,4 +1,23 @@
 
+// ─── DARK MODE SETUP ──────────────────────────────────────────
+function initTheme() {
+  if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+}
+initTheme(); // Run immediately to prevent flash of wrong theme
+
+function toggleTheme() {
+  document.documentElement.classList.toggle('dark');
+  if (document.documentElement.classList.contains('dark')) {
+    localStorage.setItem('theme', 'dark');
+  } else {
+    localStorage.setItem('theme', 'light');
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════════
     CART  (localStorage, prices normalised to numbers)
 ══════════════════════════════════════════════════════════════════ */
@@ -88,9 +107,9 @@ function injectNav(activePage) {
   const links = pages.map(p => {
     const active = p.label.toLowerCase() === activePage;
     return `<a href="${p.href}"
-      class="text-sm font-medium transition-colors ${active
-        ? 'text-gray-900 border-b-2 border-gray-900 pb-0.5'
-        : 'text-gray-500 hover:text-gray-900'}">${p.label}</a>`;
+      class="text-lg font-medium transition-colors ${active
+        ? 'text-gray-900 border-b-2 border-gray-900 pb-0.5 dark:text-white'
+        : 'text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'}">${p.label}</a>`;
   }).join('');
 
   const nav = document.getElementById('nd-nav');
@@ -99,18 +118,28 @@ function injectNav(activePage) {
   nav.innerHTML = `
     <div class="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
 
-      <a href="index.html" class="font-display font-bold text-xl tracking-tight text-gray-900">
-        ICT<span class="text-indigo-500">Tech</span>
-      </a>
-
-      <div class="hidden md:flex items-center gap-8">${links}</div>
-
+      <div class="flex items-center gap-8">
+        <a href="index.html" class="font-bold text-xl tracking-tight text-gray-900 dark:text-white flex-shrink-0">
+          ICT<span class="text-indigo-500">Tech</span>
+        </a>
+        <div class="hidden md:flex items-center gap-6">
+          ${links}
+        </div>
+      </div>
       <div class="flex items-center gap-2">
-
-        <!-- Cart — B2: only this button gets cart-badge -->
+        <button onclick="toggleTheme()" aria-label="Toggle Dark Mode"
+          class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <svg class="w-5 h-5 text-gray-700 dark:text-gray-300 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg class="w-5 h-5 text-gray-700 dark:text-gray-300 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+        <!-- Cart -->
         <button onclick="toggleCart()" aria-label="Open cart"
           class="relative p-2 rounded-xl hover:bg-gray-100 transition-colors">
-          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
           </svg>
@@ -118,10 +147,10 @@ function injectNav(activePage) {
             class="hidden absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
         </button>
 
-        <!-- User / Auth — B2: NO duplicate cart-badge here -->
+        <!-- User / Auth -->
         <button onclick="toggleAuth()" aria-label="Login or register"
           class="p-2 rounded-xl hover:bg-gray-100 transition-colors">
-          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z
                 M12 14c-3.31 0-6 2.69-6 6h12c0-3.31-2.69-6-6-6z"/>
@@ -140,10 +169,10 @@ function injectNav(activePage) {
 
     <!-- Mobile menu -->
     <div id="mobile-menu"
-      class="hidden md:hidden border-t border-gray-100 bg-white/90 backdrop-blur-md px-5 py-4 flex flex-col gap-3">
+      class="hidden md:hidden border-t border-gray-100 bg-white/90 dark:bg-neutral-900 backdrop-blur-md px-5 py-4 flex flex-col gap-3">
       ${pages.map(p => `
         <a href="${p.href}"
-          class="text-sm font-medium py-1.5 transition-colors ${p.label.toLowerCase() === activePage ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
+          class="text-sm font-medium py-1.5 transition-colors ${p.label.toLowerCase() === activePage ? 'text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
     }">${p.label}</a>`).join('')}
     </div>
   `;
@@ -165,11 +194,9 @@ function injectCartDrawer() {
   el.innerHTML = `
     <div id="cart-overlay" onclick="toggleCart()"
       class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[88] hidden"></div>
-    <div id="cart-drawer"
-      class="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white/95 backdrop-blur-xl z-[89] shadow-2xl
-              translate-x-full transition-transform duration-300 flex flex-col">
+    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white/95 backdrop-blur-xl z-[89] shadow-2xl translate-x-full transition-transform duration-300 flex flex-col dark:border-none dark:bg-neutral-800">
       <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-        <h2 class="font-display font-bold text-lg text-gray-900">Your Cart</h2>
+        <h2 class="font-display font-bold text-lg text-gray-900 dark:text-white">Your Cart</h2>
         <button onclick="toggleCart()" aria-label="Close cart"
           class="p-2 rounded-xl hover:bg-gray-100 transition-colors">
           <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,8 +204,8 @@ function injectCartDrawer() {
           </svg>
         </button>
       </div>
-      <div id="cart-items"  class="flex-1 overflow-y-auto px-6 py-4"></div>
-      <div id="cart-footer" class="px-6 py-5 border-t border-gray-100"></div>
+      <div id="cart-items"  class="flex-1 overflow-y-auto px-6 py-4 dark:bg-neutral-800 dark:text-white"></div>
+      <div id="cart-footer" class="px-6 py-5 border-t border-gray-100 dark:bg-neutral-800 dark:border-none"></div>
     </div>`;
   document.body.appendChild(el);
 }
@@ -228,9 +255,9 @@ function renderCartDrawer() {
 
     const thumb = item.image
       ? `<img src="${item.image}" alt="${item.imageAlt || item.name}"
-           class="w-full h-full object-cover object-center rounded-xl"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-         <span class="hidden w-full h-full items-center justify-center text-2xl">${categoryIcon}</span>`
+          class="w-full h-full object-cover object-center rounded-xl"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <span class="hidden w-full h-full items-center justify-center text-2xl">${categoryIcon}</span>`
       : `<span class="text-2xl">${categoryIcon}</span>`;
 
     return `
@@ -239,8 +266,8 @@ function renderCartDrawer() {
           ${thumb}
         </div>
         <div class="flex-1 min-w-0">
-          <p class="font-medium text-sm text-gray-900 truncate">${item.name}</p>
-          <p class="text-gray-400 text-[10px] uppercase tracking-wider">${item.brand}</p>
+          <p class="font-medium text-md text-gray-900 truncate dark:text-white">${item.name}</p>
+          <p class="text-gray-400 text-sm uppercase tracking-wider dark:text-white">${item.brand}</p>
           <p class="text-indigo-600 font-semibold text-sm mt-0.5">
             $${Number(item.price).toLocaleString()}
           </p>
@@ -271,7 +298,7 @@ function renderCartDrawer() {
   footerEl.innerHTML = `
     <div class="flex justify-between items-end mb-1">
       <span class="text-gray-500 text-sm">Subtotal</span>
-      <span class="font-bold text-gray-900 text-xl">
+      <span class="font-bold text-gray-900 text-xl dark:text-white">
         $${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </span>
     </div>
@@ -290,12 +317,11 @@ function injectAuthDrawer() {
   el.id = 'auth-drawer-wrapper';
   el.innerHTML = `
     <div id="auth-overlay" onclick="toggleAuth()"
-      class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[90] hidden"></div>
-    <div id="auth-drawer"
-      class="fixed top-0 right-0 h-full w-full sm:w-[380px] bg-white/95 backdrop-blur-xl z-[91] shadow-2xl
-              translate-x-full transition-transform duration-300 flex flex-col">
+      class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[90] hidden">
+    </div>
+    <div id="auth-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[380px] bg-white/95 backdrop-blur-xl z-[91] shadow-2xl translate-x-full transition-transform duration-300 flex flex-col dark:bg-neutral-800">
       <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-        <h2 id="auth-drawer-title" class="font-bold text-lg text-gray-900">Login</h2>
+        <h2 id="auth-drawer-title" class="font-bold text-lg text-gray-900 dark:text-white">Login</h2>
         <button onclick="toggleAuth()" aria-label="Close"
           class="p-2 rounded-xl hover:bg-gray-100 transition-colors">
           <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,7 +329,8 @@ function injectAuthDrawer() {
           </svg>
         </button>
       </div>
-      <div id="auth-drawer-body" class="flex-1 overflow-y-auto p-6"></div>
+      <div id="auth-drawer-body" class="flex-1 overflow-y-auto p-6">
+      </div>
     </div>`;
   document.body.appendChild(el);
 }
@@ -331,17 +358,19 @@ function renderAuthDrawer() {
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email</label>
         <input id="auth-email" type="email" placeholder="you@example.com"
           class="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none
-                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"/>
+                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all dark:text-white dark:bg-neutral-800 dark:border-gray-700
+              dark:placeholder-gray-400" "/>
       </div>
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
         <input id="auth-password" type="password" placeholder="••••••••"
           class="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none
-                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all dark:text-white dark:bg-neutral-800 dark:border-gray-700
+                dark:placeholder-gray-400""
           onkeydown="if(event.key==='Enter') handleLogin()"/>
       </div>
       <button onclick="handleLogin()"
-        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
+        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-sm transition-colors mt-5 mb-5">
         Login
       </button>
       <p class="text-sm text-center text-gray-500">
@@ -358,25 +387,28 @@ function showRegisterPanel(e) {
   const body = document.getElementById('auth-drawer-body');
   if (!body) return;
   body.innerHTML = `
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4 ">
       <div id="auth-message" class="hidden text-sm rounded-xl px-4 py-2.5"></div>
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Full name</label>
         <input id="auth-name" type="text" placeholder="Your name"
           class="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none
-                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"/>
+                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all dark:text-white dark:bg-neutral-800 dark:border-gray-700
+                dark:placeholder-gray-400 "/>
       </div>
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email</label>
         <input id="auth-email" type="email" placeholder="you@example.com"
           class="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none
-                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"/>
+                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all dark:text-white dark:bg-neutral-800 dark:border-gray-700
+                dark:placeholder-gray-400"/>
       </div>
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
         <input id="auth-password" type="password" placeholder="••••••••"
           class="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none
-                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all dark:text-white dark:bg-neutral-800 dark:border-gray-700
+                dark:placeholder-gray-400"
           onkeydown="if(event.key==='Enter') handleRegister()"/>
       </div>
       <button onclick="handleRegister()"
@@ -395,7 +427,7 @@ function handleLogin() {
   const email = document.getElementById('auth-email')?.value.trim();
   const password = document.getElementById('auth-password')?.value;
   if (!email || !password) { _authMsg('Please fill in both fields.', 'error'); return; }
-  if (email == CREDENTIALS.email || password == CREDENTIALS.password) {
+  if (email == CREDENTIALS.email && password == CREDENTIALS.password) {
     sessionStorage.setItem('nd_admin', 'true');
     sessionStorage.setItem('nd_admin_user', email);
     window.location.href = 'admin.html';

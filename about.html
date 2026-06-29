@@ -8,9 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script>
   tailwind.config = {
+    darkMode: 'class',
     theme: {
       extend: {
-        fontFamily: { display: ['sans-serif'], body: ['sans-serif'] }
+        fontFamily: { display: ['Syne','sans-serif'], body: ['Inter','sans-serif'] }
       }
     }
   }
@@ -22,24 +23,24 @@
   .fade-up.visible { opacity: 1; transform: translateY(0); }
 </style>
 </head>
-<body class="bg-gray-50 text-gray-900 antialiased">
-
-<!-- NAV -->
-<header id="nd-nav" class="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100/80 shadow-sm"></header>
+<body class="bg-white text-gray-900 dark:bg-neutral-900 dark:text-gray-100 antialiased transition-colors duration-200">
+  <!-- ─── GLOBAL NAV (injected by script.js) ─────────────────────── -->
+  <header id="nd-nav" class="fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-neutral-900 backdrop-blur-md border-b border-gray-100/80 dark:border-gray-800 shadow-sm transition-colors">
+  </header>
 
 <div class="pt-16">
 
   <!-- ─── HERO ──────────────────────────────────────────── -->
-  <section class="relative bg-gray-900 text-white py-24 overflow-hidden">
+  <section class="relative bg-gray-900 dark:bg-neutral-900 text-white py-24 overflow-hidden">
     <div class="absolute inset-0 opacity-10"
       style="background-image:linear-gradient(rgba(255,255,255,0.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.1) 1px,transparent 1px);background-size:48px 48px;"></div>
     <div class="absolute -top-20 -right-20 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="relative max-w-4xl mx-auto px-5 text-center">
-      <span class="inline-block text-xs font-semibold uppercase tracking-widest text-indigo-400 mb-4">Our Story</span>
-      <h1 class="font-display font-extrabold text-5xl sm:text-6xl text-white mb-6 ">ICT-Technology</h1>
+      <span class="inline-block text-sm font-semibold uppercase tracking-widest text-indigo-400 mb-4 dark:text-slate-500">Our Story</span>
+      <h1 class="font-display font-bold text-5xl sm:text-6xl text-white mb-6 ">ICT<p class="dark:text-slate-600">Technology</p></h1>
       <p class="text-gray-400 text-lg leading-relaxed max-w-2xl mx-auto">
-        ICTTech community was born from a simple realization: technology should feel exciting, not exhausting. 
-        Too often, finding the right phone, laptop, or accessory meant endless scrolling, 
+        ICTTech community was born from a simple realization: technology should feel exciting, not exhausting.
+        Too often, finding the right phone, laptop, or accessory meant endless scrolling,
         confusing prices, and worrying about authenticity.
       </p>
     </div>
@@ -60,17 +61,17 @@
         </div>
       </div>
       <div class="fade-up" style="transition-delay:0.1s">
-        <h2 class="font-display font-bold text-3xl text-gray-900 mb-5">How It Started</h2>
-        <p class="text-gray-500 leading-relaxed mb-4">
+        <h2 class="font-display font-bold text-3xl text-gray-900 mb-5 dark:text-slate-600 text-2xl">How It Started</h2>
+        <p class="text-gray-500 leading-relaxed mb-4 dark:text-white">
           In 2021, ICT began as an educational initiative dedicated to teaching essential technology skills. 
           Our programs covered a wide range of disciplines from programming languages such as Python and C++ to full‑stack development, cybersecurity, networking, and more. 
           We built a community where students could gain practical knowledge and prepare for the digital future.
         </p>
-        <p class="text-gray-500 leading-relaxed mb-4">
+        <p class="text-gray-500 leading-relaxed mb-4 dark:text-white">
           As our expertise grew, so did our vision. We recognized that technology is not only about learning how to build it, but also about making it accessible. 
           With this in mind, ICT expanded beyond education to become a trusted destination for technology products.
         </p>
-        <p class="text-gray-500 leading-relaxed">
+        <p class="text-gray-500 leading-relaxed dark:text-white">
           Today, ICT offers a curated selection of devices — phones, earphones, power banks, and laptops — from leading global brands. 
           Our mission remains the same: to empower people through technology, whether by teaching the skills to create it or by providing the tools to use it.
         </p>
@@ -79,24 +80,24 @@
   </section>
 
   <!-- ─── VALUES ──────────────────────────────────────────── -->
-  <section class="bg-white/60 backdrop-blur-md border-y border-gray-100 py-20">
+  <section class="bg-neutral00 backdrop-blur-md border-y border-gray-100 py-20 dark:bg-neutral-900 dark:border-none">
     <div class="max-w-4xl mx-auto px-5">
-      <h2 class="font-display font-bold text-3xl text-gray-900 mb-10 text-center fade-up">What We Stand For</h2>
+      <h2 class=" font-bold text-3xl text-gray-900 mb-10 text-center fade-up dark:text-slate-600">What We Stand For</h2>
       <div class="grid sm:grid-cols-3 gap-6">
         <div class="fade-up text-center p-6">
           <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">⚡</div>
           <h3 class="font-display font-bold text-gray-900 mb-2">Reliability</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">          We deliver technology you can depend on — fast processing, secure transactions, and timely shipping</p>
+          <p class="text-gray-400 text-md leading-relaxed dark:text-white"> We deliver technology you can depend on fast processing, secure transactions, and timely shipping</p>
         </div>
         <div class="fade-up text-center p-6" style="transition-delay:0.1s">
           <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">🤝</div>
           <h3 class="font-display font-bold text-gray-900 mb-2">Authenticity</h3>
-          <p class="text-gray-400 text-sm leading-relaxed"> Every device is sourced directly from authorized distributors. Genuine products, no compromises.</p>
+          <p class="text-gray-400 text-md leading-relaxed  dark:text-white"> Every device is sourced directly from authorized distributors. Genuine products, no compromises.</p>
         </div>
         <div class="fade-up text-center p-6" style="transition-delay:0.2s">
           <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">🌏</div>
           <h3 class="font-display font-bold text-gray-900 mb-2">Innovation</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">Built in Southeast Asia with a global outlook — connecting communities to the latest in technology.</p>
+          <p class="text-gray-400 text-md leading-relaxed  dark:text-white">Built in Southeast Asia with a global outlook connecting communities to the latest in technology.</p>
         </div>
       </div>
     </div>
@@ -104,7 +105,7 @@
 
   <!-- ─── TEAM ──────────────────────────────────────────── -->
   <section class="max-w-4xl mx-auto px-5 py-20">
-    <h2 class="font-display font-bold text-3xl text-gray-900 mb-10 text-center fade-up">The Team</h2>
+    <h2 class="font-display font-bold text-3xl text-gray-900 mb-10 text-center fade-up dark:text-white">The Team</h2>
     <div class="grid sm:grid-cols-3 gap-6">
       <div class="fade-up bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm p-6 text-center">
         <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">😎</div>
@@ -128,9 +129,9 @@
   </section>
 
   <!-- ─── CTA ──────────────────────────────────────────── -->
-  <section class="bg-neutral-50 border-t border-indigo-100 py-16 text-center">
+  <section class="bg-neutral-50 border-t border-indigo-100 py-16 text-center dark:bg-neutral-900 dark:border-none">
     <div class="max-w-xl mx-auto px-5">
-      <h2 class="font-display font-bold text-3xl text-gray-900 mb-3">Find the perfect gift</h2>
+      <h2 class="font-display font-bold text-3xl text-gray-900 mb-3 dark:text-slate-600">Find the perfect gift</h2>
       <p class="text-gray-500 mb-6">The tech is here. Don't wait.</p>
       <a href="shop.html" class="inline-block bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-8 py-4 rounded-2xl text-sm transition-colors">
         Go to Shop →
@@ -141,9 +142,9 @@
 </div>
 
 <!-- ─── FOOTER ──────────────────────────────────────────── -->
-<footer class="bg-gray-50 border-t border-gray-100 py-8">
-  <div class="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-    <span class="font-display font-bold text-gray-900">ICT<span class="text-indigo-500">Tech</span></span>
+<footer class="bg-gray-50 border-t border-gray-100 py-8 dark:bg-neutral-900 dark:border-none ">
+  <div class="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-md text-gray-400">
+    <span class="font-display font-bold text-gray-900 dark:text-white">ICT<span class="text-indigo-500">Tech</span></span>
     <span>© 2025  ICTTech. All rights reserved.</span>
     <div class="flex gap-5">
       <a href="about.html" class="hover:text-gray-700 transition-colors">About</a>

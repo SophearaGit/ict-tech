@@ -389,8 +389,6 @@ const PRODUCTS = [
     badge: "Sale"
   }
 ];
-
-
 /* ── Storage helpers ── */
 const LS_KEY = 'nd_products';
 function loadProducts() {
@@ -823,6 +821,26 @@ window.addEventListener('resize', () => {
 if (window.innerWidth < 1024) {
   document.getElementById('sidebar').classList.add('-translate-x-full');
 }
+
+  // Dark theme toggle
+    function initTheme() {
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+  initTheme(); // Run immediately to prevent flash of wrong theme
+
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    if (document.documentElement.classList.contains('dark')) {
+      localStorage.setItem('theme', 'dark');
+    } else {
+      localStorage.setItem('theme', 'light');
+    }
+  }
+
 
 
 localStorage.removeItem('nd_products');

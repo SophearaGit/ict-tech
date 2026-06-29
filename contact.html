@@ -9,15 +9,16 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
     rel="stylesheet" />
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { display: ['sans-serif'], body: ['sans-serif'] }
-        }
+    <script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: { display: 'sans-serif', body: 'sans-serif'}
       }
     }
-  </script>
+  }
+</script>
   <style>
     body {
       font-family: sans-serif;
@@ -51,20 +52,18 @@
   </style>
 </head>
 
-<body class="bg-gray-50 text-gray-900 antialiased">
-
-  <!-- NAV -->
-  <header id="nd-nav"
-    class="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100/80 shadow-sm"></header>
-
+<body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 antialiased transition-colors duration-200 dark:bg-neutral-900">
+  <!-- ─── GLOBAL NAV (injected by script.js) ─────────────────────── -->
+  <header id="nd-nav" class="fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-neutral-900 backdrop-blur-md border-b border-gray-100/80 dark:border-gray-800 shadow-sm transition-colors">
+  </header>
   <div class="pt-16">
 
     <!-- ─── HERO ──────────────────────────────────────────── -->
-    <section class="bg-white/70 backdrop-blur-md border-b border-gray-100 py-14 text-center">
+    <section class="bg-white/70 backdrop-blur-md border-b border-gray-100 py-14 text-center dark:bg-neutral-900 dark:border-none">
       <div class="max-w-2xl mx-auto px-5">
-        <span class="inline-block text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-3">Get in
+        <span class="inline-block text-md font-sbold uppercase tracking-widest text-indigo-500 mb-3 dark:text-slate-600">Get in
           Touch</span>
-        <h1 class="font-extrabold text-3xl sm:text-5xl text-gray-900 mb-5 tracking-tight">We'd love to hear<br />from
+        <h1 class="font-extrabold text-3xl sm:text-5xl text-gray-900 mb-5 tracking-tight dark:text-white">We'd love to hear<br />from
           you.</h1>
         <p class="text-gray-400 text-base">Questions about a spec of tech, an order, We reply within 24 hours.</p>
       </div>
@@ -75,13 +74,13 @@
 
       <!-- Left info -->
       <div class="md:col-span-2 fade-up">
-        <h2 class="font-display font-bold text-xl text-gray-900 mb-6">Contact Info</h2>
+        <h2 class="font-display font-bold text-xl text-gray-900 mb-6 dark:text-slate-600">Contact Info</h2>
         <div class="space-y-5">
           <div class="flex items-start gap-4">
             <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">📍
             </div>
             <div>
-              <p class="font-semibold text-sm text-gray-800">Location</p> <a
+              <p class="font-semibold text-md text-gray-800 dark:text-white">Location</p> <a
                 href="https://maps.app.goo.gl/3568UAgzxBwvwL9S7" target="_blank">
                 <span class="contact-text text-gray-500">
                   ផ្ទះលេខ 240B ផ្លូវ 132 ភូមិ06 សង្កាត់ទឹកល្អក់ទី01 ខណ្ឌទួលគោក រាជធានីភ្នំពេញ
@@ -93,7 +92,7 @@
             <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">📧
             </div>
             <div>
-              <p class="font-semibold text-sm text-gray-800">Email</p>
+              <p class="font-semibold text-md text-gray-800 dark:text-white">Email</p>
               <a href="mailto:hello@novadrop.com"
                 class="text-indigo-500 text-sm hover:underline mt-0.5 block">ICTCenter@gmail.com</a>
             </div>
@@ -102,7 +101,7 @@
             <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">📱
             </div>
             <div>
-              <p class="font-semibold text-sm text-gray-800">Telegram</p>
+              <p class="font-semibold text-md text-gray-800 dark:text-white mb-2">Telegram</p>
               <a href="#" class="text-indigo-500 text-sm hover:underline mt-0.5 block">
                 <ul>
                   <li> 092 702 175 </li>
@@ -115,7 +114,7 @@
             <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">⏰
             </div>
             <div>
-              <p class="font-semibold text-sm text-gray-800">Hours</p>
+              <p class="font-semibold text-md text-gray-800 dark:text-white">Hours</p>
               <p class="text-gray-400 text-sm mt-0.5">Mon – Sat: 9am – 6pm<br />Sunday: Closed</p>
             </div>
           </div>
@@ -123,24 +122,24 @@
 
         <!-- FAQ teaser -->
         <div class="mt-8 bg-indigo-50 rounded-2xl p-5 border border-indigo-100">
-          <h3 class="font-display font-bold text-gray-900 text-sm mb-3">Quick Questions</h3>
-          <div class="space-y-3 text-sm text-gray-500">
+          <h3 class="font-display font-bold text-gray-900 text-md mb-3">Quick Questions</h3>
+          <div class="space-y-3 text-sm text-gray-500 dark:text-gray-600">
             <details class="group">
               <summary class="cursor-pointer font-medium text-gray-700 group-open:text-indigo-600 transition-colors">How
                 long does shipping take?</summary>
-              <p class="mt-1 text-gray-400 text-xs leading-relaxed pl-2">Phnom Penh orders: 1 days. Provinces: 2-4 days.
+              <p class="mt-1 text-gray-400 text-xs leading-relaxed pl-2 dark:text-gray-600">Phnom Penh orders: 1 days. Provinces: 2-4 days.
                 International: 5–14 days.</p>
             </details>
             <details class="group">
               <summary class="cursor-pointer font-medium text-gray-700 group-open:text-indigo-600 transition-colors">Can
                 I return my order?</summary>
-              <p class="mt-1 text-gray-400 text-xs leading-relaxed pl-2">Yes, 30-day hassle-free returns on unworn items
+              <p class="mt-1 text-gray-400 text-xs leading-relaxed pl-2 dark:text-gray-600">Yes, 30-day hassle-free returns on unworn items
                 in original packaging.</p>
             </details>
             <details class="group">
               <summary class="cursor-pointer font-medium text-gray-700 group-open:text-indigo-600 transition-colors">Are
                 the products authentic?</summary>
-              <p class="mt-1 text-gray-400 text-xs leading-relaxed pl-2">100%. We source directly from authorized
+              <p class="mt-1 text-gray-400 text-xs leading-relaxed pl-2 dark:text-gray-600">100%. We source directly from authorized
                 distributors only.</p>
             </details>
           </div>
@@ -215,10 +214,10 @@
   </div>
 
   <!-- FOOTER -->
-  <footer class="bg-gray-50 border-t border-gray-100 py-8">
+  <footer class="bg-gray-50 dark:bg-neutral-900 border-t border-gray-100 py-8 dark:border-none">
     <div
-      class="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-      <span class="font-display font-bold text-gray-900">ICT<span class="text-indigo-500">Tech</span></span>
+      class="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-md text-gray-400">
+      <span class="font-bold text-gray-900 dark:text-white">ICT<span class="text-indigo-500">Tech</span></span>
       <span>© 2025 ICTTech. All rights reserved.</span>
       <div class="flex gap-5">
         <a href="about.html" class="hover:text-gray-700 transition-colors">About</a>
