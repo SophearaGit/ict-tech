@@ -1,36 +1,37 @@
 /* ═══════════════════════════════════════════════════════════════════
-   shop.js  —  NovaDrop Tech Shop Logic
-   Depends on: products-data.js (loaded before this file)
+    shop.js  —  NovaDrop Tech Shop Logic
+    Depends on: products-data.js (loaded before this file)
 ═══════════════════════════════════════════════════════════════════ */
 
 /* ── State ── */
-let filteredList   = [...PRODUCTS];
-let activeCategory = "all";      // "all" | category slug
-let activeBrand    = "all";      // "all" | brand id (lowercase)
-let activeStatus   = "all";      // "all" | "trending"
-let currentSort    = "default";
+let filteredList     = [...PRODUCTS];
+let activeCategory   = "all";      // "all" | category slug
+let activeBrand      = "all";      // "all" | brand id (lowercase)
+let activeStatus     = "all";      // "all" | "trending"
+let activePriceRange = "all";      // "all" | "under500" | "500to1000" | "above1000"
+let currentSort      = "default";
 
 /* ══════════════════════════════════════════════════════════════════
-   CARD TEMPLATE
-   Pure function — takes a product object, returns an HTML string.
-   Accessible: uses <article>, role="img" aria-label on image area,
-   meaningful alt text on <img>.
+    CARD TEMPLATE
+    Pure function — takes a product object, returns an HTML string.
+    Accessible: uses <article>, role="img" aria-label on image area,
+    meaningful alt text on <img>.
 ══════════════════════════════════════════════════════════════════ */
 function productCardHTML(p, index) {
   const specBadges = p.specs
-    .map(s => `<span class="inline-block bg-gray-100 text-gray-500 text-[10px] font-medium px-2 py-0.5 rounded-full">${s}</span>`)
+    .map(s => `<span class="inline-block bg-gray-100 text-gray-500 text-[11px] font-medium px-2 py-0.5 rounded-full">${s}</span>`)
     .join("");
 
   const trendingBadge = p.trending
     ? `<span class="absolute top-3 left-3 z-10 bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full">
-         Trending
-       </span>`
+        Trending
+      </span>`
     : "";
 
   const labelBadge = p.badge
     ? `<span class="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm text-gray-700 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-sm border border-gray-100">
-         ${p.badge}
-       </span>`
+        ${p.badge}
+        </span>`
     : "";
 
   // Serialise for the cart button — escape quotes so it's safe in an attribute
@@ -38,7 +39,7 @@ function productCardHTML(p, index) {
 
   return `
     <article
-      class="product-card group bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col"
+      class="product-card dark:bg-neutral-800 dark:border-none group bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col"
       style="animation-delay:${index * 40}ms"
       aria-label="${p.name} by ${p.brand}"
     >
@@ -67,30 +68,26 @@ function productCardHTML(p, index) {
         </div>
 
         <!-- Name -->
-        <h3 class="font-semibold text-gray-900 text-sm leading-snug mb-1.5">
+        <h3 class=" dark:text-white font-bold text-gray-900 text-md leading-snug mb-1.5 ">
           ${p.name}
         </h3>
 
         <!-- Description -->
-        <p class="text-gray-400 text-xs leading-relaxed mb-2.5 line-clamp-2 flex-1">
+        <p class=" dark:text-white text-gray-400 text-sm leading-relaxed mb-2.5 line-clamp-2 flex-1">
           ${p.desc}
         </p>
 
         <!-- Spec badges -->
-        <div class="flex flex-wrap gap-1 mb-3" aria-label="Key specifications">
+        <div class="flex flex-wrap gap-1 mb-4 mt-3" aria-label="Key specifications">
           ${specBadges}
         </div>
 
         <!-- Price + CTA -->
         <div class="flex items-center justify-between mt-auto">
-          <span class="font-bold text-gray-900 text-base" aria-label="Price: $${p.price}">
+          <span class="font-bold text-gray-900 dark:text-white text-base" aria-label="Price: $${p.price}">
             $${p.price.toLocaleString()}
           </span>
-          <button
-            onclick="Cart.add(${productJSON})"
-            aria-label="Add ${p.name} to cart"
-            class="bg-gray-900 hover:bg-indigo-500 focus:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 text-white text-xs font-semibold px-4 py-2 rounded-full transition-colors duration-200 active:scale-95"
-          >
+          <button onclick="Cart.add(${productJSON})" aria-label="Add ${p.name} to cart" class="bg-gray-900 hover:bg-indigo-500 dark:hover:bg-indigo-500 dark:bg-neutral-900 focus:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 text-white text-xs font-semibold px-4 py-2 rounded-full transition-colors duration-200 active:scale-95" >
             Add to cart
           </button>
         </div>
@@ -99,7 +96,7 @@ function productCardHTML(p, index) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   RENDER PRODUCTS
+    RENDER PRODUCTS
 ══════════════════════════════════════════════════════════════════ */
 function renderProducts(list) {
   const grid  = document.getElementById("product-grid");
@@ -125,7 +122,7 @@ function renderProducts(list) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   FILTER & SORT PIPELINE
+    FILTER & SORT PIPELINE
 ══════════════════════════════════════════════════════════════════ */
 function applyFilters(searchQuery = "") {
   const q = searchQuery.toLowerCase().trim();
@@ -147,7 +144,17 @@ function applyFilters(searchQuery = "") {
     base = base.filter(p => p.trending);
   }
 
-  // 4. Free-text search across name, brand, type, category, desc, specs
+  // 4. Price range
+  if (activePriceRange !== "all") {
+    base = base.filter(p => {
+      if (activePriceRange === "under500")  return p.price < 500;
+      if (activePriceRange === "500to1000") return p.price >= 500 && p.price <= 1000;
+      if (activePriceRange === "above1000") return p.price > 1000;
+      return true;
+    });
+  }
+
+  // 5. Free-text search across name, brand, type, category, desc, specs
   if (q) {
     base = base.filter(p =>
       p.name.toLowerCase().includes(q)        ||
@@ -159,7 +166,7 @@ function applyFilters(searchQuery = "") {
     );
   }
 
-  // 5. Sort
+  // 6. Sort
   base = sortList(base, currentSort);
 
   filteredList = base;
@@ -174,6 +181,31 @@ function sortList(list, method) {
   return arr; // "default" / featured order
 }
 
+/* ══════════════════════════════════════════════════════════════════
+    PRICE FILTER
+    Sets state and routes through applyFilters() so it composes with
+    category, brand, trending, search, and sort — instead of
+    rendering its own isolated result set.
+══════════════════════════════════════════════════════════════════ */
+function setPriceRange(range) {
+  // Toggle off if already active
+  activePriceRange = activePriceRange === range ? "all" : range;
+
+  document.querySelectorAll(".price-pill").forEach(btn => {
+    const active = btn.dataset.price === activePriceRange;
+    btn.classList.toggle("bg-gray-900",     active);
+    btn.classList.toggle("text-white",      active);
+    btn.classList.toggle("hover:bg-",      active);
+    btn.classList.toggle("border-gray-900", active);
+    btn.classList.toggle("bg-white/70",    !active);
+    btn.classList.toggle("text-gray-600",  !active);
+    btn.classList.toggle("border-gray-200",!active);
+    btn.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+
+  applyFilters(document.getElementById("search-input")?.value || "");
+}
+
 /* ── Exposed sort function (called by the <select> in HTML) ── */
 function sortProducts(method) {
   currentSort = method;
@@ -181,8 +213,8 @@ function sortProducts(method) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   CATEGORY FILTER
-   Drives the category-strip tabs AND the filter state.
+    CATEGORY FILTER
+    Drives the category-strip tabs AND the filter state.
 ══════════════════════════════════════════════════════════════════ */
 function setCategory(slug) {
   activeCategory = slug;
@@ -209,7 +241,7 @@ function setCategory(slug) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   BRAND FILTER
+    BRAND FILTER
 ══════════════════════════════════════════════════════════════════ */
 function setBrand(brandId) {
   // Toggle off if already active
@@ -234,7 +266,7 @@ function setBrandPillState(btn, active) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   TRENDING TOGGLE (filter-pill with data-filter="trending")
+    TRENDING TOGGLE (filter-pill with data-filter="trending")
 ══════════════════════════════════════════════════════════════════ */
 function setFilter(filterVal) {
   activeStatus = activeStatus === filterVal ? "all" : filterVal;
@@ -254,13 +286,14 @@ function setFilter(filterVal) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   CLEAR ALL
+    CLEAR ALL
 ══════════════════════════════════════════════════════════════════ */
 function clearAll() {
-  activeCategory = "all";
-  activeBrand    = "all";
-  activeStatus   = "all";
-  currentSort    = "default";
+  activeCategory   = "all";
+  activeBrand      = "all";
+  activeStatus     = "all";
+  activePriceRange = "all";
+  currentSort      = "default";
 
   const input = document.getElementById("search-input");
   if (input) input.value = "";
@@ -280,6 +313,11 @@ function clearAll() {
     b.classList.remove("bg-gray-900","text-white");
     b.classList.add("bg-white/70","text-gray-600","border","border-gray-200");
   });
+  document.querySelectorAll(".price-pill").forEach(b => {
+    b.classList.remove("bg-gray-900","text-white","border-gray-900");
+    b.classList.add("bg-white/70","text-gray-600","border-gray-200");
+    b.setAttribute("aria-pressed", "false");
+  });
 
   const sortEl = document.getElementById("sort-select");
   if (sortEl) sortEl.value = "default";
@@ -294,9 +332,9 @@ function clearSearch() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   DYNAMIC PILL BUILDER
-   Reads CATEGORIES and BRANDS from products-data.js and
-   injects the HTML into #category-tabs and #brand-pills.
+    DYNAMIC PILL BUILDER
+    Reads CATEGORIES and BRANDS from products-data.js and
+    injects the HTML into #category-tabs and #brand-pills.
 ══════════════════════════════════════════════════════════════════ */
 function buildFilterUI() {
   // ── Category tabs ──────────────────────────────────────────────
@@ -307,15 +345,14 @@ function buildFilterUI() {
         data-category="all"
         onclick="setCategory('all')"
         aria-pressed="true"
-        class="cat-tab text-xs font-semibold px-4 py-2 rounded-full border transition-all duration-200 bg-gray-900 text-white border-gray-900 whitespace-nowrap"
-      >All Products</button>`;
-
+        class="cat-tab text-sm font-bold px-4 py-2 rounded-full border transition-all duration-200 bg-gray-900 text-white border-gray-900 whitespace-nowrap dark:border-none" >All Products</button>`;
+    // render cat button
     const catTabs = CATEGORIES.map(c => `
       <button
         data-category="${c.slug}"
         onclick="setCategory('${c.slug}')"
         aria-pressed="false"
-        class="cat-tab text-xs font-semibold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100 whitespace-nowrap flex items-center gap-1.5"
+        class="cat-tab text-sm font-bold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100 whitespace-nowrap flex items-center gap-1.5 dark:border-none"
       >
         <span aria-hidden="true">${c.icon}</span>${c.label}
       </button>`).join("");
@@ -331,13 +368,13 @@ function buildFilterUI() {
         data-brand="${b.id}"
         onclick="setBrand('${b.id}')"
         aria-pressed="false"
-        class="brand-pill text-xs font-semibold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100 whitespace-nowrap"
+        class="brand-pill text-sm font-bold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100 whitespace-nowrap dark:border-none"
       >${b.label}</button>`).join("");
   }
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   INIT
+    INIT
 ══════════════════════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
   buildFilterUI();
