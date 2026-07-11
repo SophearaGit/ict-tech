@@ -83,7 +83,7 @@ function productCardHTML(p, index) {
         </div>
 
         <!-- Price + CTA -->
-        <div class="flex items-center justify-between mt-auto">
+        <div class="flex flex-wrap items-center justify-between gap-2 mt-auto">
           <span class="font-bold text-gray-900 dark:text-white text-base" aria-label="Price: $${p.price}">
             $${p.price.toLocaleString()}
           </span>

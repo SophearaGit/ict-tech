@@ -466,12 +466,12 @@ function renderRecentTable() {
   const tbody = document.getElementById('recent-tbody');
   const recent = [...products].slice(-6).reverse();
   tbody.innerHTML = recent.map(p => `
-    <tr class="trow border-b border-gray-50 last:border-0">
+    <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0">
       <td class="px-5 py-3 flex items-center gap-3">
-        <span class="text-sm font-medium text-gray-800 truncate max-w-[200px]">${p.name}</span>
+        <span class="text-sm font-medium text-gray-800 dark:text-white truncate max-w-[200px]">${p.name}</span>
       </td>
-      <td class="px-3 py-3 text-sm font-semibold text-gray-900">$${p.price}</td>
-      <td class="px-3 py-3 text-sm text-gray-600">${p.qty}</td>
+      <td class="px-3 py-3 text-sm font-semibold text-gray-900 dark:text-white">$${p.price}</td>
+      <td class="px-3 py-3 text-sm text-gray-600 dark:text-white">${p.qty}</td>
       <td class="px-3 py-3">${statusBadge(p)}</td>
     </tr>`).join('');
 }
@@ -520,22 +520,22 @@ function renderProductsTable() {
   empty.classList.add('hidden');
 
   tbody.innerHTML = list.map(p => `
-    <tr class="trow border-b border-gray-50 last:border-0">
+    <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0">
       <td class="px-5 py-3.5">
         <div class="flex items-center gap-3">
           <span class="text-base">${p.emoji || "📦"}</span>
           <div>
-            <p class="text-sm font-medium text-gray-900">${p.name}</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">${p.name}</p>
             ${p.trending ? `<span class="text-[10px] text-indigo-500 font-semibold">🔥 Trending</span>` : ''}
           </div>
         </div>
       </td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 hidden sm:table-cell">${p.brand}</td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 hidden md:table-cell">${p.category}</td>
-      <td class="px-3 py-3.5 text-sm font-semibold text-gray-900">$${p.price}</td>
+      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${p.brand}</td>
+      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden md:table-cell">${p.category}</td>
+      <td class="px-3 py-3.5 text-sm font-semibold text-gray-900 dark:text-white">$${p.price}</td>
       <td class="px-3 py-3.5">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-gray-700 w-8 text-right">${p.qty}</span>
+          <span class="text-sm font-medium text-gray-700 dark:text-white w-8 text-right">${p.qty}</span>
           <div class="flex gap-1">
             <button onclick="quickQty('${p.id}',-1)" title="Remove 1"
               class="w-6 h-6 rounded-md bg-gray-100 hover:bg-red-100 hover:text-red-600 text-gray-600 flex items-center justify-center text-sm font-bold transition-colors">−</button>
@@ -572,17 +572,17 @@ function renderInventoryTable() {
     const pct = Math.round((p.qty / max) * 100);
     const barColor = statusOf(p) === 'out' ? 'bg-red-400' : statusOf(p) === 'low' ? 'bg-amber-400' : 'bg-green-400';
     return `
-    <tr class="trow border-b border-gray-50 last:border-0">
+    <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0">
       <td class="px-5 py-3.5">
         <div class="flex items-center gap-2">
-          <p class="text-sm font-medium text-gray-800">${p.name}</p>
+          <p class="text-sm font-medium text-gray-800 dark:text-white">${p.name}</p>
         </div>
       </td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 hidden sm:table-cell">${p.brand}</td>
-      <td class="px-3 py-3.5 text-sm font-bold text-gray-900">${p.qty}</td>
+      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${p.brand}</td>
+      <td class="px-3 py-3.5 text-sm font-bold text-gray-900 dark:text-white">${p.qty}</td>
       <td class="px-3 py-3.5">${statusBadge(p)}</td>
       <td class="px-3 py-3.5 w-36 hidden md:table-cell">
-        <div class="bg-gray-100 rounded-full h-2 overflow-hidden">
+        <div class="bg-gray-100 dark:bg-neutral-600 rounded-full h-2 overflow-hidden">
           <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width:${pct}%"></div>
         </div>
       </td>
@@ -731,6 +731,10 @@ function showView(view) {
   document.getElementById('topbar-search').classList.toggle('hidden', view !== 'products' && view !== 'inventory');
 
   if (view === 'add' && !editingId) resetAddForm();
+
+  // Auto-close the mobile sidebar after navigating so its overlay doesn't
+  // keep blocking the view that was just opened.
+  if (window.innerWidth < 1024 && typeof closeSidebar === 'function') closeSidebar();
 }
 
 function resetAddForm() {
@@ -740,7 +744,6 @@ function resetAddForm() {
   document.getElementById('f-category').value = '';
   document.getElementById('f-price').value = '';
   document.getElementById('f-qty').value = '';
-  document.getElementById('f-emoji').value = '👟';
   document.getElementById('f-desc').value = '';
   document.getElementById('f-trending').checked = false;
   document.getElementById('form-title').textContent = 'Add New Product';
@@ -760,7 +763,6 @@ function submitProductForm() {
   const category = document.getElementById('f-category').value;
   const price    = parseFloat(document.getElementById('f-price').value);
   const qty      = parseInt(document.getElementById('f-qty').value);
-  const emoji    = document.getElementById('f-emoji').value.trim() || '👟';
   const desc     = document.getElementById('f-desc').value.trim();
   const trending = document.getElementById('f-trending').checked;
   const errEl    = document.getElementById('form-error');
@@ -774,11 +776,11 @@ function submitProductForm() {
 
   if (editingId) {
     const p = products.find(x => x.id === editingId);
-    Object.assign(p, {name, brand, category, price, qty, emoji, desc, trending});
+    Object.assign(p, {name, brand, category, price, qty, desc, trending});
     toast('Product updated!');
   } else {
     const newId = 'p' + Date.now();
-    products.push({id:newId, name, brand, category, price, qty, emoji, desc, trending});
+    products.push({id:newId, name, brand, category, price, qty, desc, trending});
     toast('Product added to catalog!');
   }
 
@@ -795,8 +797,6 @@ function toggleSidebar() {
   s.classList.toggle('-translate-x-full');
   o.classList.toggle('hidden');
 }
-const sidebar = document.getElementById('sidebar-btn');
-sidebar.addEventListener('click', toggleSidebar);
 /* ── Toast ── */
 function toast(msg) {
   const el = document.getElementById('admin-toast');
@@ -839,6 +839,7 @@ if (window.innerWidth < 1024) {
     } else {
       localStorage.setItem('theme', 'light');
     }
+    if (typeof window.refreshAnalyticsTheme === 'function') window.refreshAnalyticsTheme();
   }
 
 
