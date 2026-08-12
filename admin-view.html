@@ -6,6 +6,7 @@
 <title>Admin Dashboard — ICTTech</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="./assets/css/glass.css" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <!-- <script>tailwind.config={theme:{extend:{fontFamily:{display:['Syne','sans-serif'],body:['Inter','sans-serif']}}}}</script> -->
@@ -62,11 +63,11 @@
   .tab-btn.active-tab{border-bottom:2px solid #6366f1;color:#4f46e5;font-weight:600;}
 </style>
 </head>
-<body class="flex bg-white dark:bg-neutral-800">
+<body class="flex bg-gray-50 dark:bg-neutral-800">
 <!-- ══════════════════════════════════════════════
     SIDEBAR
 ══════════════════════════════════════════════ -->
-  <aside id="sidebar" class="sidebar fixed dark:bg-neutral-800 dark:border-none top-0 left-0 h-full w-64 max-w-[85vw] bg-white border-r border-gray-100 shadow-sm z-40 flex flex-col -translate-x-full lg:translate-x-0">
+  <aside id="sidebar" class="sidebar glass-nav fixed dark:bg-neutral-800 dark:border-none top-0 left-0 h-full w-64 max-w-[85vw] bg-white border-r border-gray-100 shadow-sm z-40 flex flex-col -translate-x-full lg:translate-x-0">
     <!-- Logo -->
     <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between dark:border-none">
         <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-sm">
@@ -118,7 +119,7 @@
           <p class="text-[10px] text-gray-400">Super Admin</p>
         </div>
       </div>
-      <button onclick="logout()" title="Logout" class="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-red-500">
+      <button onclick="logout()" title="Logout" class="glass-icon-btn border border-transparent p-1.5 rounded-lg transition-colors text-gray-400 hover:text-red-500">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
       </button>
     </div>
@@ -132,10 +133,10 @@
 ══════════════════════════════════════════════ -->
   <div class="w-full lg:ml-64 flex flex-col dark:bg-neutral-800 dark:border-none">
     <!-- Top bar -->
-    <div class="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-100 px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2 dark:bg-neutral-800 dark:border-none">
+    <div class="glass-nav sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-100 px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2 dark:bg-neutral-800 dark:border-none">
       <!-- Left -->
       <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-        <button onclick="toggleSidebar()" class="p-2 rounded-xl hover:bg-gray-100 transition-colors dark:hover:bg-neutral-800 shrink-0">
+        <button onclick="toggleSidebar()" class="glass-icon-btn border border-transparent p-2 rounded-xl transition-colors shrink-0">
           <svg id="sidebar-btn" class="w-5 h-5 text-neutral-800 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <h2 id="page-title" class="font-display font-bold text-base sm:text-lg text-gray-900 dark:text-white truncate">Dashboard</h2>
@@ -153,7 +154,7 @@
           <span class="hidden sm:inline">Add Product</span>
         </button>
         <button onclick="toggleTheme()" aria-label="Toggle Dark Mode"
-            class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0">
+            class="glass-icon-btn border border-transparent p-2 rounded-xl transition-colors shrink-0">
             <svg class="w-5 h-5 text-neutral-800 dark:text-gray-300 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
@@ -175,7 +176,7 @@
 
           <!-- KPI cards -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
-            <div class="bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
+            <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
               <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Visitors</span>
                 <div class="w-8 h-8 bg-indigo-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
@@ -185,7 +186,7 @@
               <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-visitors">0</p>
               <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">last 14 days</p>
             </div>
-            <div class="bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
+            <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
               <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Purchases</span>
                 <div class="w-8 h-8 bg-green-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
@@ -195,7 +196,7 @@
               <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-purchases">0</p>
               <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">last 14 days</p>
             </div>
-            <div class="bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
+            <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
               <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Conversion Rate</span>
                 <div class="w-8 h-8 bg-amber-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
@@ -208,7 +209,7 @@
           </div>
 
           <!-- Chart -->
-          <div class="bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
+          <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-4">
               <h4 class="font-display font-bold text-sm text-gray-900 dark:text-white">Visitors vs Purchases</h4>
               <div class="flex items-center gap-3 text-[10px] text-gray-400 dark:text-gray-300">
@@ -224,7 +225,7 @@
 
         <!-- Stat cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none">
+          <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none">
             <div class="flex items-center justify-between mb-3">
               <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Total Products</span>
               <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0">
@@ -234,7 +235,7 @@
             <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="stat-total">0</p>
             <p class="text-xs text-gray-400 mt-1 dark:text-white">in catalog</p>
           </div>
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none">
+          <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none">
             <div class="flex items-center justify-between mb-3">
               <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide dark:text-white">In Stock</span>
               <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
@@ -244,7 +245,7 @@
             <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="stat-instock">0</p>
             <p class="text-xs text-gray-400 mt-1 dark:text-white">products available</p>
           </div>
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none">
+          <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none">
             <div class="flex items-center justify-between mb-3">
               <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Low Stock</span>
               <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center shrink-0">
@@ -254,7 +255,7 @@
             <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="stat-low">0</p>
             <p class="text-xs text-gray-400 mt-1 dark:text-white">need restocking</p>
           </div>
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none">
+          <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none">
             <div class="flex items-center justify-between mb-3">
               <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Out of Stock</span>
               <div class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center shrink-0">
@@ -269,7 +270,7 @@
         <!-- Recent + Alerts row -->
         <div class="grid lg:grid-cols-3 gap-4">
           <!-- Recent products table -->
-          <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+          <div class="lg:col-span-2 glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
             <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
               <h3 class="font-display font-bold text-sm text-gray-900 dark:text-white">Recent Products</h3>
               <button onclick="showView('products')" class="text-indigo-500 text-xs font-medium hover:underline">View all →</button>
@@ -288,7 +289,7 @@
           </div>
 
           <!-- Alerts panel -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+          <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
             <div class="px-5 py-4 border-b border-gray-50">
               <h3 class="font-display font-bold text-sm text-gray-900 dark:text-white">Stock Alerts</h3>
             </div>
@@ -307,7 +308,7 @@
           <button onclick="filterByStatus('out')" data-tab="out" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">Out of Stock</button>
         </div>
 
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
           <div class="overflow-x-auto">
             <table class="w-full">
               <thead><tr class="text-left bg-gray-50/50 dark:bg-neutral-700 border-b border-gray-100 dark:border-neutral-600">
@@ -332,7 +333,7 @@
 
       <!-- ──── INVENTORY VIEW ──── -->
       <div id="view-inventory" class="hidden">
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
           <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-600 flex items-center justify-between">
             <div>
               <h3 class="font-display font-bold text-gray-900 dark:text-white">Inventory Overview</h3>
@@ -360,7 +361,7 @@
 
       <!-- ──── ADD PRODUCT VIEW ──── -->
       <div id="view-add" class="hidden w-full flex justify-center items-center">
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-7 w-full max-w-2xl dark:bg-neutral-700 dark:border-none">
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-7 w-full max-w-2xl dark:bg-neutral-700 dark:border-none">
           <h3 class="font-display font-bold text-xl text-gray-900 dark:text-white mb-6" id="form-title">Add New Product</h3>
           <input type="hidden" id="edit-id"/>
 
@@ -429,7 +430,7 @@
       EDIT MODAL (quick inline qty / details edit)
 ══════════════════════════════════════════════ -->
   <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-    <div class="modal-card bg-white dark:bg-neutral-700 rounded-2xl shadow-2xl w-full max-w-md p-7 border border-gray-100 dark:border-none">
+    <div class="modal-card glass-panel bg-white dark:bg-neutral-700 rounded-2xl shadow-2xl w-full max-w-md p-7 border border-gray-100 dark:border-none">
       <div class="flex items-center justify-between mb-5">
         <h3 class="font-display font-bold text-lg text-gray-900 dark:text-white">Edit Product</h3>
         <button onclick="closeModal()" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors">
@@ -471,7 +472,7 @@
 
 <!-- Quick-restock modal -->
   <div id="restock-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-    <div class="modal-card bg-white dark:bg-neutral-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-none">
+    <div class="modal-card glass-panel bg-white dark:bg-neutral-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-none">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-display font-bold text-gray-900 dark:text-white">Restock Product</h3>
         <button onclick="closeRestockModal()" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors">
@@ -501,7 +502,7 @@
 
 <!-- Delete confirm modal -->
   <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-    <div class="modal-card bg-white dark:bg-neutral-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-none text-center">
+    <div class="modal-card glass-panel bg-white dark:bg-neutral-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-none text-center">
       <div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🗑️</div>
       <h3 class="font-display font-bold text-lg text-gray-900 dark:text-white mb-2">Delete Product?</h3>
       <p class="text-gray-500 dark:text-gray-300 text-sm mb-5">This will permanently remove <strong id="del-name" class="dark:text-white"></strong> from your catalog.</p>

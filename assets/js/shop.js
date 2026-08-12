@@ -39,7 +39,7 @@ function productCardHTML(p, index) {
 
   return `
     <article
-      class="product-card dark:bg-neutral-800 dark:border-none group bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col"
+      class="product-card glass-panel dark:bg-neutral-800 dark:border-none group bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col"
       style="animation-delay:${index * 40}ms"
       aria-label="${p.name} by ${p.brand}"
     >
@@ -197,9 +197,10 @@ function setPriceRange(range) {
     btn.classList.toggle("text-white",      active);
     btn.classList.toggle("hover:bg-",      active);
     btn.classList.toggle("border-gray-900", active);
-    btn.classList.toggle("bg-white/70",    !active);
+    btn.classList.toggle("bg-white/50",    !active);
     btn.classList.toggle("text-gray-600",  !active);
-    btn.classList.toggle("border-gray-200",!active);
+    btn.classList.toggle("dark:text-gray-300", !active);
+    btn.classList.toggle("border-white/60",!active);
     btn.setAttribute("aria-pressed", active ? "true" : "false");
   });
 
@@ -224,10 +225,9 @@ function setCategory(slug) {
     const active = btn.dataset.category === slug;
     btn.classList.toggle("bg-gray-900",     active);
     btn.classList.toggle("text-white",      active);
-    btn.classList.toggle("border-gray-900", active);
-    btn.classList.toggle("bg-white/70",    !active);
+    btn.classList.toggle("bg-white/50",    !active);
     btn.classList.toggle("text-gray-600",  !active);
-    btn.classList.toggle("border-gray-200",!active);
+    btn.classList.toggle("dark:text-gray-300", !active);
     btn.setAttribute("aria-pressed", active ? "true" : "false");
   });
 
@@ -259,10 +259,9 @@ function setBrand(brandId) {
 function setBrandPillState(btn, active) {
   btn.classList.toggle("bg-indigo-500",   active);
   btn.classList.toggle("text-white",      active);
-  btn.classList.toggle("border-indigo-500", active);
-  btn.classList.toggle("bg-white/70",    !active);
+  btn.classList.toggle("bg-white/50",    !active);
   btn.classList.toggle("text-gray-600",  !active);
-  btn.classList.toggle("border-gray-200",!active);
+  btn.classList.toggle("dark:text-gray-300", !active);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -275,10 +274,11 @@ function setFilter(filterVal) {
     const active = btn.dataset.filter === activeStatus;
     btn.classList.toggle("bg-gray-900",   active);
     btn.classList.toggle("text-white",    active);
-    btn.classList.toggle("bg-white/70",  !active);
+    btn.classList.toggle("bg-white/50",  !active);
     btn.classList.toggle("text-gray-600",!active);
+    btn.classList.toggle("dark:text-gray-300", !active);
     btn.classList.toggle("border",       !active);
-    btn.classList.toggle("border-gray-200", !active);
+    btn.classList.toggle("border-white/60", !active);
     btn.setAttribute("aria-pressed", active ? "true" : "false");
   });
 
@@ -302,20 +302,19 @@ function clearAll() {
     const isAll = btn.dataset.category === "all";
     btn.classList.toggle("bg-gray-900",     isAll);
     btn.classList.toggle("text-white",      isAll);
-    btn.classList.toggle("border-gray-900", isAll);
-    btn.classList.toggle("bg-white/70",    !isAll);
+    btn.classList.toggle("bg-white/50",    !isAll);
     btn.classList.toggle("text-gray-600",  !isAll);
-    btn.classList.toggle("border-gray-200",!isAll);
+    btn.classList.toggle("dark:text-gray-300", !isAll);
   });
 
   document.querySelectorAll(".brand-pill").forEach(b => setBrandPillState(b, false));
   document.querySelectorAll(".filter-pill").forEach(b => {
     b.classList.remove("bg-gray-900","text-white");
-    b.classList.add("bg-white/70","text-gray-600","border","border-gray-200");
+    b.classList.add("bg-white/50","text-gray-600","dark:text-gray-300","border","border-white/60");
   });
   document.querySelectorAll(".price-pill").forEach(b => {
     b.classList.remove("bg-gray-900","text-white","border-gray-900");
-    b.classList.add("bg-white/70","text-gray-600","border-gray-200");
+    b.classList.add("bg-white/50","text-gray-600","dark:text-gray-300","border-white/60");
     b.setAttribute("aria-pressed", "false");
   });
 
@@ -336,6 +335,13 @@ function clearSearch() {
     Reads CATEGORIES and BRANDS from products-data.js and
     injects the HTML into #category-tabs and #brand-pills.
 ══════════════════════════════════════════════════════════════════ */
+/* Floating glass pill markup shared by the category/brand rows — glides
+   behind whichever pill is hovered, same behaviour as the nav links. */
+function hoverPillSpanHTML(id) {
+  return `<span id="${id}" class="nav-hover-pill absolute rounded-full opacity-0 pointer-events-none"
+    style="transition: left 0.35s cubic-bezier(0.34,1.56,0.64,1), top 0.35s cubic-bezier(0.34,1.56,0.64,1), width 0.35s cubic-bezier(0.34,1.56,0.64,1), height 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;"></span>`;
+}
+
 function buildFilterUI() {
   // ── Category tabs ──────────────────────────────────────────────
   const catContainer = document.getElementById("category-tabs");
@@ -345,31 +351,35 @@ function buildFilterUI() {
         data-category="all"
         onclick="setCategory('all')"
         aria-pressed="true"
-        class="cat-tab text-sm font-bold px-4 py-2 rounded-full border transition-all duration-200 bg-gray-900 text-white border-gray-900 whitespace-nowrap dark:border-none" >All Products</button>`;
+        class="cat-tab glass-chip relative z-10 text-sm font-bold px-4 py-2 rounded-full transition-all duration-200 bg-gray-900 text-white whitespace-nowrap" >All Products</button>`;
     // render cat button
     const catTabs = CATEGORIES.map(c => `
       <button
         data-category="${c.slug}"
         onclick="setCategory('${c.slug}')"
         aria-pressed="false"
-        class="cat-tab text-sm font-bold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100 whitespace-nowrap flex items-center gap-1.5 dark:border-none"
+        class="cat-tab glass-chip relative z-10 text-sm font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 whitespace-nowrap flex items-center gap-1.5"
       >
         <span aria-hidden="true">${c.icon}</span>${c.label}
       </button>`).join("");
 
-    catContainer.innerHTML = allTab + catTabs;
+    catContainer.innerHTML = hoverPillSpanHTML("cat-hover-pill") + allTab + catTabs;
+    bindHoverPill(catContainer, document.getElementById("cat-hover-pill"), ".cat-tab");
   }
 
   // ── Brand pills ────────────────────────────────────────────────
   const brandContainer = document.getElementById("brand-pills");
   if (brandContainer) {
-    brandContainer.innerHTML = BRANDS.map(b => `
+    const brandPills = BRANDS.map(b => `
       <button
         data-brand="${b.id}"
         onclick="setBrand('${b.id}')"
         aria-pressed="false"
-        class="brand-pill text-sm font-bold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100 whitespace-nowrap dark:border-none"
+        class="brand-pill glass-chip relative z-10 text-sm font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 whitespace-nowrap"
       >${b.label}</button>`).join("");
+
+    brandContainer.innerHTML = hoverPillSpanHTML("brand-hover-pill") + brandPills;
+    bindHoverPill(brandContainer, document.getElementById("brand-hover-pill"), ".brand-pill");
   }
 }
 
