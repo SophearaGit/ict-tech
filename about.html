@@ -6,6 +6,7 @@
 <title>About — NovaDrop</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="./assets/css/glass.css" rel="stylesheet"/>
 <script>
   tailwind.config = {
     darkMode: 'class',
@@ -23,12 +24,12 @@
   .fade-up.visible { opacity: 1; transform: translateY(0); }
 </style>
 </head>
-<body class="bg-white text-gray-900 dark:bg-neutral-900 dark:text-gray-100 antialiased transition-colors duration-200">
+<body class="bg-gray-50 text-gray-900 dark:bg-neutral-900 dark:text-gray-100 antialiased transition-colors duration-200">
   <!-- ─── GLOBAL NAV (injected by script.js) ─────────────────────── -->
-  <header id="nd-nav" class="fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-neutral-900 backdrop-blur-md border-b border-gray-100/80 dark:border-gray-800 shadow-sm transition-colors">
+  <header id="nd-nav" class="glass-nav fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-neutral-900 backdrop-blur-md border-b border-gray-100/80 dark:border-gray-800 shadow-sm transition-colors">
   </header>
 
-<div class="pt-16">
+<div class="pt-20">
 
   <!-- ─── HERO ──────────────────────────────────────────── -->
   <section class="relative bg-gray-900 dark:bg-neutral-900 text-white py-24 overflow-hidden">
@@ -50,7 +51,7 @@
   <section class="max-w-4xl mx-auto px-5 py-20">
     <div class="grid md:grid-cols-2 gap-12 items-center">
       <div class="fade-up">
-        <div class="w-full aspect-square bg-gradient-to-br from-indigo-50 via-purple-50 to-gray-50 rounded-3xl flex items-center justify-center border border-gray-100 shadow-sm">
+        <div class="glass-panel w-full aspect-square bg-gradient-to-br from-indigo-50 via-purple-50 to-gray-50 rounded-3xl flex items-center justify-center border border-gray-100 shadow-sm">
           <div class="text-center">
             <div class="text-8xl mb-4">
               <img src="./assets/img/ICT-1.jpg">
@@ -107,19 +108,19 @@
   <section class="max-w-4xl mx-auto px-5 py-20">
     <h2 class="font-display font-bold text-3xl text-gray-900 mb-10 text-center fade-up dark:text-white">The Team</h2>
     <div class="grid sm:grid-cols-3 gap-6">
-      <div class="fade-up bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm p-6 text-center">
+      <div class="fade-up glass-panel bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm p-6 text-center">
         <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">😎</div>
         <h4 class="font-display font-bold text-gray-900">Davin K.</h4>
         <p class="text-indigo-500 text-xs font-semibold mt-0.5">Co-founder & CEO</p>
         <p class="text-gray-400 text-xs mt-2">Jordan 4 collector. Hates bots. Loves spreadsheets.</p>
       </div>
-      <div class="fade-up bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm p-6 text-center" style="transition-delay:0.1s">
+      <div class="fade-up glass-panel bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm p-6 text-center" style="transition-delay:0.1s">
         <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">🤩</div>
         <h4 class="font-display font-bold text-gray-900">Sreymom C.</h4>
         <p class="text-indigo-500 text-xs font-semibold mt-0.5">Co-founder & Design</p>
         <p class="text-gray-400 text-xs mt-2">Makes everything look clean. Converse devotee.</p>
       </div>
-      <div class="fade-up bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm p-6 text-center" style="transition-delay:0.2s">
+      <div class="fade-up glass-panel bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-sm p-6 text-center" style="transition-delay:0.2s">
         <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">🧑‍💻</div>
         <h4 class="font-display font-bold text-gray-900">Vichea R.</h4>
         <p class="text-indigo-500 text-xs font-semibold mt-0.5">Co-founder & Tech</p>
@@ -147,8 +148,8 @@
     <span class="font-display font-bold text-gray-900 dark:text-white">ICT<span class="text-indigo-500">Tech</span></span>
     <span>© 2025  ICTTech. All rights reserved.</span>
     <div class="flex gap-5">
-      <a href="about.html" class="hover:text-gray-700 transition-colors">About</a>
-      <a href="contact.html" class="hover:text-gray-700 transition-colors">Contact</a>
+      <a href="about.html" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">About</a>
+      <a href="contact.html" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">Contact</a>
     </div>
   </div>
 </footer>

@@ -7,6 +7,7 @@
   <meta name="description" content="Shop premium phones, earphones, power banks and laptops from Apple, Samsung, Sony, Xiaomi, Asus, Dell and more."/>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="./assets/css/glass.css" rel="stylesheet"/>
   <script>
   tailwind.config = {
     darkMode: 'class',
@@ -52,17 +53,17 @@
   </style>
 </head>
 
-<body class="bg-white text-gray-900 dark:bg-neutral-900 dark:text-gray-100 antialiased transition-colors duration-200">
+<body class="bg-gray-50 text-gray-900 dark:bg-neutral-900 dark:text-gray-100 antialiased transition-colors duration-200">
 <!-- ─── GLOBAL NAV (injected by script.js) ─────────────────────── -->
-<header id="nd-nav" class="fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-neutral-900 backdrop-blur-md border-b border-gray-100/80 dark:border-gray-800 shadow-sm transition-colors">
+<header id="nd-nav" class="glass-nav fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-neutral-900 backdrop-blur-md border-b border-gray-100/80 dark:border-gray-800 shadow-sm transition-colors">
 </header>
 
-<div class="pt-16">
+<div class="pt-20">
 
   <!-- ════════════════════════════════════════════════════════════
     PAGE HEADER
   ════════════════════════════════════════════════════════════ -->
-  <div class="bg-white/70 backdrop-blur-md border-b border-gray-100 dark:bg-neutral-900 dark:border-none mt-12">
+  <div class="mt-6">
     <div class="max-w-7xl mx-auto px-5 py-10">
 
       <!-- Title + Search row -->
@@ -90,7 +91,7 @@
             type="search"
             placeholder="Search brand, name, spec…"
             autocomplete="off"
-            class="w-full pl-10 pr-10 py-3 bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 transition-all"
+            class="glass-input w-full pl-10 pr-10 py-3 bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 transition-all"
           />
           <button
             onclick="clearSearch()"
@@ -109,7 +110,7 @@
       <div class="mt-5">
         <p class="text-[12px] font-semibold uppercase tracking-widest text-gray-400 mb-2 dark:text-white">Category</p>
         <div id="category-tabs"
-          class="pill-scroll flex gap-2 pb-1"
+          class="pill-scroll flex gap-2 pb-1 relative"
           role="group"
           aria-label="Filter by category"
         >
@@ -122,7 +123,7 @@
         <p class="text-[12px] font-semibold uppercase tracking-widest text-gray-400 mb-2 dark:text-white mb-5">Brand</p>
         <div
           id="brand-pills"
-          class="pill-scroll flex gap-2 pb-1"
+          class="pill-scroll flex gap-2 pb-1 relative"
           role="group"
           aria-label="Filter by brand"
         >
@@ -136,7 +137,7 @@
           data-filter="trending"
           onclick="setFilter('trending')"
           aria-pressed="false"
-          class="filter-pill text-xs font-semibold px-4 py-2 rounded-full border transition-all duration-200 bg-white/70 text-gray-600 border-gray-200 hover:bg-gray-100"
+          class="filter-pill glass-chip text-xs font-semibold px-4 py-2 rounded-full border backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 border-white/60"
         >
           🔥 Trending only
         </button>
@@ -160,7 +161,7 @@
       <button
         onclick="setCategory('phones')"
         aria-label="Shop Phones"
-        class="cat-card bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none "
+        class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none "
       >
         <span class="text-3xl mb-2 block" aria-hidden="true">📱</span>
         <p class="font-bold text-sm text-gray-900 dark:text-white">Phones</p>
@@ -171,7 +172,7 @@
       <button
         onclick="setCategory('earphones')"
         aria-label="Shop Earphones and Headphones"
-        class="cat-card bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none"
+        class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none"
       >
         <span class="text-3xl mb-2 block" aria-hidden="true">🎧</span>
         <p class="font-bold text-sm text-gray-900 dark:text-white">Earphones</p>
@@ -181,7 +182,7 @@
       <button
         onclick="setCategory('powerbanks')"
         aria-label="Shop Power Banks"
-        class="cat-card bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none"
+        class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none"
       >
         <span class="text-3xl mb-2 block" aria-hidden="true">🔋</span>
         <p class="font-bold text-sm text-gray-900 dark:text-white">Power Banks</p>
@@ -191,7 +192,7 @@
       <button
         onclick="setCategory('laptops')"
         aria-label="Shop Laptops"
-        class="cat-card bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none"
+        class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none"
       >
         <span class="text-3xl mb-2 block" aria-hidden="true">💻</span>
         <p class="font-bold text-sm text-gray-900 dark:text-white">Laptops</p>
@@ -267,8 +268,8 @@
     </span>
     <span>© 2025 ICTTech. All rights reserved.</span>
     <nav aria-label="Footer links" class="flex gap-5">
-      <a href="about.html"   class="hover:text-gray-700 transition-colors">About</a>
-      <a href="contact.html" class="hover:text-gray-700 transition-colors">Contact</a>
+      <a href="about.html"   class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">About</a>
+      <a href="contact.html" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">Contact</a>
     </nav>
   </div>
 </footer>

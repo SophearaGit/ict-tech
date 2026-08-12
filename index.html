@@ -19,6 +19,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
     rel="stylesheet" />
+  <link href="./assets/css/glass.css" rel="stylesheet" />
   <style>
     body {
       font-family: sans-serif;
@@ -106,12 +107,12 @@
   </style>
 </head>
 
-<body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 antialiased transition-colors duration-200">  <!-- NAV -->
-<header id="nd-nav" class="fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-neutral-900 backdrop-blur-lg border-b border-gray-100/80 dark:border-gray-800 shadow-sm transition-colors">
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 antialiased transition-colors duration-200">  <!-- NAV -->
+<header id="nd-nav" class="glass-nav fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-neutral-900 backdrop-blur-lg border-b border-gray-100/80 dark:border-gray-800 shadow-sm transition-colors">
 </header>
 
   <!-- ==================== HERO ========================= -->
-  <section class="relative min-h-screen flex items-center overflow-hidden pt-16">
+  <section class="relative min-h-screen flex items-center overflow-hidden pt-20">
 
     <!-- Animated background blobs -->
     <!-- <div class="absolute inset-0 bg-neutral-50"></div> -->
@@ -172,7 +173,7 @@
 
         <!-- Big feature card -->
         <div
-          class="bg-white/70 backdrop-blur-lg dark:bg-neutral-800 rounded-3xl border border-gray-100 shadow-sm p-8 flex items-center gap-6 dark:border-none">
+          class="glass-panel bg-white/70 backdrop-blur-lg dark:bg-neutral-800 rounded-3xl border border-gray-100 shadow-sm p-8 flex items-center gap-6 dark:border-none">
           <div
             class="w-32 h-32 rounded-2xl flex items-center justify-center text-5xl flex-shrink-0 dark:bg-red">
             <img src="./assets/img/17 pro max.png" alt="Iphone 16 pro max"  class="w-full h-full object-cover">
@@ -187,7 +188,7 @@
 
         <!-- Two mini cards -->
         <div class="grid grid-cols-2 gap-4">
-          <div class="dark:border-none dark:bg-neutral-800 bg-white/70 backdrop-blur-lg rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center ">
+          <div class="glass-panel dark:border-none dark:bg-neutral-800 bg-white/70 backdrop-blur-lg rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center ">
             <span class="block w-full h-20 mb-2">
               <img src="./assets/img/17 pro max.png" alt="Samsung S26 ultra" class="object-contain w-full h-full rounded-lg">
             </span>
@@ -195,7 +196,7 @@
             <p class="text-xs text-gray-400 mt-0.5">Samsung</p>
             <p class="font-bold text-indigo-600 mt-1">$1,190</p>
           </div>
-          <div class=" dark:border-none dark:bg-neutral-800 dark:border-none bg-white/70 backdrop-blur-lg rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center ">
+          <div class="glass-panel dark:border-none dark:bg-neutral-800 dark:border-none bg-white/70 backdrop-blur-lg rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center ">
             <span class="block w-full h-20 mb-2">
               <img src="./assets/img/17 pro max.png" alt="Iphone 17 pro max" class="object-contain w-full h-full rounded-lg">
             </span>
@@ -243,41 +244,41 @@
     </p>
     <div class="marquee-wrapper py-2">
           <div class="marquee-group">
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
           </div>
 
           <div class="marquee-group" aria-hidden="true">
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
-            <div class="bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
+            <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
           </div>
     </div>
   </section>
@@ -291,7 +292,7 @@
       <p class="text-gray-400 max-w-lg mx-auto text-lg mt-10">We offered an exclusive gadgets, delivered with trust.</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-16 mb-10">
 
-        <div class="flex flex-col items-center bg-white/30 dark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl backdrop-blur-xl border border-white/20 dark:border-none
+        <div class="glass-panel flex flex-col items-center bg-white/30 dark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl backdrop-blur-xl border border-white/20 dark:border-none
               rounded-2xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer">
           <div class="w-20 h-20 flex items-center justify-center
               rounded-full bg-gradient-to-r from-white to-gray-300
@@ -303,7 +304,7 @@
         </div>
 
         <div
-          class="flex flex-col items-center bg-white/30 dark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl backdrop-blur-xl border border-white/20 dark:border-none rounded-xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer">
+          class="glass-panel flex flex-col items-center bg-white/30 dark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl backdrop-blur-xl border border-white/20 dark:border-none rounded-xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer">
           <div class="w-20 h-20 flex items-center justify-center
               rounded-full bg-gradient-to-r from-white to-gray-300
               text-black text-3xl shadow-inner">
@@ -314,7 +315,7 @@
         </div>
 
         <div
-          class="flex flex-col items-center bg-white/30 dark:bg-neutral-800 backdrop-blur-xl border border-white/20 ark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl rounded-xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer">
+          class="glass-panel flex flex-col items-center bg-white/30 dark:bg-neutral-800 backdrop-blur-xl border border-white/20 ark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl rounded-xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer">
           <div class="w-20 h-20 flex items-center justify-center
               rounded-full bg-gradient-to-r from-white to-gray-300
               text-black text-3xl shadow-inner">
@@ -325,7 +326,7 @@
         </div>
 
         <div
-          class="flex flex-col items-center bg-white/30 dark:bg-neutral-800 backdrop-blur-xl border border-white/20 ark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl rounded-xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer ">
+          class="glass-panel flex flex-col items-center bg-white/30 dark:bg-neutral-800 backdrop-blur-xl border border-white/20 ark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl rounded-xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer ">
           <div class="w-20 h-20 flex items-center justify-center
               rounded-full bg-gradient-to-r from-white to-gray-300
               text-black text-3xl shadow-inner">
@@ -357,8 +358,8 @@
       <span class="font-display font-bold text-gray-900 dark:text-white">ICT<span class="text-indigo-500">Tech</span></span>
       <span>© 2026 NovaDrop. All rights reserved.</span>
       <div class="flex gap-5">
-        <a href="about.html" class="hover:text-gray-700 transition-colors">About</a>
-        <a href="contact.html" class="hover:text-gray-700 transition-colors">Contact</a>
+        <a href="about.html" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">About</a>
+        <a href="contact.html" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">Contact</a>
       </div>
     </div>
   </footer>
