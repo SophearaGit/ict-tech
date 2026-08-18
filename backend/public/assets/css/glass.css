@@ -1,0 +1,147 @@
+/* ══════════════════════════════════════════════════════════════════
+   "Liquid Glass" surfaces — iOS 26 style frosted panels.
+   Light mode only: scoped to html:not(.dark) so these rules simply
+   don't match when dark mode is active, leaving the existing
+   dark: Tailwind utilities in full control there (untouched).
+══════════════════════════════════════════════════════════════════ */
+
+html:not(.dark) .glass-nav {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.55));
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 20px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+html:not(.dark) .glass-panel {
+  background: linear-gradient(160deg, rgba(245, 248, 255, 0.7), rgba(255, 255, 255, 0.32));
+  backdrop-filter: blur(26px) saturate(200%);
+  -webkit-backdrop-filter: blur(26px) saturate(200%);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 12px 28px -10px rgba(79, 70, 229, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+html:not(.dark) .glass-input {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+/* Small pills/chips (marquee brand pills, filter/category/brand pills,
+   badges) — a heavy panel shadow reads as a flat gray box at this size, so
+   this variant stays crisp: a cool blue-white tint, a bright hairline edge,
+   and a soft indigo glow instead of a neutral drop shadow.
+   :not(.bg-gray-900):not(.bg-indigo-500) lets this be applied as a
+   permanent class on JS-toggled filter pills — it steps aside automatically
+   whenever the pill is in its solid "selected" state, so the glass look
+   only ever shows on the resting/inactive look. */
+html:not(.dark) .glass-chip:not(.bg-gray-900):not(.bg-indigo-500) {
+  background: linear-gradient(160deg, rgba(240, 245, 255, 0.65), rgba(255, 255, 255, 0.25));
+  backdrop-filter: blur(16px) saturate(220%);
+  -webkit-backdrop-filter: blur(16px) saturate(220%);
+  border-color: rgba(255, 255, 255, 0.85);
+  /* Kept tight and mostly inset — a wide outer glow bleeds into neighbouring
+     pills when several sit close together (gap-2) and reads as one shared
+     background behind the whole row instead of individual glass pills. */
+  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.glass-chip {
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+/* No added box-shadow here on purpose: category/brand pills already sit in
+   front of a floating .nav-hover-pill (see below), which supplies its own
+   glow — stacking a second shadow from the chip itself doubled up into a
+   fuzzy, misaligned smear.
+   This used to be a plain `hover:bg-white/70` Tailwind utility, but a bare
+   :hover class always outranks a single class like .bg-indigo-500 on
+   specificity — so clicking a pill while the mouse stayed over it (the
+   normal case) let the hover-white win over the active indigo/black fill,
+   leaving white text on a white pill. Keeping the guard here fixes that:
+   it steps aside whenever the pill is actually selected. */
+html:not(.dark) .glass-chip:not(.bg-gray-900):not(.bg-indigo-500):hover {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.45));
+  border-color: rgba(255, 255, 255, 1);
+}
+
+.dark .glass-chip:not(.bg-gray-900):not(.bg-indigo-500) {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass-chip:not(.bg-gray-900):not(.bg-indigo-500):hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Floating nav hover pill — JS positions it (left/width/opacity) as the
+   cursor moves between links; this just supplies the "liquid glass" look. */
+html:not(.dark) .nav-hover-pill {
+  background: linear-gradient(160deg, rgba(240, 245, 255, 0.85), rgba(255, 255, 255, 0.5));
+  backdrop-filter: blur(14px) saturate(220%);
+  -webkit-backdrop-filter: blur(14px) saturate(220%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.dark .nav-hover-pill {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Current-page nav pill — same glass look as the hover pill, but a plain
+   static class (no JS positioning) sitting directly on the active link. */
+html:not(.dark) .nav-active-pill {
+  background: linear-gradient(160deg, rgba(240, 245, 255, 0.85), rgba(255, 255, 255, 0.5));
+  backdrop-filter: blur(14px) saturate(220%);
+  -webkit-backdrop-filter: blur(14px) saturate(220%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.dark .nav-active-pill {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Nav icon buttons (theme / cart / account) — glass effect at rest and on hover */
+.glass-icon-btn {
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+html:not(.dark) .glass-icon-btn {
+  background: linear-gradient(160deg, rgba(240, 245, 255, 0.65), rgba(255, 255, 255, 0.35));
+  backdrop-filter: blur(12px) saturate(200%);
+  -webkit-backdrop-filter: blur(12px) saturate(200%);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+html:not(.dark) .glass-icon-btn:hover {
+  background: linear-gradient(160deg, rgba(240, 245, 255, 0.85), rgba(255, 255, 255, 0.5));
+  backdrop-filter: blur(14px) saturate(220%);
+  -webkit-backdrop-filter: blur(14px) saturate(220%);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 14px -2px rgba(79, 70, 229, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dark .glass-icon-btn {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
