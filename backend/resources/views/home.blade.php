@@ -1,0 +1,176 @@
+@extends('layouts.app')
+
+@section('title', 'ICT — Technology')
+
+@section('content')
+  <!-- ==================== HERO ========================= -->
+  <section class="relative min-h-screen flex items-center overflow-hidden pt-20">
+    <div class="absolute inset-0 bg-neutral-50 dark:bg-neutral-900 transition-colors"></div>
+    <div class="absolute top-1/4 -left-32 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-1/4 -right-32 w-80 h-80 bg-purple-200/30 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-4 items-center gap-8 lg:gap-12">
+      <!-- Left -->
+      <div class="fade-up col-span-2 lg:col-span-2">
+        <span class="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-md font-semibold uppercase tracking-widest px-6 py-4 rounded-full mb-7 dark:text-slate-600">
+          <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
+          ELevate your lifestyle
+        </span>
+        <h1 class="font-bold text-4xl sm:text-5xl lg:text-6xl leading-none tracking-medium mb-7">
+          MODERN<br/><span class="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent dark:text-slate-600">TECH</span><br />
+          <span>LIFESTYES</span>
+        </h1>
+        <p class="text-gray-500 text-lg leading-relaxed max-w-lg mb-8">Your next upgrade starts here.</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="{{ route('shop') }}" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-8 py-4 rounded-2xl text-sm transition-all duration-200 shadow-lg hover:shadow-indigo-200 hover:-translate-y-0.5 active:translate-y-0">
+            Shop Now
+          </a>
+          <a href="#" class="bg-white/80 hover:bg-white border border-gray-200 text-gray-700 font-semibold px-8 py-4 rounded-2xl text-sm transition-all duration-200 hover:-translate-y-0.5">
+            Our Story
+          </a>
+        </div>
+
+        <!-- Social proof -->
+        <div class="mt-10 flex items-center gap-4 text-lg dark:text-gray-100 text-gray-500">
+          <div class="flex -space-x-2">
+            <div class="w-8 h-8 rounded-full bg-indigo-200 border-2 border-white flex items-center justify-center text-xs">😊</div>
+            <div class="w-8 h-8 rounded-full bg-purple-200 border-2 border-white flex items-center justify-center text-xs">😎</div>
+            <div class="w-8 h-8 rounded-full bg-pink-200 border-2 border-white flex items-center justify-center text-xs">🤩</div>
+          </div>
+          <span><strong class="text-gray-700 dark:text-gray-100">12,000+</strong> happy customers</span>
+        </div>
+      </div>
+
+      <!-- Right: Hero visual -->
+      <div class="fade-up flex flex-col col-span-2 gap-5 w-full" style="transition-delay:0.15s">
+        <!-- Big feature card -->
+        <div class="glass-panel bg-white/70 backdrop-blur-lg dark:bg-neutral-800 rounded-3xl border border-gray-100 shadow-sm p-8 flex items-center gap-6 dark:border-none">
+          <div class="w-32 h-32 rounded-2xl flex items-center justify-center text-5xl flex-shrink-0 dark:bg-red">
+            <img src="{{ asset('assets/img/17 pro max.png') }}" alt="Iphone 16 pro max" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <div class="text-lg text-indigo-500 font-bold uppercase tracking-widest mb-1 dark:text-white">Week's Top Pick</div>
+            <h3 class="font-display font-bold text-xl text-gray-900 dark:text-white">Iphone 17 pro max</h3>
+            <p class="text-gray-400 text-md mt-2 dark:text-white">Apple</p>
+            <p class="font-bold text-gray-900 text-lg mt-2 dark:text-white">$1,180</p>
+          </div>
+        </div>
+
+        <!-- Two mini cards -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="glass-panel dark:border-none dark:bg-neutral-800 bg-white/70 backdrop-blur-lg rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center ">
+            <span class="block w-full h-20 mb-2">
+              <img src="{{ asset('assets/img/17 pro max.png') }}" alt="Samsung S26 ultra" class="object-contain w-full h-full rounded-lg">
+            </span>
+            <p class="font-semibold text-sm text-gray-800 dark:text-white">Samsung S26 ultra</p>
+            <p class="text-xs text-gray-400 mt-0.5">Samsung</p>
+            <p class="font-bold text-indigo-600 mt-1">$1,190</p>
+          </div>
+          <div class="glass-panel dark:border-none dark:bg-neutral-800 dark:border-none bg-white/70 backdrop-blur-lg rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center ">
+            <span class="block w-full h-20 mb-2">
+              <img src="{{ asset('assets/img/17 pro max.png') }}" alt="Iphone 17 pro max" class="object-contain w-full h-full rounded-lg">
+            </span>
+            <p class="font-semibold text-sm text-gray-800 dark:text-white">Iphone 17 pro max</p>
+            <p class="text-xs text-gray-400 mt-0.5">Apple</p>
+            <p class="font-bold text-indigo-600 mt-1">$1,285</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── BRANDS ──────────────────────────────────────────── -->
+  <section class="bg-white/60 dark:bg-neutral-900 dark:border-none backdrop-blur-lg border-y border-gray-100 dark:border-gray-800 py-10 transition-colors">
+    <p class="text-center text-lg font-semibold uppercase tracking-widest text-gray-400 mb-12">Trusted brands in our catalog</p>
+    <div class="marquee-wrapper py-2">
+      <div class="marquee-group">
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
+      </div>
+      <div class="marquee-group" aria-hidden="true">
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Samsung</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Microsoft</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Sony</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">LG</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Huawei</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Google</div>
+        <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-5 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Asus</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURES ──────────────────────────────────────────── -->
+  <section class="bg-gradient-to-br bg-neutral-50 dark:bg-neutral-900 py-16 px-6 transition-colors">
+    <div class="max-w-6xl mx-auto text-center">
+      <h2 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-blue-600 mb-6 dark:text-white mb-10">
+        Why ICT-Tech?
+      </h2>
+      <p class="text-gray-400 max-w-lg mx-auto text-lg mt-10">We offered an exclusive gadgets, delivered with trust.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-16 mb-10">
+        <div class="glass-panel flex flex-col items-center bg-white/30 dark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl backdrop-blur-xl border border-white/20 dark:border-none rounded-2xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer">
+          <div class="w-20 h-20 flex items-center justify-center rounded-full bg-gradient-to-r from-white to-gray-300 text-black text-3xl shadow-inner">🚚</div>
+          <h3 class="mt-4 text-xl font-semibold text-gray-800 dark:text-white">Fast Delivery</h3>
+          <p class="text-gray-500 mt-2 text-lg">Orders ship within 24 hours. Free shipping on everything over $10.</p>
+        </div>
+        <div class="glass-panel flex flex-col items-center bg-white/30 dark:bg-neutral-800 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl backdrop-blur-xl border border-white/20 dark:border-none rounded-xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer">
+          <div class="w-20 h-20 flex items-center justify-center rounded-full bg-gradient-to-r from-white to-gray-300 text-black text-3xl shadow-inner">📝</div>
+          <h3 class="mt-4 text-xl font-semibold text-gray-800 dark:text-white">Always Genuine</h3>
+          <p class="text-gray-500 mt-2 text-lg">Every product is sourced directly from authorized distributors.</p>
+        </div>
+        <div class="glass-panel flex flex-col items-center bg-white/30 dark:bg-neutral-800 backdrop-blur-xl border border-white/20 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl rounded-xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer">
+          <div class="w-20 h-20 flex items-center justify-center rounded-full bg-gradient-to-r from-white to-gray-300 text-black text-3xl shadow-inner">💵</div>
+          <h3 class="mt-4 text-xl font-semibold text-gray-800 dark:text-white">Hassle-Free Returns</h3>
+          <p class="text-gray-500 mt-2 text-lg">30-day hassle-free returns, no questions asked.</p>
+        </div>
+        <div class="glass-panel flex flex-col items-center bg-white/30 dark:bg-neutral-800 backdrop-blur-xl border border-white/20 dark:border-none dark:shadow-2xl dark:backdrop-blur-xl rounded-xl shadow-lg p-6 hover:scale-105 transition-transform cursor-pointer ">
+          <div class="w-20 h-20 flex items-center justify-center rounded-full bg-gradient-to-r from-white to-gray-300 text-black text-3xl shadow-inner">🏦</div>
+          <h3 class="mt-4 text-xl font-semibold text-gray-800 dark:text-white">Online Payment</h3>
+          <p class="text-gray-500 mt-2 text-lg">24/7 Online Payment Access</p>
+        </div>
+      </div>
+  </section>
+
+  <!-- ─── CTA BANNER ──────────────────────────────────────────── -->
+  <section class="bg-gray-900 py-20 text-center dark:bg-neutral-900">
+    <div class="max-w-2xl mx-auto px-5">
+      <h2 class="font-bold text-2xl sm:text-4xl text-white mb-5">The best way to buy the products you love.</h2>
+      <p class="text-gray-400 text-lg mb-8">Trusted tech, no cap.</p>
+      <a href="{{ route('shop') }}" class="inline-block bg-indigo-500 hover:bg-indigo-400 text-white font-semibold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg hover:shadow-indigo-500/30">
+        See our gadgets ? →
+      </a>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ──────────────────────────────────────────── -->
+  <footer class="bg-gray-50 dark:bg-neutral-900 border-t dark:border-none border-gray-100 dark:border-gray-800 py-8 transition-colors">
+    <div class="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-lg text-gray-400">
+      <span class="font-display font-bold text-gray-900 dark:text-white">ICT<span class="text-indigo-500">Tech</span></span>
+      <span>© 2026 NovaDrop. All rights reserved.</span>
+      <div class="flex gap-5">
+        <a href="#" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">About</a>
+        <a href="{{ route('contact') }}" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">Contact</a>
+      </div>
+    </div>
+  </footer>
+@endsection
+
+@section('extra-scripts')
+<script>
+  // Intersection observer for fade-up
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, {
+    threshold: 0.15
+  });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+@endsection
