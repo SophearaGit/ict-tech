@@ -5,7 +5,7 @@
 @section('body-class', 'bg-gray-50 dark:bg-neutral-900')
 
 @section('content')
-<main class="min-h-screen bg-gray-50 grid-bg flex items-center justify-center px-4 dark:bg-neutral-900 pt-20">
+<main class="min-h-screen bg-gray-50 grid-bg flex items-center justify-center px-4 dark:bg-neutral-900">
   <div class="card-in w-full max-w-md ">
     <!-- Logo -->
     <div class="text-center mb-8">
