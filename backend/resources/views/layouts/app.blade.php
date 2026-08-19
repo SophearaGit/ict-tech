@@ -103,7 +103,7 @@
 <body class="@yield('body-class', 'bg-gray-50 text-gray-900 dark:bg-neutral-900 dark:text-gray-100 antialiased transition-colors duration-200')">
   
   <!-- ─── GLOBAL NAV ─── -->
-  @unless(request()->routeIs('admin-view'))
+  @unless(request()->routeIs('admin-view') || request()->routeIs('admin-login'))
   <header id="nd-nav" class="glass-nav fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-neutral-900 backdrop-blur-md border-b border-gray-100/80 dark:border-gray-800 shadow-sm transition-colors">
     <nav class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
       <div class="flex items-center gap-8">
