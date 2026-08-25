@@ -10,7 +10,7 @@
     <!-- Logo -->
     <div class="text-center mb-8">
       <a href="{{ route('home') }}" class="inline-flex items-center gap-2 mb-4">
-        <span class="font-display font-bold text-5xl text-gray-900 dark:text-white mb-4">ICT<span class="text-indigo-500">Tech</span></span>
+        <img src="{{ asset('assets/img/ICT.jpg') }}" alt="ICT Professional Training Center logo" class="w-24 h-24 rounded-full object-cover shadow-sm"/>
       </a>
       <h1 class="font-display font-bold text-3xl text-gray-900 dark:text-slate-600 mb-5">Admin Portal</h1>
       <p class="text-gray-400 text-md mt-1 dark:text-white">Sign in to manage your store</p>
