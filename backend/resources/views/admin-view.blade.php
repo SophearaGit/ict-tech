@@ -52,17 +52,7 @@
   <!-- Logo -->
   <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between dark:border-none">
     <a href="{{ route('home') }}" class="flex items-center gap-2">
-      <svg class="w-9 h-9 shrink-0" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <circle cx="20" cy="20" r="19" fill="white" stroke="url(#ictLogoRing)" stroke-width="2"/>
-        <circle cx="20" cy="20" r="14.5" fill="none" stroke="#4f46e5" stroke-width="1"/>
-        <text x="20" y="24" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="12" fill="#4338ca">ICT</text>
-        <defs>
-          <linearGradient id="ictLogoRing" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#4338ca"/>
-            <stop offset="1" stop-color="#3b82f6"/>
-          </linearGradient>
-        </defs>
-      </svg>
+      <img src="{{ asset('assets/img/ICT.jpg') }}" alt="ICT Professional Training Center logo" class="w-9 h-9 rounded-full object-cover shrink-0"/>
       <span class="font-display font-bold text-gray-900 dark:text-white">ICT<span class="text-indigo-500">Tech</span></span>
     </a>
     <span class="text-[10px] bg-indigo-100 text-indigo-600 font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide">Admin</span>
