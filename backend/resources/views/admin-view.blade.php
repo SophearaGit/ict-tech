@@ -37,6 +37,10 @@
   .spin{animation:spin 1s linear infinite;}
 
   .tab-btn.active-tab{border-bottom:2px solid #6366f1;color:#4f46e5;font-weight:600;}
+
+  /* Sidebar nav active state */
+  .nav-item.active{background:#1f2937;color:#fff;}
+  .dark .nav-item.active{background:#525252;}
 </style>
 @endsection
 
@@ -48,7 +52,17 @@
   <!-- Logo -->
   <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between dark:border-none">
     <a href="{{ route('home') }}" class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">I</div>
+      <svg class="w-9 h-9 shrink-0" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="20" cy="20" r="19" fill="white" stroke="url(#ictLogoRing)" stroke-width="2"/>
+        <circle cx="20" cy="20" r="14.5" fill="none" stroke="#4f46e5" stroke-width="1"/>
+        <text x="20" y="24" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="12" fill="#4338ca">ICT</text>
+        <defs>
+          <linearGradient id="ictLogoRing" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#4338ca"/>
+            <stop offset="1" stop-color="#3b82f6"/>
+          </linearGradient>
+        </defs>
+      </svg>
       <span class="font-display font-bold text-gray-900 dark:text-white">ICT<span class="text-indigo-500">Tech</span></span>
     </a>
     <span class="text-[10px] bg-indigo-100 text-indigo-600 font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide">Admin</span>
@@ -71,23 +85,24 @@
     </button>
     <button onclick="showView('add')" id="nav-add" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Add Product
+      Add Products
     </button>
-
-    <div class="pt-3 mt-3 border-t border-gray-100">
-      <a href="{{ route('admin-messages') }}" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        Messages
-      </a>
-      <a href="{{ route('shop') }}" target="_blank" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-        View Shop
-      </a>
-    </div>
+    <a href="{{ route('admin-messages') }}" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Message
+    </a>
+    <a href="{{ route('shop') }}" target="_blank" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      View
+    </a>
+    <button onclick="showView('history')" id="nav-history" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      History
+    </button>
   </nav>
 
   <!-- User -->
-  <div class="px-4 py-4 border-t border-gray-100 flex items-center justify-between">
+  <div class="px-4 py-4 border-t border-gray-100 dark:border-none flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-600">{{ substr(Auth::user()->name, 0, 1) }}</div>
       <div>
@@ -397,6 +412,31 @@
           <button onclick="cancelEdit()" class="px-5 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition-colors">
             Cancel
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──── HISTORY VIEW ──── -->
+    <div id="view-history" class="hidden">
+      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">No</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden sm:table-cell">Branch</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">QTY</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Price</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Total</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden md:table-cell">Date</th>
+            </tr></thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+        <div id="history-empty" class="hidden text-center py-16">
+          <div class="text-4xl mb-3">🕘</div>
+          <p class="text-gray-500 dark:text-white font-medium">No sales history yet</p>
+          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your search.</p>
         </div>
       </div>
     </div>
