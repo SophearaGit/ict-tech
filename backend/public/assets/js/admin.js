@@ -213,6 +213,51 @@ function renderInventoryTable() {
   }).join('');
 }
 
+/* ── Contact messages ── */
+let messages = [];
+let messagesLoaded = false;
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+function formatMessageDate(iso) {
+  return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+function renderMessagesList() {
+  const list = document.getElementById('messages-list');
+  const empty = document.getElementById('messages-empty');
+  if (!list) return;
+
+  if (messages.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  list.innerHTML = messages.map(m => `
+    <div class="px-6 py-5">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 mb-1.5">
+        <p class="font-semibold text-gray-900 dark:text-white">${escapeHtml(m.name)}
+          <span class="font-normal text-gray-400 text-sm">&lt;${escapeHtml(m.email)}&gt;</span>
+        </p>
+        <span class="text-xs text-gray-400">${formatMessageDate(m.created_at)}</span>
+      </div>
+      ${m.subject ? `<p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-1.5">${escapeHtml(m.subject)}</p>` : ''}
+      <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">${escapeHtml(m.message)}</p>
+    </div>`).join('');
+}
+
+function loadMessages() {
+  apiFetch('/admin/messages')
+    .then(data => { messages = data; renderMessagesList(); })
+    .catch(() => toast('Failed to load messages.'));
+}
+
 /* ── Sales history (placeholder rows — no orders backend yet, mirrors the design sample data) ── */
 const historyRecords = [
   { product: 'Iphone 11',       branch: 'Apple',   qty: 1, price: 210, date: '2026-03-01' },
@@ -409,17 +454,18 @@ function confirmDelete() {
 
 /* ── Add product form ── */
 function showView(view) {
-  ['dashboard','products','inventory','add','history'].forEach(v => {
+  ['dashboard','products','inventory','add','history','messages'].forEach(v => {
     document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
     const nav = document.getElementById(`nav-${v}`);
     if (nav) nav.classList.toggle('active', v === view);
   });
   currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'History'};
+  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'History',messages:'Messages'};
   document.getElementById('page-title').textContent = titles[view] || '';
   document.getElementById('topbar-search').classList.toggle('hidden', !['products','inventory','history'].includes(view));
 
   if (view === 'add' && !editingId) resetAddForm();
+  if (view === 'messages' && !messagesLoaded) { messagesLoaded = true; loadMessages(); }
 
   // Auto-close the mobile sidebar after navigating so its overlay doesn't
   // keep blocking the view that was just opened.
