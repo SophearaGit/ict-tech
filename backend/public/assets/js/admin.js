@@ -213,6 +213,103 @@ function renderInventoryTable() {
   }).join('');
 }
 
+/* ── Contact messages ── */
+let messages = [];
+let messagesLoaded = false;
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+function formatMessageDate(iso) {
+  return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+function renderMessagesList() {
+  const list = document.getElementById('messages-list');
+  const empty = document.getElementById('messages-empty');
+  if (!list) return;
+
+  if (messages.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  list.innerHTML = messages.map(m => `
+    <div class="px-6 py-5">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 mb-1.5">
+        <p class="font-semibold text-gray-900 dark:text-white">${escapeHtml(m.name)}
+          <span class="font-normal text-gray-400 text-sm">&lt;${escapeHtml(m.email)}&gt;</span>
+        </p>
+        <span class="text-xs text-gray-400">${formatMessageDate(m.created_at)}</span>
+      </div>
+      ${m.subject ? `<p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-1.5">${escapeHtml(m.subject)}</p>` : ''}
+      <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">${escapeHtml(m.message)}</p>
+    </div>`).join('');
+}
+
+function loadMessages() {
+  apiFetch('/admin/messages')
+    .then(data => { messages = data; renderMessagesList(); })
+    .catch(() => toast('Failed to load messages.'));
+}
+
+/* ── Sales history (placeholder rows — no orders backend yet, mirrors the design sample data) ── */
+const historyRecords = [
+  { product: 'Iphone 11',       branch: 'Apple',   qty: 1, price: 210, date: '2026-03-01' },
+  { product: 'Iphone 12',       branch: 'Apple',   qty: 2, price: 280, date: '2026-03-01' },
+  { product: 'Iphone 14',       branch: 'Apple',   qty: 1, price: 349, date: '2026-03-02' },
+  { product: 'Sony',            branch: 'Sony',    qty: 1, price: 175, date: '2026-03-04' },
+  { product: 'Iphone 11',       branch: 'Apple',   qty: 1, price: 210, date: '2026-03-04' },
+  { product: 'Iphone 15',       branch: 'Apple',   qty: 1, price: 510, date: '2026-03-05' },
+  { product: 'Samsung',         branch: 'Samsung', qty: 1, price: 260, date: '2026-03-05' },
+  { product: 'Techno 5',        branch: 'Techno',  qty: 2, price: 190, date: '2026-03-06' },
+  { product: 'Iphone 13pro',    branch: 'Apple',   qty: 1, price: 320, date: '2026-03-07' },
+  { product: 'Dell Inspiron',   branch: 'Dell',    qty: 1, price: 540, date: '2026-03-10' },
+  { product: 'Xiaomi 14 ultra', branch: 'Xiaomi',  qty: 1, price: 435, date: '2026-03-12' },
+  { product: 'Mackbook M2',     branch: 'Apple',   qty: 1, price: 950, date: '2026-03-15' },
+  { product: 'Iphone 12pro',    branch: 'Apple',   qty: 2, price: 340, date: '2026-03-19' },
+];
+
+function formatHistoryDate(iso) {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function renderHistoryTable() {
+  let list = historyRecords;
+  if (searchQ) {
+    const q = searchQ.toLowerCase();
+    list = list.filter(r => r.product.toLowerCase().includes(q) || r.branch.toLowerCase().includes(q));
+  }
+
+  const empty = document.getElementById('history-empty');
+  const tbody = document.getElementById('history-tbody');
+  if (!tbody) return;
+
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  tbody.innerHTML = list.map((r, i) => `
+    <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0">
+      <td class="px-5 py-3 text-sm text-gray-500 dark:text-white">#${String(i + 1).padStart(4, '0')}</td>
+      <td class="px-3 py-3 text-sm font-medium text-gray-900 dark:text-white">${r.product}</td>
+      <td class="px-3 py-3 text-sm font-medium text-indigo-500 hidden sm:table-cell">${r.branch}</td>
+      <td class="px-3 py-3 text-sm text-gray-700 dark:text-white">${r.qty}</td>
+      <td class="px-3 py-3 text-sm font-semibold text-red-500">$${r.price}</td>
+      <td class="px-3 py-3 text-sm font-semibold text-red-500">$${r.qty * r.price}</td>
+      <td class="px-3 py-3 text-sm text-gray-400 hidden md:table-cell">${formatHistoryDate(r.date)}</td>
+    </tr>`).join('');
+}
+
 /* ── Quick qty ── */
 function quickQty(id, delta) {
   const p = products.find(x => x.id === id);
@@ -243,6 +340,7 @@ function filterTable(q) {
   searchQ = q;
   renderProductsTable();
   renderInventoryTable();
+  renderHistoryTable();
 }
 
 /* ── Edit modal ── */
@@ -356,17 +454,18 @@ function confirmDelete() {
 
 /* ── Add product form ── */
 function showView(view) {
-  ['dashboard','products','inventory','add'].forEach(v => {
+  ['dashboard','products','inventory','add','history','messages'].forEach(v => {
     document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
     const nav = document.getElementById(`nav-${v}`);
     if (nav) nav.classList.toggle('active', v === view);
   });
   currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product'};
+  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'History',messages:'Messages'};
   document.getElementById('page-title').textContent = titles[view] || '';
-  document.getElementById('topbar-search').classList.toggle('hidden', view !== 'products' && view !== 'inventory');
+  document.getElementById('topbar-search').classList.toggle('hidden', !['products','inventory','history'].includes(view));
 
   if (view === 'add' && !editingId) resetAddForm();
+  if (view === 'messages' && !messagesLoaded) { messagesLoaded = true; loadMessages(); }
 
   // Auto-close the mobile sidebar after navigating so its overlay doesn't
   // keep blocking the view that was just opened.
@@ -488,4 +587,5 @@ if (window.innerWidth < 1024) {
   }
 
 /* ── Boot ── */
+renderHistoryTable();
 init();

@@ -36,7 +36,11 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .spin{animation:spin 1s linear infinite;}
 
-  .tab-btn.active-tab{border-bottom:2px solid #6366f1;color:#4f46e5;font-weight:600;}
+  .tab-btn.active-tab{border-bottom:2px solid #6366f1;color:#4f46e5;font-weight:600;margin-bottom:-1px;}
+
+  /* Sidebar nav active state */
+  .nav-item.active{background:#1f2937;color:#fff;}
+  .dark .nav-item.active{background:#525252;}
 </style>
 @endsection
 
@@ -48,7 +52,7 @@
   <!-- Logo -->
   <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between dark:border-none">
     <a href="{{ route('home') }}" class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">I</div>
+      <img src="{{ asset('assets/img/ICT.jpg') }}" alt="ICT Professional Training Center logo" class="w-9 h-9 rounded-full object-cover shrink-0"/>
       <span class="font-display font-bold text-gray-900 dark:text-white">ICT<span class="text-indigo-500">Tech</span></span>
     </a>
     <span class="text-[10px] bg-indigo-100 text-indigo-600 font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide">Admin</span>
@@ -71,23 +75,24 @@
     </button>
     <button onclick="showView('add')" id="nav-add" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Add Product
+      Add Products
     </button>
-
-    <div class="pt-3 mt-3 border-t border-gray-100">
-      <a href="{{ route('admin-messages') }}" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        Messages
-      </a>
-      <a href="{{ route('shop') }}" target="_blank" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-        View Shop
-      </a>
-    </div>
+    <button onclick="showView('messages')" id="nav-messages" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Message
+    </button>
+    <a href="{{ route('shop') }}" target="_blank" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      View
+    </a>
+    <button onclick="showView('history')" id="nav-history" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      History
+    </button>
   </nav>
 
   <!-- User -->
-  <div class="px-4 py-4 border-t border-gray-100 flex items-center justify-between">
+  <div class="px-4 py-4 border-t border-gray-100 dark:border-none flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-600">{{ substr(Auth::user()->name, 0, 1) }}</div>
       <div>
@@ -281,7 +286,7 @@
     <div id="view-products" class="hidden">
       <!-- Tabs -->
       <div class="flex gap-0 border-b border-gray-200 mb-4">
-        <button onclick="filterByStatus('all')" data-tab="all" class="tab-btn active-tab px-4 py-2.5 text-sm text-indigo-600 border-b-2 border-indigo-500 -mb-px">All</button>
+        <button onclick="filterByStatus('all')" data-tab="all" class="tab-btn active-tab px-4 py-2.5 text-sm text-indigo-600">All</button>
         <button onclick="filterByStatus('in')" data-tab="in" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">In Stock</button>
         <button onclick="filterByStatus('low')" data-tab="low" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">Low Stock</button>
         <button onclick="filterByStatus('out')" data-tab="out" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">Out of Stock</button>
@@ -397,6 +402,43 @@
           <button onclick="cancelEdit()" class="px-5 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition-colors">
             Cancel
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──── MESSAGES VIEW ──── -->
+    <div id="view-messages" class="hidden">
+      <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm overflow-hidden">
+        <div id="messages-list" class="divide-y divide-gray-100 dark:divide-neutral-600"></div>
+        <div id="messages-empty" class="hidden text-center py-16">
+          <div class="text-4xl mb-3">📭</div>
+          <p class="text-gray-500 dark:text-white font-medium">No messages yet</p>
+          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Submissions from the contact form will show up here.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──── HISTORY VIEW ──── -->
+    <div id="view-history" class="hidden">
+      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">No</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden sm:table-cell">Branch</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">QTY</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Price</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Total</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden md:table-cell">Date</th>
+            </tr></thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+        <div id="history-empty" class="hidden text-center py-16">
+          <div class="text-4xl mb-3">🕘</div>
+          <p class="text-gray-500 dark:text-white font-medium">No sales history yet</p>
+          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your search.</p>
         </div>
       </div>
     </div>

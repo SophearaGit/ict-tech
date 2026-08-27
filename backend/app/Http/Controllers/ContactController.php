@@ -21,9 +21,20 @@ class ContactController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $messages = ContactMessage::orderByDesc('created_at')->get();
+
+        if ($request->wantsJson()) {
+            return response()->json($messages->map(fn (ContactMessage $m) => [
+                'id' => $m->id,
+                'name' => $m->name,
+                'email' => $m->email,
+                'subject' => $m->subject,
+                'message' => $m->message,
+                'created_at' => $m->created_at->toIso8601String(),
+            ]));
+        }
 
         return view('admin-messages', compact('messages'));
     }
