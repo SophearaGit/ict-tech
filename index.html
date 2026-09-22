@@ -425,7 +425,7 @@
           <a href="shop.html" class="mt-5 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-semibold px-5 py-2 rounded-full transition-colors">Learn more</a>
           <div class="relative flex items-center justify-center mt-8">
             <div class="absolute w-52 h-52 rounded-full bg-gradient-to-br from-red-400 via-pink-400 to-purple-500 opacity-50 blur-2xl"></div>
-            <img src="assets/img/ict-upgrade-iphone.png" alt="ICT Upgrade" class="relative max-h-56 object-contain drop-shadow-xl">
+            <img src="assets/img/ict-upgrade-iphone.png" alt="ICT Upgrade" class="relative max-h-56 object-contain drop-shadow-xl dark:drop-shadow-none">
           </div>
         </div>
 
@@ -434,7 +434,7 @@
           <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Incredible Carrier Deals</h3>
           <p class="text-gray-500 dark:text-gray-400 mt-2 max-w-xs">Explore deals that accept eligible trade-in devices in any condition.</p>
           <a href="shop.html" class="mt-5 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-semibold px-5 py-2 rounded-full transition-colors">Find your deal</a>
-          <img src="assets/img/ict-airpods.png" alt="ICT AirPods" class="mt-6 max-h-52 object-contain drop-shadow-xl">
+          <img src="assets/img/ict-airpods.png" alt="ICT AirPods" class="mt-6 max-h-52 object-contain drop-shadow-xl dark:drop-shadow-none">
         </div>
 
       </div>
@@ -534,7 +534,7 @@
       if (!mask) return;
       let heroPlayer = null;
       let revealTimer = null;
-      let lastTime = 0;
+      let seeking = false;
 
       function hide() {
         clearTimeout(revealTimer);
@@ -548,7 +548,7 @@
       }
 
       function pollLoop() {
-        if (!heroPlayer || typeof heroPlayer.getDuration !== 'function') return;
+        if (!heroPlayer || typeof heroPlayer.getDuration !== 'function' || seeking) return;
         let t, d;
         try {
           t = heroPlayer.getCurrentTime();
@@ -556,15 +556,22 @@
         } catch (e) { return; }
         if (!d) return;
 
-        // About to loop: hide well before the restart so the branding
-        // never has a chance to render visibly.
-        if (d - t < 1.5) hide();
-
-        // Just looped (playback position jumped backwards): start the
-        // reveal countdown fresh.
-        if (t < lastTime - 1) reveal(3500);
-
-        lastTime = t;
+        // Restart it ourselves a couple of seconds before the real end -
+        // well before YouTube's end-screen "related videos" overlay would
+        // appear - instead of waiting for the native loop restart, which
+        // also flashes YouTube's startup branding and left a long blank
+        // gap every cycle. A seekTo-driven restart is near-instant, so
+        // only a brief mask flash is needed around it, keeping playback
+        // feeling continuous instead of going blank.
+        if (d - t < 2) {
+          seeking = true;
+          hide();
+          heroPlayer.seekTo(0, true);
+          setTimeout(() => {
+            seeking = false;
+            reveal(60);
+          }, 350);
+        }
       }
 
       // cc_load_policy=0 only stops captions being forced ON - if the viewer's

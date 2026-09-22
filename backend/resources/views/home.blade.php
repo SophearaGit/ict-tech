@@ -100,7 +100,7 @@
 
   <!-- ─── BRANDS ──────────────────────────────────────────── -->
   <section class="bg-gray-50 dark:bg-neutral-900 dark:border-none backdrop-blur-lg  border-gray-100 dark:border-gray-800 py-10 transition-colors mt-10">
-    <p class="text-center text-lg font-semibold uppercase tracking-widest text-gray-400 mb-15">Trusted brands in our catalog</p>
+    <p class="text-center text-lg font-semibold uppercase tracking-widest text-gray-700 mb-15">Store Owner And Brands Who Trust Us</p>
     <div class="marquee-wrapper py-2 mt-7">
       <div class="marquee-group">
         <div class="glass-chip bg-white/80 dark:bg-neutral-800 border border-gray-100 dark:border-none rounded-2xl px-6 py-7 text-lg font-semibold text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer transition-colors whitespace-nowrap hover:-translate-y-0.5">Apple</div>
@@ -175,6 +175,8 @@
 
   <!-- ─── PROMO GRID ──────────────────────────────────────────── -->
   <section class="bg-gray-50 dark:bg-neutral-900 py-4 px-4 sm:px-6 transition-colors">
+
+  <h1 class="text-4xl font-bold bg-clip-text text-gray-500 mb-10 "> <span class="text-4xl font-bold bg-clip-text text-gray-800">The latest.</span> Take a look at what’s new.</h1>
 
     <!-- ICT Watch - breaks out to the full viewport width, own left/right padding as its margin -->
     <div class="w-screen relative left-1/2 -translate-x-1/2 px-4 sm:px-6 mb-3">
@@ -264,7 +266,7 @@
           <a href="{{ route('shop') }}" class="mt-5 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-semibold px-5 py-2 rounded-full transition-colors">Learn more</a>
           <div class="relative flex items-center justify-center mt-8">
             <div class="absolute w-52 h-52 rounded-full bg-gradient-to-br from-red-400 via-pink-400 to-purple-500 opacity-50 blur-2xl"></div>
-            <img src="{{ asset('assets/img/ict-upgrade-iphone.png') }}" alt="ICT Upgrade" class="relative max-h-56 object-contain drop-shadow-xl">
+            <img src="{{ asset('assets/img/ict-upgrade-iphone.png') }}" alt="ICT Upgrade" class="relative max-h-56 object-contain drop-shadow-xl dark:drop-shadow-none">
           </div>
         </div>
 
@@ -273,7 +275,7 @@
           <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Incredible Carrier Deals</h3>
           <p class="text-gray-500 dark:text-gray-400 mt-2 max-w-xs">Explore deals that accept eligible trade-in devices in any condition.</p>
           <a href="{{ route('shop') }}" class="mt-5 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-semibold px-5 py-2 rounded-full transition-colors">Find your deal</a>
-          <img src="{{ asset('assets/img/ict-airpods.png') }}" alt="ICT AirPods" class="mt-6 max-h-52 object-contain drop-shadow-xl">
+          <img src="{{ asset('assets/img/ict-airpods.png') }}" alt="ICT AirPods" class="mt-6 max-h-52 object-contain drop-shadow-xl dark:drop-shadow-none">
         </div>
 
       </div>
@@ -284,7 +286,7 @@
   <section class="bg-gray-50 dark:bg-neutral-900 py-20 text-center transition-colors">
     <div class="max-w-2xl mx-auto px-5">
       <h2 class="font-bold text-2xl sm:text-4xl text-neutral-600 dark:text-white mb-5">The best way to buy the products you love.</h2>
-      <p class="text-gray-400 text-lg mb-8">Trusted tech, globally.</p>
+      <p class="text-gray-600 text-lg mb-8">Trusted tech, globally.</p>
       <a href="{{ route('shop') }}" class="inline-block bg-indigo-500 hover:bg-indigo-400 text-white font-semibold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg hover:shadow-indigo-500/30">
         See our gadgets ? →
       </a>
@@ -372,7 +374,7 @@
     if (!mask) return;
     let heroPlayer = null;
     let revealTimer = null;
-    let lastTime = 0;
+    let seeking = false;
 
     function hide() {
       clearTimeout(revealTimer);
@@ -386,7 +388,7 @@
     }
 
     function pollLoop() {
-      if (!heroPlayer || typeof heroPlayer.getDuration !== 'function') return;
+      if (!heroPlayer || typeof heroPlayer.getDuration !== 'function' || seeking) return;
       let t, d;
       try {
         t = heroPlayer.getCurrentTime();
@@ -394,15 +396,22 @@
       } catch (e) { return; }
       if (!d) return;
 
-      // About to loop: hide well before the restart so the branding
-      // never has a chance to render visibly.
-      if (d - t < 1.5) hide();
-
-      // Just looped (playback position jumped backwards): start the
-      // reveal countdown fresh.
-      if (t < lastTime - 1) reveal(3500);
-
-      lastTime = t;
+      // Restart it ourselves a couple of seconds before the real end -
+      // well before YouTube's end-screen "related videos" overlay would
+      // appear - instead of waiting for the native loop restart, which
+      // also flashes YouTube's startup branding and left a long blank
+      // gap every cycle. A seekTo-driven restart is near-instant, so
+      // only a brief mask flash is needed around it, keeping playback
+      // feeling continuous instead of going blank.
+      if (d - t < 2) {
+        seeking = true;
+        hide();
+        heroPlayer.seekTo(0, true);
+        setTimeout(() => {
+          seeking = false;
+          reveal(60);
+        }, 350);
+      }
     }
 
     // cc_load_policy=0 only stops captions being forced ON - if the viewer's
