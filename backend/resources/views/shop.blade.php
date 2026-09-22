@@ -11,7 +11,7 @@
         <div>
           <h1 class="font-bold text-3xl sm:text-5xl text-gray-900 mb-1 dark:text-gray-100 mb-5">Shop Tech</h1>
           <p class="text-gray-400 text-md dark:text-white mt-7">
-            Phones · Earphones · Power Banks · Laptops — the best brands, curated.
+            Phones · Earphones · Power Banks · Laptops the best brands, curated.
           </p>
         </div>
 
