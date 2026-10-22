@@ -18,7 +18,7 @@ let currentSort      = "default";
     meaningful alt text on <img>.
 ══════════════════════════════════════════════════════════════════ */
 function productCardHTML(p, index) {
-  const specBadges = p.specs
+  const specBadges = (p.specs || [])
     .map(s => `<span class="inline-block bg-gray-100 text-gray-500 text-[11px] font-medium px-2 py-0.5 rounded-full">${s}</span>`)
     .join("");
 
@@ -36,6 +36,7 @@ function productCardHTML(p, index) {
 
   // Serialise for the cart button — escape quotes so it's safe in an attribute
   const productJSON = JSON.stringify(p).replace(/"/g, "&quot;");
+  const isFav = Favorites.isFavorited(p.id);
 
   return `
     <article
@@ -87,12 +88,60 @@ function productCardHTML(p, index) {
           <span class="font-bold text-gray-900 dark:text-white text-base" aria-label="Price: $${p.price}">
             $${p.price.toLocaleString()}
           </span>
-          <button onclick="Cart.add(${productJSON})" aria-label="Add ${p.name} to cart" class="bg-gray-900 hover:bg-indigo-500 dark:hover:bg-indigo-500 dark:bg-neutral-900 focus:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 text-white text-xs font-semibold px-4 py-2 rounded-full transition-colors duration-200 active:scale-95" >
-            Add to cart
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="handleFavoriteToggle(this, ${p.id})" data-fav-btn
+              aria-label="${isFav ? `Remove ${p.name} from favorites` : `Save ${p.name} to favorites`}"
+              aria-pressed="${isFav ? 'true' : 'false'}"
+              class="glass-icon-btn p-2 rounded-full border border-gray-200 dark:border-gray-700 transition-colors ${isFav ? 'text-red-500' : 'text-gray-400 hover:text-red-400'}">
+              <svg class="w-4 h-4" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
+              </svg>
+            </button>
+            <button onclick="Cart.add(${productJSON})" aria-label="Add ${p.name} to cart" class="bg-gray-900 hover:bg-indigo-500 dark:hover:bg-indigo-500 dark:bg-neutral-900 focus:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 text-white text-xs font-semibold px-4 py-2 rounded-full transition-colors duration-200 active:scale-95" >
+              Add to cart
+            </button>
+          </div>
         </div>
       </div>
     </article>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+    FAVORITE TOGGLE
+    On the shop page, just flips the heart icon in place. On the
+    favorites page, an un-favorite also removes the card from view.
+══════════════════════════════════════════════════════════════════ */
+async function handleFavoriteToggle(btn, productId) {
+  btn.disabled = true;
+  const result = await Favorites.toggle(productId);
+  btn.disabled = false;
+  if (!result || !result.ok) return;
+
+  const isFav = result.favorited;
+  btn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+  btn.classList.toggle('text-red-500', isFav);
+  btn.classList.toggle('text-gray-400', !isFav);
+  btn.classList.toggle('hover:text-red-400', !isFav);
+  const svg = btn.querySelector('svg');
+  if (svg) svg.setAttribute('fill', isFav ? 'currentColor' : 'none');
+
+  if (!isFav && window.location.pathname === '/favorites') {
+    const card = btn.closest('article');
+    if (card) card.remove();
+    const grid = document.getElementById('product-grid');
+    const remaining = grid ? grid.querySelectorAll('article').length : 0;
+    const countEl = document.getElementById('product-count');
+    if (countEl) countEl.textContent = `${remaining} product${remaining !== 1 ? 's' : ''}`;
+    if (remaining === 0 && grid) {
+      grid.innerHTML = `
+        <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
+          <div class="text-5xl mb-4" aria-hidden="true">🤍</div>
+          <h3 class="text-gray-700 dark:text-gray-200 font-semibold text-lg mb-1">No favorites yet</h3>
+          <p class="text-gray-400 text-sm mb-4">Tap the heart on any product to save it here.</p>
+          <a href="/shop" class="text-indigo-500 text-sm font-medium hover:underline">Browse the shop</a>
+        </div>`;
+    }
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -234,7 +283,7 @@ function setCategory(slug) {
   // Reset brand when category changes
   activeBrand = "all";
   document.querySelectorAll(".brand-pill").forEach(btn => {
-    setBrandPillState(btn, false);
+    setBrandPillState(btn, btn.dataset.brand === "all");
   });
 
   applyFilters(document.getElementById("search-input")?.value || "");
@@ -307,7 +356,12 @@ function clearAll() {
     btn.classList.toggle("dark:text-gray-300", !isAll);
   });
 
-  document.querySelectorAll(".brand-pill").forEach(b => setBrandPillState(b, false));
+  // The "All brands" pill (category pages only) is the selected one once brand is reset
+  document.querySelectorAll(".brand-pill").forEach(b => {
+    const isAll = b.dataset.brand === "all";
+    setBrandPillState(b, isAll);
+    b.setAttribute("aria-pressed", isAll ? "true" : "false");
+  });
   document.querySelectorAll(".filter-pill").forEach(b => {
     b.classList.remove("bg-gray-900","text-white");
     b.classList.add("bg-white/50","text-gray-600","dark:text-gray-300","border","border-white/60");
@@ -345,6 +399,9 @@ function hoverPillSpanHTML(id) {
 function buildFilterUI() {
   // ── Category tabs ──────────────────────────────────────────────
   const catContainer = document.getElementById("category-tabs");
+  const onCategoryPage = typeof SHOP_CATEGORY !== "undefined" && SHOP_CATEGORY;
+
+  // No #category-tabs on a /shop/{category} page (the view omits it), so this is skipped there.
   if (catContainer) {
     const allTab = `
       <button
@@ -378,7 +435,17 @@ function buildFilterUI() {
         class="brand-pill glass-chip relative z-10 text-sm font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 whitespace-nowrap"
       >${b.label}</button>`).join("");
 
-    brandContainer.innerHTML = hoverPillSpanHTML("brand-hover-pill") + brandPills;
+    // On a category page the brand row is the main way to narrow the list, so give it an
+    // explicit "All brands" reset (setBrand('all') clears the brand filter).
+    const allBrandsPill = onCategoryPage ? `
+      <button
+        data-brand="all"
+        onclick="setBrand('all')"
+        aria-pressed="true"
+        class="brand-pill glass-chip relative z-10 text-sm font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all duration-200 bg-indigo-500 text-white whitespace-nowrap"
+      >All brands</button>` : "";
+
+    brandContainer.innerHTML = hoverPillSpanHTML("brand-hover-pill") + allBrandsPill + brandPills;
     bindHoverPill(brandContainer, document.getElementById("brand-hover-pill"), ".brand-pill");
   }
 }
