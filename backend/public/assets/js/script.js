@@ -19,60 +19,124 @@ function toggleTheme() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-    AUTH  (localStorage-backed accounts — client-side only, no backend)
+    AUTH  (real accounts — session-backed via the Laravel API)
 ══════════════════════════════════════════════════════════════════ */
 const Auth = (() => {
-  const USERS_KEY = 'novadrop_users';
-  const SESSION_KEY = 'novadrop_session';
-
-  function getUsers() {
-    return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-  }
-  function saveUsers(users) {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content || '';
   }
 
-  function register(username, email, password) {
-    username = username.trim();
-    email = email.trim();
-    const users = getUsers();
-    if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-      return { ok: false, error: 'That username is already taken.' };
+  async function postJSON(url, body) {
+    let res, data;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken(),
+        },
+        body: JSON.stringify(body),
+      });
+      data = await res.json();
+    } catch (e) {
+      return { ok: false, error: 'Network error — please try again.' };
     }
-    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-      return { ok: false, error: 'An account with that email already exists.' };
+    if (!res.ok && !data) return { ok: false, error: 'Something went wrong.' };
+    if (data && data.csrf_token) {
+      const meta = document.querySelector('meta[name="csrf-token"]');
+      if (meta) meta.content = data.csrf_token;
     }
-    users.push({ username, email, password });
-    saveUsers(users);
-    localStorage.setItem(SESSION_KEY, username);
-    return { ok: true };
+    return data;
   }
 
-  function login(email, password) {
-    email = email.trim();
-    const user = getUsers().find(u =>
-      u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
-    if (!user) return { ok: false, error: 'Invalid email or password.' };
-    localStorage.setItem(SESSION_KEY, user.username);
-    return { ok: true };
+  async function register(name, email, password) {
+    const result = await postJSON('/register', { name, email, password });
+    if (result.ok) window.__CURRENT_USER__ = result.user;
+    return result;
   }
 
-  function logout() {
-    localStorage.removeItem(SESSION_KEY);
+  async function login(email, password) {
+    const result = await postJSON('/login', { email, password });
+    if (result.ok) window.__CURRENT_USER__ = result.user;
+    return result;
+  }
+
+  async function logout() {
+    const result = await postJSON('/logout', {});
+    window.__CURRENT_USER__ = null;
+    return result;
   }
 
   function getCurrentUser() {
-    const username = localStorage.getItem(SESSION_KEY);
-    if (!username) return null;
-    return getUsers().find(u => u.username === username) || null;
+    return window.__CURRENT_USER__ || null;
   }
 
   function isLoggedIn() {
     return !!getCurrentUser();
   }
 
-  return { register, login, logout, getCurrentUser, isLoggedIn };
+  async function requestPasswordResetCode(email) {
+    return postJSON('/forgot-password', { email });
+  }
+
+  async function resetPasswordWithCode(email, code, password) {
+    return postJSON('/reset-password', { email, code, password });
+  }
+
+  return {
+    register, login, logout, getCurrentUser, isLoggedIn,
+    requestPasswordResetCode, resetPasswordWithCode,
+  };
+})();
+
+
+/* ══════════════════════════════════════════════════════════════════
+    FAVORITES  (signed-in only — real backend, saved products to buy later)
+══════════════════════════════════════════════════════════════════ */
+const Favorites = (() => {
+  const ids = new Set(window.__FAVORITE_IDS__ || []);
+
+  function isFavorited(id) {
+    return ids.has(id);
+  }
+
+  function promptSignIn() {
+    showToast('Sign in to save favorites');
+    setTimeout(() => {
+      const page = window.location.pathname || '/';
+      window.location.href = `/account?redirect=${encodeURIComponent(page)}`;
+    }, 900);
+  }
+
+  async function toggle(productId) {
+    if (!Auth.isLoggedIn()) {
+      promptSignIn();
+      return { ok: false };
+    }
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    let res, data;
+    try {
+      res = await fetch('/favorites/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': meta?.content || '',
+        },
+        body: JSON.stringify({ product_id: productId }),
+      });
+      data = await res.json();
+    } catch (e) {
+      return { ok: false, error: 'Network error — please try again.' };
+    }
+    if (data.ok) {
+      if (data.favorited) ids.add(productId); else ids.delete(productId);
+    }
+    return data;
+  }
+
+  return { isFavorited, toggle };
 })();
 
 
@@ -400,6 +464,7 @@ function toggleCart() {
   overlay.classList.toggle('hidden', !cartOpen);
   if (!cartOpen) {
     clearInterval(_checkoutTimerId);
+    destroyCheckoutMap();
     _checkoutState = null;
   }
   renderCartDrawer();
@@ -410,21 +475,87 @@ function toggleCart() {
     with a 10-minute countdown. Client-side only: no real payment
     gateway exists here, so the QR is clearly labelled as a demo.
 ══════════════════════════════════════════════════════════════════ */
+// L.Icon.Default._getIconUrl() always prefixes its own auto-detected image
+// path onto iconUrl/shadowUrl, even when they're already absolute — so
+// mergeOptions() on Icon.Default just doubles the URL. A plain L.icon()
+// (not Icon.Default) has no such prefixing, so build the pin icon that way.
+const _checkoutPinIcon = (typeof L !== 'undefined') ? L.icon({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+}) : null;
+
 let _checkoutState = null;   // null | 'contact' | 'payment' | 'expired' | 'success'
-let _checkoutOrder = null;   // { id, phone, address, coords, total, expiresAt }
+let _checkoutOrder = null;   // { id, phone, address, coords, total, expiresAt, paymentMethod }
 let _checkoutCoords = null;  // { lat, lng } once shared
 let _checkoutTimerId = null;
+let _checkoutMap = null;     // Leaflet map instance, once the pin map is shown
+let _checkoutMarker = null;  // Leaflet draggable marker
+let _checkoutPaymentMethod = 'aba'; // 'aba' | 'cod' — chosen on the contact step
 
 function startCheckout() {
   if (Cart.getItems().length === 0) return;
+  destroyCheckoutMap();
   _checkoutState = 'contact';
   renderCartDrawer();
 }
 
 function cancelCheckout() {
   clearInterval(_checkoutTimerId);
+  destroyCheckoutMap();
   _checkoutState = null;
   renderCartDrawer();
+}
+
+function destroyCheckoutMap() {
+  if (_checkoutMap) _checkoutMap.remove();
+  _checkoutMap = null;
+  _checkoutMarker = null;
+}
+
+/* Shared by the initial GPS fix and every pin drag — keeps the address
+   field, status text, and _checkoutCoords in sync with wherever the pin is. */
+function applyCheckoutCoords(lat, lng, adjusted) {
+  _checkoutCoords = { lat, lng };
+  const addressField = document.getElementById('checkout-address');
+  if (addressField) {
+    addressField.value = `My current location (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+  }
+  const statusEl = document.getElementById('checkout-location-status');
+  if (statusEl) {
+    statusEl.innerHTML = adjusted
+      ? `📍 Pin updated — this exact spot will be shared.`
+      : `📍 Approximate location found — drag the pin below to match your exact spot.`;
+    statusEl.className = 'text-xs text-green-600 dark:text-green-400 mt-1';
+  }
+}
+
+function showCheckoutMap(lat, lng) {
+  const mapEl = document.getElementById('checkout-map');
+  if (!mapEl || typeof L === 'undefined') return;
+  mapEl.classList.remove('hidden');
+
+  if (!_checkoutMap) {
+    _checkoutMap = L.map('checkout-map').setView([lat, lng], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(_checkoutMap);
+    _checkoutMarker = L.marker([lat, lng], { draggable: true, icon: _checkoutPinIcon || undefined }).addTo(_checkoutMap);
+    _checkoutMarker.on('dragend', () => {
+      const pos = _checkoutMarker.getLatLng();
+      applyCheckoutCoords(pos.lat, pos.lng, true);
+    });
+    setTimeout(() => _checkoutMap && _checkoutMap.invalidateSize(), 150);
+  } else {
+    _checkoutMap.setView([lat, lng], 16);
+    _checkoutMarker.setLatLng([lat, lng]);
+    _checkoutMap.invalidateSize();
+  }
 }
 
 function shareCheckoutLocation() {
@@ -442,15 +573,8 @@ function shareCheckoutLocation() {
   }
   navigator.geolocation.getCurrentPosition(
     pos => {
-      _checkoutCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      const addressField = document.getElementById('checkout-address');
-      if (addressField) {
-        addressField.value = `My current location (${_checkoutCoords.lat.toFixed(5)}, ${_checkoutCoords.lng.toFixed(5)})`;
-      }
-      if (statusEl) {
-        statusEl.innerHTML = `📍 Location shared — <a href="https://www.google.com/maps?q=${_checkoutCoords.lat},${_checkoutCoords.lng}" target="_blank" rel="noopener" class="underline">view on map</a>`;
-        statusEl.className = 'text-xs text-green-600 dark:text-green-400 mt-1';
-      }
+      applyCheckoutCoords(pos.coords.latitude, pos.coords.longitude, false);
+      showCheckoutMap(pos.coords.latitude, pos.coords.longitude);
     },
     err => {
       if (statusEl) {
@@ -482,10 +606,15 @@ function handleCheckoutContactSubmit() {
     phone, address,
     coords: _checkoutCoords,
     total,
+    paymentMethod: _checkoutPaymentMethod,
   };
+  destroyCheckoutMap();
   _checkoutState = 'payment';
   renderCartDrawer();
-  startCheckoutCountdown();
+  // Cash on delivery has no online payment window to time out — the QR/countdown is ABA-only.
+  if (_checkoutOrder.paymentMethod === 'aba') {
+    startCheckoutCountdown();
+  }
 }
 
 function startCheckoutCountdown() {
@@ -532,6 +661,21 @@ function _checkoutMsg(msg, type) {
   el.classList.remove('hidden');
 }
 
+function checkoutMethodBtnClasses(active) {
+  return `payment-method-btn flex flex-col items-center justify-center gap-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
+    active
+      ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-400'
+      : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
+  }`;
+}
+
+function setCheckoutPaymentMethod(method) {
+  _checkoutPaymentMethod = method;
+  document.querySelectorAll('.payment-method-btn').forEach(btn => {
+    btn.className = checkoutMethodBtnClasses(btn.dataset.paymentMethod === method);
+  });
+}
+
 function checkoutContactFormHTML() {
   return `
     <div class="py-2">
@@ -545,10 +689,26 @@ function checkoutContactFormHTML() {
             class="glass-input w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none dark:text-white dark:bg-neutral-800 dark:placeholder-gray-400"/>
         </div>
         <div>
+          <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1.5">Payment method</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" data-payment-method="aba" onclick="setCheckoutPaymentMethod('aba')"
+              class="${checkoutMethodBtnClasses(_checkoutPaymentMethod === 'aba')}">
+              <span class="text-xl" aria-hidden="true">🏦</span>
+              <span>ABA KHQR</span>
+            </button>
+            <button type="button" data-payment-method="cod" onclick="setCheckoutPaymentMethod('cod')"
+              class="${checkoutMethodBtnClasses(_checkoutPaymentMethod === 'cod')}">
+              <span class="text-xl" aria-hidden="true">💵</span>
+              <span>Cash on Delivery</span>
+            </button>
+          </div>
+        </div>
+        <div>
           <div class="flex items-center justify-between mb-1.5">
             <label class="block text-sm text-gray-500 dark:text-gray-400">Delivery location</label>
             <button type="button" onclick="shareCheckoutLocation()" class="text-xs font-medium text-indigo-500 hover:underline">Share my current location</button>
           </div>
+          <div id="checkout-map" class="hidden w-full h-44 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 mb-2"></div>
           <textarea id="checkout-address" rows="2" placeholder="Street, city, or share your location above"
             class="glass-input w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none dark:text-white dark:bg-neutral-800 dark:placeholder-gray-400 resize-none"></textarea>
           <p id="checkout-location-status" class="text-xs text-gray-400 mt-1"></p>
@@ -559,17 +719,28 @@ function checkoutContactFormHTML() {
 
 function checkoutPaymentStepHTML() {
   const order = _checkoutOrder;
+
+  if (order.paymentMethod === 'cod') {
+    return `
+      <div class="flex flex-col items-center text-center py-6">
+        <div class="text-5xl mb-3" aria-hidden="true">💵</div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Order <span class="font-semibold text-gray-800 dark:text-white">#${escapeHtml(order.id)}</span></p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white mb-2">$${order.total.toFixed(2)}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-xs">Pay in cash to the delivery person when your order arrives.</p>
+      </div>`;
+  }
+
   const qrPayload = `ICTTECH-PAY|order:${order.id}|amount:${order.total.toFixed(2)}|phone:${order.phone}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrPayload)}`;
   return `
     <div class="flex flex-col items-center text-center py-4">
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Order <span class="font-semibold text-gray-800 dark:text-white">#${escapeHtml(order.id)}</span></p>
       <div class="glass-panel bg-white p-4 rounded-2xl border border-gray-100 my-4">
-        <img src="${qrUrl}" alt="Payment QR code" width="220" height="220" class="rounded-xl" />
+        <img src="${qrUrl}" alt="ABA KHQR payment code" width="220" height="220" class="rounded-xl" />
       </div>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mb-1">$${order.total.toFixed(2)}</p>
       <p id="checkout-timer" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 mb-2">10:00 remaining</p>
-      <p class="text-xs text-gray-400 max-w-xs">Scan with your banking app to pay. This is a demo QR — no real payment is processed.</p>
+      <p class="text-xs text-gray-400 max-w-xs">Scan with your ABA Mobile app to pay. This is a demo QR — no real payment is processed.</p>
     </div>`;
 }
 
@@ -583,11 +754,16 @@ function checkoutExpiredStepHTML() {
 }
 
 function checkoutSuccessStepHTML() {
+  const order = _checkoutOrder;
+  const codNote = order.paymentMethod === 'cod'
+    ? `<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Please have <strong>$${order.total.toFixed(2)}</strong> ready in cash.</p>`
+    : '';
   return `
     <div class="flex flex-col items-center text-center py-10">
       <div class="text-5xl mb-3">✅</div>
       <h3 class="font-bold text-gray-900 dark:text-white mb-1">Booking confirmed!</h3>
-      <p class="text-sm text-gray-400">We'll contact you at ${escapeHtml(_checkoutOrder.phone)} to confirm delivery.</p>
+      <p class="text-sm text-gray-400">We'll contact you at ${escapeHtml(order.phone)} to confirm delivery.</p>
+      ${codNote}
     </div>`;
 }
 
@@ -602,8 +778,9 @@ function renderCheckoutStep(itemsEl, footerEl) {
       <button onclick="cancelCheckout()" class="w-full text-center text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mt-2 py-1">Back to cart</button>`;
   } else if (_checkoutState === 'payment') {
     itemsEl.innerHTML = checkoutPaymentStepHTML();
+    const isCod = _checkoutOrder.paymentMethod === 'cod';
     footerEl.innerHTML = `
-      <button onclick="completeCheckoutPayment()" class="${primaryBtnClasses} bg-green-600 hover:bg-green-700">I've completed payment</button>
+      <button onclick="completeCheckoutPayment()" class="${primaryBtnClasses} bg-green-600 hover:bg-green-700">${isCod ? 'Confirm Order' : "I've completed payment"}</button>
       ${cancelBtnHTML}`;
   } else if (_checkoutState === 'expired') {
     itemsEl.innerHTML = checkoutExpiredStepHTML();

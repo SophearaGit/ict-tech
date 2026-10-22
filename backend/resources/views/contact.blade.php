@@ -143,13 +143,14 @@
 </div>
 
 <!-- FOOTER -->
-<footer class="bg-gray-50 dark:bg-neutral-900 border-t border-gray-100 py-8 dark:border-none">
+<footer class="bg-black py-8">
   <div class="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-md text-gray-400">
-    <span class="font-bold text-gray-900 dark:text-white">ICT<span class="text-indigo-500">Tech</span></span>
+    <span class="font-bold text-white">ICT<span class="text-indigo-500">Tech</span></span>
     <span>© 2025 ICTTech. All rights reserved.</span>
     <div class="flex gap-5">
-      <a href="#" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">About</a>
-      <a href="{{ route('contact') }}" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">Contact</a>
+      <a href="#" class="text-gray-300 hover:text-white transition-colors">About</a>
+      <a href="{{ route('contact') }}" class="text-gray-300 hover:text-white transition-colors">Contact</a>
+      <a href="{{ route('privacy') }}" class="text-gray-300 hover:text-white transition-colors">Privacy</a>
     </div>
   </div>
 </footer>

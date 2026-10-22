@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Shop Tech — NovaDrop')
+@section('title', $category ? $category['label'] . ' — ICTTech' : 'Shop Tech — NovaDrop')
 
 @section('content')
 <div class="pt-20">
@@ -9,10 +9,14 @@
     <div class="max-w-7xl mx-auto px-5 py-10">
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 class="font-bold text-3xl sm:text-5xl text-gray-900 mb-1 dark:text-gray-100 mb-5">Shop Tech</h1>
-          <p class="text-gray-400 text-md dark:text-white mt-7">
-            Phones · Earphones · Power Banks · Laptops the best brands, curated.
-          </p>
+          @if ($category)
+            <h1 class="sr-only">{{ $category['label'] }}</h1>
+          @else
+            <h1 class="font-bold text-3xl sm:text-5xl text-gray-900 mb-1 dark:text-gray-100 mb-5">Shop Tech</h1>
+            <p class="text-gray-400 text-md dark:text-white mt-7">
+              Phones · Earphones · Power Banks · Laptops the best brands, curated.
+            </p>
+          @endif
         </div>
 
         <!-- Search bar -->
@@ -43,7 +47,8 @@
         </div>
       </div>
 
-      <!-- CATEGORY FILTER TABS -->
+      <!-- CATEGORY FILTER TABS (full shop only — a category page is already scoped, brands only) -->
+      @unless ($category)
       <div class="mt-5">
         <p class="text-[12px] font-semibold uppercase tracking-widest text-gray-400 mb-2 dark:text-white">Category</p>
         <div id="category-tabs"
@@ -52,40 +57,46 @@
           aria-label="Filter by category"
         ></div>
       </div>
+      @endunless
 
       <!-- BRAND FILTER PILLS -->
-      <div class="mt-3">
+      <div class="{{ $category ? 'mt-5' : 'mt-3' }}">
         <p class="text-[12px] font-semibold uppercase tracking-widest text-gray-400 mb-2 dark:text-white mb-5">Brand</p>
-        <div
-          id="brand-pills"
-          class="pill-scroll flex gap-2 pb-1 relative"
-          role="group"
-          aria-label="Filter by brand"
-        ></div>
-      </div>
 
-      <!-- TRENDING TOGGLE -->
-      <div class="mt-3 flex items-center gap-2">
-        <button
-          data-filter="trending"
-          onclick="setFilter('trending')"
-          aria-pressed="false"
-          class="filter-pill glass-chip text-xs font-semibold px-4 py-2 rounded-full border backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 border-white/60"
-        >
-          🔥 Trending only
-        </button>
-        <button
-          onclick="clearAll()"
-          class="text-sm text-gray-400 hover:text-indigo-500 transition-colors px-2 py-2 focus:outline-none focus:underline"
-          aria-label="Clear all filters and search"
-        >
-          Reset all
-        </button>
+        {{-- On a category page at large widths, the brand pills and the Trending/Reset controls share one row. --}}
+        <div class="flex flex-col gap-3 {{ $category ? 'lg:flex-row lg:items-center lg:gap-6' : '' }}">
+          <div
+            id="brand-pills"
+            class="pill-scroll flex gap-2 pb-1 relative {{ $category ? 'lg:min-w-0' : '' }}"
+            role="group"
+            aria-label="Filter by brand"
+          ></div>
+
+          <!-- TRENDING TOGGLE -->
+          <div class="flex items-center gap-2 flex-shrink-0 {{ $category ? 'lg:pb-1' : '' }}">
+            <button
+              data-filter="trending"
+              onclick="setFilter('trending')"
+              aria-pressed="false"
+              class="filter-pill glass-chip text-xs font-semibold px-4 py-2 rounded-full border backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 border-white/60"
+            >
+              🔥 Trending only
+            </button>
+            <button
+              onclick="clearAll()"
+              class="text-sm text-gray-400 hover:text-indigo-500 transition-colors px-2 py-2 focus:outline-none focus:underline"
+              aria-label="Clear all filters and search"
+            >
+              Reset all
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- CATEGORY SHOWCASE CARDS -->
+  <!-- CATEGORY SHOWCASE CARDS (full shop only — a category page is already scoped) -->
+  @unless ($category)
   <section aria-label="Browse by category" class="max-w-7xl mx-auto px-5 pt-8 pb-2">
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <button onclick="setCategory('phones')" aria-label="Shop Phones" class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none ">
@@ -110,6 +121,7 @@
       </button>
     </div>
   </section>
+  @endunless
 
   <!-- PRODUCT GRID -->
   <main id="main-content" class="max-w-7xl mx-auto px-5 py-6 pb-20" aria-label="Product listing">
@@ -152,39 +164,42 @@
 </div>
 
 <!-- FOOTER -->
-<footer class="bg-gray-50  dark:bg-neutral-900 border-t border-gray-100 py-8 dark:border-none">
+<footer class="bg-black py-8">
   <div class="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-md text-gray-400">
-    <span class="font-display font-bold text-gray-900 dark:text-white">
+    <span class="font-display font-bold text-white">
     ICT<span class="text-indigo-500">Tech</span>
     </span>
     <span>© 2025 ICTTech. All rights reserved.</span>
     <nav aria-label="Footer links" class="flex gap-5">
-      <a href="#" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">About</a>
-      <a href="{{ route('contact') }}" class="glass-icon-btn px-3 py-1.5 rounded-full border border-transparent hover:text-gray-700 dark:hover:text-white transition-colors">Contact</a>
+      <a href="#" class="text-gray-300 hover:text-white transition-colors">About</a>
+      <a href="{{ route('contact') }}" class="text-gray-300 hover:text-white transition-colors">Contact</a>
+      <a href="{{ route('privacy') }}" class="text-gray-300 hover:text-white transition-colors">Privacy</a>
     </nav>
   </div>
 </footer>
 @endsection
 
+@section('pre-scripts')
+<script>
+  window.__FAVORITE_IDS__ = @json($favoriteIds);
+</script>
+@endsection
+
 @section('extra-scripts')
+@php
+  $shopCategory = $category ? ['slug' => $category['slug']] : null;
+@endphp
 <script>
   const PRODUCTS = @json($products);
   const CATEGORIES = [
-    { slug: "phones",     label: "Phones",      icon: "📱", desc: "Apple · Samsung · Xiaomi" },
-    { slug: "earphones",  label: "Earphones",   icon: "🎧", desc: "Apple · Samsung · Sony · Anker" },
-    { slug: "powerbanks", label: "Power Banks", icon: "🔋", desc: "Anker · Xiaomi · Jtrust" },
-    { slug: "laptops",    label: "Laptops",     icon: "💻", desc: "Apple · Asus · Dell" },
+    @foreach (config('shop.categories') as $slug => $cat)
+    { slug: @json($slug), label: @json($cat['label']), icon: @json($cat['icon']), desc: @json($cat['desc']) },
+    @endforeach
   ];
-  const BRANDS = [
-    { id: "apple",   label: "Apple"   },
-    { id: "samsung", label: "Samsung" },
-    { id: "xiaomi",  label: "Xiaomi"  },
-    { id: "sony",    label: "Sony"    },
-    { id: "anker",   label: "Anker"   },
-    { id: "jtrust",  label: "Jtrust"  },
-    { id: "asus",    label: "Asus"    },
-    { id: "dell",    label: "Dell"    },
-  ];
+  // Set on /shop/{category}: shop.js adds an "All brands" pill to the brand row.
+  // null on the full /shop page.
+  const SHOP_CATEGORY = @json($shopCategory);
+  const BRANDS = @json($brands);
 </script>
 <script src="{{ asset('assets/js/shop.js') }}"></script>
 @endsection

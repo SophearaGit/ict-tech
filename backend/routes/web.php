@@ -2,8 +2,12 @@
 
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\AdminAuthController;
+use App\Http\Controllers\Auth\CustomerAuthController;
+use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\ContactController;
-use App\Models\Product;
+use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\ShopController;
 use Illuminate\Support\Facades\Route;
 
 // Home page
@@ -12,24 +16,11 @@ Route::get('/', function () {
 })->name('home');
 
 // Shop page
-Route::get('/shop', function () {
-    $products = Product::orderBy('id')->get()->map(fn (Product $p) => [
-        'id' => $p->id,
-        'name' => $p->name,
-        'brand' => $p->brand,
-        'type' => $p->type,
-        'category' => $p->category,
-        'price' => (float) $p->price,
-        'desc' => $p->description,
-        'specs' => $p->specs,
-        'image' => $p->image,
-        'imageAlt' => $p->image_alt,
-        'trending' => (bool) $p->trending,
-        'badge' => $p->badge,
-    ]);
-
-    return view('shop', compact('products'));
-})->name('shop');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop');
+// One category per page (phones, earphones, powerbanks, laptops — see config/shop.php)
+Route::get('/shop/{category}', [ShopController::class, 'category'])
+    ->whereIn('category', array_keys(config('shop.categories')))
+    ->name('shop.category');
 
 // Contact page
 Route::get('/contact', function () {
@@ -37,10 +28,28 @@ Route::get('/contact', function () {
 })->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.submit');
 
-// Account page (login / register / welcome — client-side auth)
+// Privacy policy page (also referenced from Google OAuth consent screen config)
+Route::get('/privacy', function () {
+    return view('privacy');
+})->name('privacy');
+
+// Account page (login / register / welcome — session-backed customer auth)
 Route::get('/account', function () {
     return view('account');
 })->name('account');
+
+Route::post('/register', [CustomerAuthController::class, 'register'])->name('register');
+Route::post('/login', [CustomerAuthController::class, 'login'])->name('login');
+Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('logout');
+
+Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])->name('password.email');
+Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
+
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
+
+Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites');
+Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
 
 Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin-login');
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin-login.attempt');

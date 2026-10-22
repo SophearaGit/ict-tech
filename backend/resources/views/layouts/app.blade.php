@@ -18,6 +18,8 @@
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link href="{{ asset('assets/css/glass.css') }}" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -115,18 +117,59 @@
             class="nav-hover-pill absolute rounded-full opacity-0 pointer-events-none"
             style="transition: left 0.35s cubic-bezier(0.34,1.56,0.64,1), top 0.35s cubic-bezier(0.34,1.56,0.64,1), width 0.35s cubic-bezier(0.34,1.56,0.64,1), height 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;"></span>
           @php
+            $shopCategories = config('shop.categories');
+            $activeCategory = request()->route('category');
             $navLinks = [
               ['label' => 'Home', 'href' => route('home'), 'active' => request()->routeIs('home')],
-              ['label' => 'Shop', 'href' => route('shop'), 'active' => request()->routeIs('shop')],
+              ['label' => 'Shop', 'href' => route('shop'), 'active' => request()->routeIs('shop', 'shop.category'), 'dropdown' => true],
               ['label' => 'Contact', 'href' => route('contact'), 'active' => request()->routeIs('contact')],
               ['label' => 'Admin', 'href' => route('admin-login'), 'active' => request()->routeIs('admin-login') || request()->routeIs('admin-view')],
             ];
           @endphp
           @foreach ($navLinks as $link)
-            <a href="{{ $link['href'] }}" data-nav-link
-              class="relative z-10 px-4 py-2 rounded-full text-lg font-medium transition-colors duration-200 {{ $link['active']
-                ? 'nav-active-pill text-gray-900 dark:text-white'
-                : 'text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white' }}">{{ $link['label'] }}</a>
+            @php
+              $linkClass = 'relative z-10 px-4 py-2 rounded-full text-lg font-medium transition-colors duration-200 '
+                . ($link['active']
+                  ? 'nav-active-pill text-gray-900 dark:text-white'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white');
+            @endphp
+            @if (! empty($link['dropdown']))
+              {{-- "Shop" is only a menu trigger, not a link: hover (or keyboard focus) reveals the category
+                   menu, and the categories inside it are the only things to click. On touch devices, where
+                   there is no hover, a tap toggles it (data-open, see toggleShopMenu script below).
+                   The pt-3 on the panel wrapper bridges the gap below the trigger so the pointer can
+                   travel into the menu. --}}
+              <div id="shop-menu" class="relative group" data-open="false">
+                <button type="button" data-nav-link data-shop-trigger aria-haspopup="true" aria-expanded="false"
+                  class="{{ $linkClass }} inline-flex items-center gap-1.5 cursor-default">
+                  {{ $link['label'] }}
+                  <svg class="w-3.5 h-3.5 transition-transform duration-200 [@media(hover:hover)]:group-hover:rotate-180 group-focus-within:rotate-180 group-data-[open=true]:rotate-180"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+                <div class="absolute left-0 top-full pt-3 w-72 z-50 invisible opacity-0 -translate-y-1
+                            [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:translate-y-0
+                            group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0
+                            group-data-[open=true]:visible group-data-[open=true]:opacity-100 group-data-[open=true]:translate-y-0
+                            transition duration-150 ease-out">
+                  <div class="nav-dropdown rounded-2xl p-2" role="menu" aria-label="Shop by category">
+                    @foreach ($shopCategories as $slug => $cat)
+                      <a href="{{ route('shop.category', $slug) }}" role="menuitem"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none dark:hover:bg-white/10 dark:focus:bg-white/10 {{ $activeCategory === $slug ? 'bg-indigo-50/80 dark:bg-white/10' : '' }}">
+                        <span class="text-2xl leading-none" aria-hidden="true">{{ $cat['icon'] }}</span>
+                        <span class="flex flex-col min-w-0">
+                          <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $cat['label'] }}</span>
+                          <span class="text-xs text-gray-400 truncate">{{ $cat['desc'] }}</span>
+                        </span>
+                      </a>
+                    @endforeach
+                  </div>
+                </div>
+              </div>
+            @else
+              <a href="{{ $link['href'] }}" data-nav-link class="{{ $linkClass }}">{{ $link['label'] }}</a>
+            @endif
           @endforeach
         </div>
       </div>
@@ -139,6 +182,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
         </button>
+        <a href="{{ route('favorites') }}" aria-label="My Favorites"
+          class="glass-icon-btn p-2 rounded-xl border border-transparent transition-colors inline-flex">
+          <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
+          </svg>
+        </a>
         <button onclick="toggleCart()" aria-label="Open cart"
           class="glass-icon-btn relative p-2 rounded-xl border border-transparent transition-colors">
           <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -169,10 +218,27 @@
     <div id="mobile-menu"
       class="hidden md:hidden border-t border-gray-100 bg-white/90 dark:bg-neutral-900 backdrop-blur-md px-5 py-4 flex flex-col gap-3">
       @foreach ($navLinks as $link)
-        <a href="{{ $link['href'] }}"
-          class="text-sm font-medium py-1.5 transition-colors {{ $link['active']
-            ? 'text-gray-900 dark:text-white'
-            : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white' }}">{{ $link['label'] }}</a>
+        @if (! empty($link['dropdown']))
+          {{-- Shop is a heading here, not a link — its categories (below) are the destinations. --}}
+          <span class="text-sm font-medium py-1.5 {{ $link['active'] ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400' }}">{{ $link['label'] }}</span>
+        @else
+          <a href="{{ $link['href'] }}"
+            class="text-sm font-medium py-1.5 transition-colors {{ $link['active']
+              ? 'text-gray-900 dark:text-white'
+              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white' }}">{{ $link['label'] }}</a>
+        @endif
+        @if (! empty($link['dropdown']))
+          <div class="flex flex-col gap-1 pl-4 -mt-1 border-l border-gray-200 dark:border-white/10">
+            @foreach ($shopCategories as $slug => $cat)
+              <a href="{{ route('shop.category', $slug) }}"
+                class="text-sm py-1 transition-colors {{ $activeCategory === $slug
+                  ? 'text-indigo-500 font-medium'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white' }}">
+                <span aria-hidden="true">{{ $cat['icon'] }}</span> {{ $cat['label'] }}
+              </a>
+            @endforeach
+          </div>
+        @endif
       @endforeach
     </div>
   </header>
@@ -181,6 +247,10 @@
   @yield('content')
 
   <!-- Scripts -->
+  <script>
+    window.__CURRENT_USER__ = @json(auth()->check() ? ['name' => auth()->user()->name, 'email' => auth()->user()->email] : null);
+  </script>
+  @yield('pre-scripts')
   <script src="{{ asset('assets/js/script.js') }}"></script>
   <script>
     initNavHoverPill();
@@ -195,10 +265,37 @@
 
     document.addEventListener('DOMContentLoaded', renderBladeAccountSlot);
 
-    function bladeNavLogout() {
-      Auth.logout();
-      showToast('Logged out');
-      renderBladeAccountSlot();
+    // Shop menu: on hover-capable devices CSS (group-hover / focus-within) does everything and a click
+    // on "Shop" intentionally does nothing. Touch devices have no hover, so there a tap toggles it.
+    (function () {
+      const menu = document.getElementById('shop-menu');
+      if (!menu) return;
+      const trigger = menu.querySelector('[data-shop-trigger]');
+      const setOpen = open => {
+        menu.dataset.open = open ? 'true' : 'false';
+        trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+      const noHover = window.matchMedia('(hover: none)');
+
+      // A mouse/touch press must not focus the button, otherwise focus-within would keep the menu
+      // open after the pointer leaves (or after a second tap meant to close it). Keyboard focus
+      // via Tab is unaffected.
+      trigger.addEventListener('mousedown', e => e.preventDefault());
+
+      trigger.addEventListener('click', () => {
+        if (noHover.matches) setOpen(menu.dataset.open !== 'true');
+      });
+      document.addEventListener('click', e => {
+        if (!menu.contains(e.target)) setOpen(false);
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { setOpen(false); trigger.blur(); }
+      });
+    })();
+
+    async function bladeNavLogout() {
+      await Auth.logout();
+      window.location.href = '{{ route('home') }}';
     }
   </script>
   @yield('extra-scripts')
