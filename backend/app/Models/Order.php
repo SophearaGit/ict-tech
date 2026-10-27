@@ -38,4 +38,21 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function toSummary(): array
+    {
+        return [
+            'number' => $this->number,
+            'status' => $this->status,
+            'payment_method' => $this->payment_method,
+            'total' => (float) $this->total,
+            'created_at' => $this->created_at->toIso8601String(),
+            'items' => $this->items->map(fn (OrderItem $item) => [
+                'name' => $item->name,
+                'brand' => $item->brand,
+                'unit_price' => (float) $item->unit_price,
+                'quantity' => $item->quantity,
+            ])->all(),
+        ];
+    }
 }
