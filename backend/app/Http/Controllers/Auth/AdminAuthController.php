@@ -20,14 +20,13 @@ class AdminAuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (! Auth::attempt($credentials, remember: true)) {
+        $guard = Auth::guard('admin');
+
+        if (! $guard->attempt($credentials + ['is_active' => true], remember: true)) {
             return back()->withErrors(['email' => 'Invalid credentials.'])->onlyInput('email');
         }
 
-        if (! Auth::user()->is_admin) {
-            Auth::logout();
-            return back()->withErrors(['email' => 'Invalid credentials.']);
-        }
+        $guard->user()->forceFill(['last_login_at' => now()])->save();
 
         $request->session()->regenerate();
         return redirect()->route('admin-view');
@@ -35,7 +34,7 @@ class AdminAuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('admin-login');

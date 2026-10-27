@@ -94,9 +94,9 @@
   <!-- User -->
   <div class="px-4 py-4 border-t border-gray-100 dark:border-none flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-600">{{ substr(Auth::user()->name, 0, 1) }}</div>
+      <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-600">{{ substr(Auth::guard('admin')->user()->name, 0, 1) }}</div>
       <div>
-        <p class="text-xs font-semibold text-gray-800 dark:text-white" id="admin-name">{{ Auth::user()->name }}</p>
+        <p class="text-xs font-semibold text-gray-800 dark:text-white" id="admin-name">{{ Auth::guard('admin')->user()->name }}</p>
         <p class="text-[10px] text-gray-400">Super Admin</p>
       </div>
     </div>
