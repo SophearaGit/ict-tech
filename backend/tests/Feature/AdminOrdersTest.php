@@ -2,10 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Actions\PlaceOrder;
 use App\Models\Order;
-use App\Models\Product;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\MakesShopData;
@@ -14,18 +11,6 @@ use Tests\TestCase;
 class AdminOrdersTest extends TestCase
 {
     use MakesShopData, RefreshDatabase;
-
-    private function placeOrder(User $customer, Product $product, int $quantity = 2): Order
-    {
-        return app(PlaceOrder::class)->handle($customer, [
-            'phone' => '012 345 678',
-            'address' => 'Street 1, Phnom Penh',
-            'payment_method' => 'cod',
-            'lat' => 11.5564,
-            'lng' => 104.9282,
-            'items' => [['product_id' => $product->id, 'quantity' => $quantity]],
-        ]);
-    }
 
     private function actingAsAdmin(): static
     {

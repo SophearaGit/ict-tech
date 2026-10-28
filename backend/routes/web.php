@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ShopController;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +55,7 @@ Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites'
 Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
 
 Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout');
+Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
 
 Route::get('/admin/login',[AdminAuthController::class, 'showLoginForm'])->name('admin-login');
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin-login.attempt');
