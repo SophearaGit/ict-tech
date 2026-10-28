@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\CustomerAuthController;
@@ -69,4 +70,7 @@ Route::middleware('admin')->group(function () {
     Route::post('/admin/products', [ProductController::class, 'store'])->name('admin-products.store');
     Route::put('/admin/products/{product}', [ProductController::class, 'update'])->name('admin-products.update');
     Route::delete('/admin/products/{product}', [ProductController::class, 'destroy'])->name('admin-products.destroy');
+
+    Route::get('/admin/orders', [OrderController::class, 'index'])->name('admin-orders.index');
+    Route::put('/admin/orders/{order}', [OrderController::class, 'update'])->name('admin-orders.update');
 });

@@ -55,4 +55,16 @@ class Order extends Model
             ])->all(),
         ];
     }
+
+    public function toAdminArray(): array
+    {
+        return $this->toSummary() + [
+            'id' => $this->id,
+            'phone' => $this->phone,
+            'address' => $this->address,
+            'lat' => $this->lat !== null ? (float) $this->lat : null,
+            'lng' => $this->lng !== null ? (float) $this->lng : null,
+            'customer' => $this->user ? ['name' => $this->user->name, 'email' => $this->user->email] : null,
+        ];
+    }
 }
