@@ -164,6 +164,23 @@ class CheckoutTest extends TestCase
         ];
     }
 
+    #[DataProvider('unusableProductIds')]
+    public function test_a_cart_line_without_a_usable_product_id_gets_the_unavailable_message(mixed $productId): void
+    {
+        $this->checkout($this->payload([['product_id' => $productId, 'quantity' => 1]]))
+            ->assertStatus(422)
+            ->assertExactJson(['ok' => false, 'error' => 'One of the items in your cart is no longer available.']);
+    }
+
+    public static function unusableProductIds(): array
+    {
+        return [
+            'legacy string id' => ['iphone-15'],
+            'fractional id' => [1.5],
+            'missing id' => [null],
+        ];
+    }
+
     public function test_checkout_is_rate_limited(): void
     {
         $customer = $this->makeCustomer();

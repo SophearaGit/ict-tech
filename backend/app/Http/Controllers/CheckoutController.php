@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Validator;
 
 class CheckoutController extends Controller
 {
+    private const ITEM_UNAVAILABLE = 'One of the items in your cart is no longer available.';
+
     public function store(Request $request, PlaceOrder $placeOrder): JsonResponse
     {
         if (! $request->user()) {
@@ -25,6 +27,10 @@ class CheckoutController extends Controller
             'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*.product_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'between:1,99'],
+        ], [
+            // A cart saved by an older version of the site can hold ids that aren't database ids at all.
+            'items.*.product_id.required' => self::ITEM_UNAVAILABLE,
+            'items.*.product_id.integer' => self::ITEM_UNAVAILABLE,
         ]);
 
         if ($validator->fails()) {
