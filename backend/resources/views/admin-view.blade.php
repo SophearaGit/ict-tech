@@ -155,55 +155,56 @@
 
     <!-- ──── DASHBOARD VIEW ──── -->
     <div id="view-dashboard">
-      <!-- Visitor & Sales Analytics -->
+      <!-- Sales Analytics -->
       <div class="mb-6">
-        <h3 class="font-display font-bold text-sm text-gray-900 dark:text-white mb-3">Visitor &amp; Sales Analytics</h3>
+        <h3 class="font-display font-bold text-sm text-gray-900 dark:text-white mb-3">Sales Analytics (last 14 days)</h3>
 
         <!-- KPI cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Visitors</span>
+              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Orders</span>
               <div class="w-8 h-8 bg-indigo-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
               </div>
             </div>
-            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-visitors">0</p>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-orders">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">last 14 days</p>
           </div>
           <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Purchases</span>
+              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Order Value</span>
               <div class="w-8 h-8 bg-green-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m-10 0a1 1 0 100 2 1 1 0 000-2zm10 0a1 1 0 100 2 1 1 0 000-2z"/></svg>
+                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               </div>
             </div>
-            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-purchases">0</p>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-revenue">$0.00</p>
             <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">last 14 days</p>
           </div>
           <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Conversion Rate</span>
+              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Average Order Value</span>
               <div class="w-8 h-8 bg-amber-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
               </div>
             </div>
-            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-conversion">0%</p>
-            <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">purchases ÷ visitors</p>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-average">$0.00</p>
+            <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">per order, last 14 days</p>
           </div>
         </div>
 
         <!-- Chart -->
         <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
           <div class="flex items-center justify-between mb-4">
-            <h4 class="font-display font-bold text-sm text-gray-900 dark:text-white">Visitors vs Purchases</h4>
+            <h4 class="font-display font-bold text-sm text-gray-900 dark:text-white">Orders vs Order Value</h4>
             <div class="flex items-center gap-3 text-[10px] text-gray-400 dark:text-gray-300">
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>Visitors</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Purchases</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>Orders</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Order value ($)</span>
             </div>
           </div>
           <div class="relative w-full" style="height:280px">
             <canvas id="analytics-chart"></canvas>
+            <p id="analytics-unavailable" class="hidden absolute inset-0 flex items-center justify-center text-sm text-gray-400 dark:text-gray-300">Analytics unavailable</p>
           </div>
         </div>
       </div>

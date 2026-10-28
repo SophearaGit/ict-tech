@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\AdminAuthController;
@@ -75,4 +76,6 @@ Route::middleware('admin')->group(function () {
 
     Route::get('/admin/orders', [OrderController::class, 'index'])->name('admin-orders.index');
     Route::put('/admin/orders/{order}', [OrderController::class, 'update'])->name('admin-orders.update');
+
+    Route::get('/admin/analytics/summary', [AnalyticsController::class, 'summary'])->name('admin-analytics.summary');
 });
