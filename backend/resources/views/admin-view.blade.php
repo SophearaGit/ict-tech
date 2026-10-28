@@ -18,6 +18,7 @@
   .badge-in   {background:#dcfce7;color:#16a34a;}
   .badge-low  {background:#fef9c3;color:#ca8a04;}
   .badge-out  {background:#fee2e2;color:#dc2626;}
+  .badge-paid {background:#e0e7ff;color:#4f46e5;}
 
   /* Modal */
   .modal-backdrop{background:rgba(0,0,0,0.25);backdrop-filter:blur(4px);}
@@ -87,7 +88,7 @@
     </a>
     <button onclick="showView('history')" id="nav-history" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      History
+      Orders
     </button>
   </nav>
 
@@ -418,27 +419,28 @@
       </div>
     </div>
 
-    <!-- ──── HISTORY VIEW ──── -->
+    <!-- ──── ORDERS VIEW (element ids keep their old "history" names) ──── -->
     <div id="view-history" class="hidden">
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
-              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">No</th>
-              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
-              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden sm:table-cell">Branch</th>
-              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">QTY</th>
-              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Price</th>
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Order</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Customer</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden sm:table-cell">Items</th>
               <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Total</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden md:table-cell">Payment</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
               <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden md:table-cell">Date</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
             </tr></thead>
             <tbody id="history-tbody"></tbody>
           </table>
         </div>
         <div id="history-empty" class="hidden text-center py-16">
-          <div class="text-4xl mb-3">🕘</div>
-          <p class="text-gray-500 dark:text-white font-medium">No sales history yet</p>
-          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your search.</p>
+          <div class="text-4xl mb-3">🧾</div>
+          <p id="history-empty-title" class="text-gray-500 dark:text-white font-medium">No orders yet</p>
+          <p id="history-empty-hint" class="text-gray-400 dark:text-gray-300 text-sm mt-1">Orders placed in the store will show up here.</p>
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@ function apiFetch(url, options = {}) {
   }).then(async res => {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || `Request failed (${res.status})`);
+      throw new Error(err.error || err.message || `Request failed (${res.status})`);
     }
     return res.status === 204 ? null : res.json();
   });
@@ -258,56 +258,90 @@ function loadMessages() {
     .catch(() => toast('Failed to load messages.'));
 }
 
-/* ── Sales history (placeholder rows — no orders backend yet, mirrors the design sample data) ── */
-const historyRecords = [
-  { product: 'Iphone 11',       branch: 'Apple',   qty: 1, price: 210, date: '2026-03-01' },
-  { product: 'Iphone 12',       branch: 'Apple',   qty: 2, price: 280, date: '2026-03-01' },
-  { product: 'Iphone 14',       branch: 'Apple',   qty: 1, price: 349, date: '2026-03-02' },
-  { product: 'Sony',            branch: 'Sony',    qty: 1, price: 175, date: '2026-03-04' },
-  { product: 'Iphone 11',       branch: 'Apple',   qty: 1, price: 210, date: '2026-03-04' },
-  { product: 'Iphone 15',       branch: 'Apple',   qty: 1, price: 510, date: '2026-03-05' },
-  { product: 'Samsung',         branch: 'Samsung', qty: 1, price: 260, date: '2026-03-05' },
-  { product: 'Techno 5',        branch: 'Techno',  qty: 2, price: 190, date: '2026-03-06' },
-  { product: 'Iphone 13pro',    branch: 'Apple',   qty: 1, price: 320, date: '2026-03-07' },
-  { product: 'Dell Inspiron',   branch: 'Dell',    qty: 1, price: 540, date: '2026-03-10' },
-  { product: 'Xiaomi 14 ultra', branch: 'Xiaomi',  qty: 1, price: 435, date: '2026-03-12' },
-  { product: 'Mackbook M2',     branch: 'Apple',   qty: 1, price: 950, date: '2026-03-15' },
-  { product: 'Iphone 12pro',    branch: 'Apple',   qty: 2, price: 340, date: '2026-03-19' },
-];
+/* ── Orders (real orders placed in the store — this view was the "History" placeholder) ── */
+let orders = [];
+let ordersLoaded = false;
 
-function formatHistoryDate(iso) {
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
+const ORDER_STATUS_BADGE = { pending: 'badge-low', paid: 'badge-paid', delivered: 'badge-in', cancelled: 'badge-out' };
+const ORDER_PAYMENT_LABEL = { aba: 'ABA KHQR', cod: 'Cash on delivery' };
+// Same transitions the server allows (ChangeOrderStatus); the server stays the authority.
+const ORDER_NEXT_STATUSES = { pending: ['paid', 'delivered', 'cancelled'], paid: ['delivered', 'cancelled'] };
+const ORDER_ACTION_LABEL = { paid: 'Mark paid', delivered: 'Mark delivered', cancelled: 'Cancel' };
+
+function loadOrders() {
+  apiFetch('/admin/orders')
+    .then(data => { orders = data; ordersLoaded = true; renderHistoryTable(); })
+    .catch(() => toast('Failed to load orders.'));
 }
 
 function renderHistoryTable() {
-  let list = historyRecords;
-  if (searchQ) {
-    const q = searchQ.toLowerCase();
-    list = list.filter(r => r.product.toLowerCase().includes(q) || r.branch.toLowerCase().includes(q));
-  }
-
   const empty = document.getElementById('history-empty');
   const tbody = document.getElementById('history-tbody');
-  if (!tbody) return;
+  if (!tbody || !ordersLoaded) return;
+
+  let list = orders;
+  if (searchQ) {
+    const q = searchQ.toLowerCase();
+    list = list.filter(o => [o.number, o.customer && o.customer.name, o.customer && o.customer.email, ...o.items.map(i => i.name)]
+      .some(v => (v || '').toLowerCase().includes(q)));
+  }
 
   if (list.length === 0) {
     tbody.innerHTML = '';
+    document.getElementById('history-empty-title').textContent = orders.length === 0 ? 'No orders yet' : 'No matching orders';
+    document.getElementById('history-empty-hint').textContent = orders.length === 0
+      ? 'Orders placed in the store will show up here.'
+      : 'Try adjusting your search.';
     empty.classList.remove('hidden');
     return;
   }
   empty.classList.add('hidden');
 
-  tbody.innerHTML = list.map((r, i) => `
-    <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0">
-      <td class="px-5 py-3 text-sm text-gray-500 dark:text-white">#${String(i + 1).padStart(4, '0')}</td>
-      <td class="px-3 py-3 text-sm font-medium text-gray-900 dark:text-white">${r.product}</td>
-      <td class="px-3 py-3 text-sm font-medium text-indigo-500 hidden sm:table-cell">${r.branch}</td>
-      <td class="px-3 py-3 text-sm text-gray-700 dark:text-white">${r.qty}</td>
-      <td class="px-3 py-3 text-sm font-semibold text-red-500">$${r.price}</td>
-      <td class="px-3 py-3 text-sm font-semibold text-red-500">$${r.qty * r.price}</td>
-      <td class="px-3 py-3 text-sm text-gray-400 hidden md:table-cell">${formatHistoryDate(r.date)}</td>
-    </tr>`).join('');
+  // Every customer-supplied value (names, email, phone, address, product names) goes through escapeHtml.
+  tbody.innerHTML = list.map(o => {
+    const actions = (ORDER_NEXT_STATUSES[o.status] || []).map(s => `
+      <button onclick="changeOrderStatus(${Number(o.id)}, '${s}', this)"
+        class="text-xs font-semibold ${s === 'cancelled' ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'} px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
+        ${ORDER_ACTION_LABEL[s]}
+      </button>`).join('');
+    const customer = o.customer
+      ? `<p class="font-medium text-gray-900 dark:text-white">${escapeHtml(o.customer.name)}</p>
+         <p class="text-xs text-gray-400">${escapeHtml(o.customer.email)}</p>`
+      : `<p class="font-medium text-gray-400 italic">Deleted account</p>`;
+    return `
+    <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0 align-top">
+      <td class="px-5 py-3 text-sm font-semibold text-gray-700 dark:text-white whitespace-nowrap">${escapeHtml(o.number)}</td>
+      <td class="px-3 py-3 text-sm">
+        ${customer}
+        <p class="text-xs text-gray-500 dark:text-gray-300 mt-1">${escapeHtml(o.phone)}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-300 whitespace-pre-line">${escapeHtml(o.address)}</p>
+      </td>
+      <td class="px-3 py-3 text-sm text-gray-700 dark:text-white hidden sm:table-cell">
+        ${o.items.map(i => `<p>${Number(i.quantity)} × ${escapeHtml(i.name)}</p>`).join('')}
+      </td>
+      <td class="px-3 py-3 text-sm font-semibold text-red-500 whitespace-nowrap">$${Number(o.total).toFixed(2)}</td>
+      <td class="px-3 py-3 text-sm text-gray-700 dark:text-white hidden md:table-cell">${escapeHtml(ORDER_PAYMENT_LABEL[o.payment_method] || o.payment_method)}</td>
+      <td class="px-3 py-3"><span class="${ORDER_STATUS_BADGE[o.status] || 'badge-low'} text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize">${escapeHtml(o.status)}</span></td>
+      <td class="px-3 py-3 text-sm text-gray-400 hidden md:table-cell">${formatMessageDate(o.created_at)}</td>
+      <td class="px-3 py-3"><div class="flex flex-wrap gap-1.5">${actions}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function changeOrderStatus(id, status, btn) {
+  if (btn) btn.disabled = true;
+  apiFetch(`/admin/orders/${id}`, { method: 'PUT', body: JSON.stringify({ status }) })
+    .then(res => {
+      const i = orders.findIndex(o => o.id === id);
+      if (i !== -1) orders[i] = res.order;
+      renderHistoryTable();
+      toast(`${escapeHtml(res.order.number)} marked ${status}`);
+      if (status === 'cancelled') init(); // stock went back up — refresh the product/inventory numbers
+    })
+    .catch(e => {
+      if (btn) btn.disabled = false;
+      toast(escapeHtml(e.message));
+    });
 }
 
 /* ── Quick qty ── */
@@ -460,12 +494,13 @@ function showView(view) {
     if (nav) nav.classList.toggle('active', v === view);
   });
   currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'History',messages:'Messages'};
+  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages'};
   document.getElementById('page-title').textContent = titles[view] || '';
   document.getElementById('topbar-search').classList.toggle('hidden', !['products','inventory','history'].includes(view));
 
   if (view === 'add' && !editingId) resetAddForm();
   if (view === 'messages' && !messagesLoaded) { messagesLoaded = true; loadMessages(); }
+  if (view === 'history') loadOrders(); // reload on every open so new orders appear
 
   // Auto-close the mobile sidebar after navigating so its overlay doesn't
   // keep blocking the view that was just opened.
@@ -587,5 +622,4 @@ if (window.innerWidth < 1024) {
   }
 
 /* ── Boot ── */
-renderHistoryTable();
 init();
