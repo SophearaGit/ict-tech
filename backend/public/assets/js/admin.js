@@ -26,6 +26,8 @@ let searchQ = '';
 let editingId = null;
 let restockId = null;
 let deleteId = null;
+let brands = [];             // [{id, name, productCount}] from /admin/brands, kept sorted by name
+let renamingBrandId = null;  // the Brands-table row that is currently in rename mode
 
 /* ── Status helpers ── */
 function statusOf(p) {
@@ -48,6 +50,7 @@ function init() {
       refreshAll();
     })
     .catch(() => toast('Failed to load products.'));
+  loadBrands();
 }
 
 function refreshAll() {
@@ -57,6 +60,7 @@ function refreshAll() {
   renderProductsTable();
   renderInventoryTable();
   updateLowBadge();
+  if (currentView === 'brands') renderBrandsTable();
 }
 
 /* ── Stats ── */
@@ -223,6 +227,11 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// For values placed inside a double-quoted HTML attribute (escapeHtml leaves quotes alone).
+function escapeAttr(str) {
+  return escapeHtml(str).replace(/"/g, '&quot;');
+}
+
 function formatMessageDate(iso) {
   return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
@@ -256,6 +265,158 @@ function loadMessages() {
   apiFetch('/admin/messages')
     .then(data => { messages = data; renderMessagesList(); })
     .catch(() => toast('Failed to load messages.'));
+}
+
+/* ── Brands (managed list: the Brands page, plus the brand selects in the product form and edit modal) ── */
+function sortBrands() {
+  brands.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
+}
+
+// Server messages can contain a brand name, and toast() writes HTML, so escape them.
+function toastError(e, fallback) {
+  toast(escapeHtml((e && e.message) || fallback || 'Something went wrong.'));
+}
+
+function loadBrands() {
+  return apiFetch('/admin/brands')
+    .then(data => { brands = data; renderBrandSelects(); renderBrandsTable(); })
+    .catch(() => toast('Failed to load brands.'));
+}
+
+// Rebuild both brand selects from `brands`, keeping whatever is currently selected.
+// Only the Add Product form's select ends with "+ Add new brand…".
+function renderBrandSelects() {
+  const options = brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  [['f-brand', true], ['m-brand', false]].forEach(([id, withNew]) => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = `<option value="">Select brand…</option>${options}`
+      + (withNew ? '<option value="__new__">+ Add new brand…</option>' : '');
+    if ([...select.options].some(o => o.value === current)) select.value = current;
+  });
+}
+
+function onBrandChange(select) {
+  const adding = select.value === '__new__';
+  document.getElementById('new-brand-box').classList.toggle('hidden', !adding);
+  if (adding) document.getElementById('new-brand-name').focus();
+}
+
+function cancelNewBrand() {
+  const select = document.getElementById('f-brand');
+  if (select.value === '__new__') select.value = '';
+  document.getElementById('new-brand-name').value = '';
+  document.getElementById('new-brand-box').classList.add('hidden');
+}
+
+// Inline "+ Add new brand…" in the product form: create it, then select it.
+function saveNewBrand() {
+  const name = document.getElementById('new-brand-name').value.trim();
+  if (!name) { toast('Type the new brand name first.'); return; }
+
+  apiFetch('/admin/brands', { method: 'POST', body: JSON.stringify({ name }) })
+    .then(created => {
+      brands.push(created);
+      sortBrands();
+      renderBrandSelects();
+      renderBrandsTable();
+      document.getElementById('f-brand').value = String(created.id);
+      cancelNewBrand();
+      toast('Brand added!');
+    })
+    .catch(e => toastError(e, 'Failed to add brand.'));
+}
+
+function renderBrandsTable() {
+  const tbody = document.getElementById('brands-tbody');
+  const empty = document.getElementById('brands-empty');
+  if (!tbody) return;
+
+  empty.classList.toggle('hidden', brands.length > 0);
+  const btn = 'px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors';
+  tbody.innerHTML = brands.map(b => {
+    const renaming = b.id === renamingBrandId;
+    const nameCell = renaming
+      ? `<input id="brand-rename-input" type="text" maxlength="50" value="${escapeAttr(b.name)}"
+           onkeydown="if (event.key === 'Enter') saveRenameBrand(${b.id}); if (event.key === 'Escape') cancelRenameBrand()"
+           class="form-inp w-full max-w-xs bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm"/>`
+      : escapeHtml(b.name);
+    const actions = renaming
+      ? `<button onclick="saveRenameBrand(${b.id})" class="${btn} bg-indigo-500 hover:bg-indigo-600 text-white">Save</button>
+         <button onclick="cancelRenameBrand()" class="${btn} bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white">Cancel</button>`
+      : `<button onclick="startRenameBrand(${b.id})" class="${btn} bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white">Rename</button>
+         <button onclick="deleteBrand(${b.id})" class="${btn} bg-red-50 hover:bg-red-100 text-red-600">Delete</button>`;
+    return `
+      <tr class="border-t border-gray-100 dark:border-neutral-600">
+        <td class="px-5 py-3.5 text-sm font-medium text-gray-900 dark:text-white">${nameCell}</td>
+        <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white">${b.productCount}</td>
+        <td class="px-3 py-3.5"><div class="flex gap-2">${actions}</div></td>
+      </tr>`;
+  }).join('');
+
+  if (renamingBrandId !== null) {
+    const input = document.getElementById('brand-rename-input');
+    if (input) { input.focus(); input.select(); }
+  }
+}
+
+function addBrand() {
+  const input = document.getElementById('brand-add-name');
+  const name = input.value.trim();
+  if (!name) { toast('Type a brand name.'); return; }
+
+  apiFetch('/admin/brands', { method: 'POST', body: JSON.stringify({ name }) })
+    .then(created => {
+      brands.push(created);
+      sortBrands();
+      input.value = '';
+      renderBrandsTable();
+      renderBrandSelects();
+      toast('Brand added!');
+    })
+    .catch(e => toastError(e, 'Failed to add brand.'));
+}
+
+function startRenameBrand(id) {
+  renamingBrandId = id;
+  renderBrandsTable();
+}
+
+function cancelRenameBrand() {
+  renamingBrandId = null;
+  renderBrandsTable();
+}
+
+function saveRenameBrand(id) {
+  const name = document.getElementById('brand-rename-input').value.trim();
+  if (!name) { toast('Type a brand name.'); return; }
+
+  apiFetch(`/admin/brands/${id}`, { method: 'PUT', body: JSON.stringify({ name }) })
+    .then(updated => {
+      const b = brands.find(x => x.id === id);
+      if (b) Object.assign(b, updated);
+      sortBrands();
+      renamingBrandId = null;
+      // Products carry the brand name, so the product/inventory tables must show the new one too.
+      products.forEach(p => { if (p.brandId === id) p.brand = updated.name; });
+      renderBrandSelects();
+      refreshAll();
+      renderBrandsTable();
+      toast('Brand renamed!');
+    })
+    .catch(e => toastError(e, 'Failed to rename brand.'));
+}
+
+function deleteBrand(id) {
+  apiFetch(`/admin/brands/${id}`, { method: 'DELETE' })
+    .then(() => {
+      brands = brands.filter(b => b.id !== id);
+      renderBrandsTable();
+      renderBrandSelects();
+      toast('Brand deleted.');
+    })
+    .catch(e => toastError(e, 'Failed to delete brand.'));
 }
 
 /* ── Orders (real orders placed in the store — this view was the "History" placeholder) ── */
@@ -386,6 +547,8 @@ function openEdit(id) {
   document.getElementById('m-qty').value = p.qty;
   document.getElementById('m-desc').value = p.desc || '';
   document.getElementById('m-trending').checked = p.trending;
+  setSelectValue('m-brand', p.brandId);
+  setSelectValue('m-category', p.category); // a legacy category that is not in the list leaves the placeholder
   document.getElementById('edit-modal').classList.remove('hidden');
 }
 
@@ -394,15 +557,26 @@ function closeModal() {
   editingId = null;
 }
 
+// Select `value` in the <select> with this id if it has such an option, otherwise show its placeholder.
+function setSelectValue(id, value) {
+  const select = document.getElementById(id);
+  select.value = [...select.options].some(o => o.value === String(value)) ? String(value) : '';
+}
+
 function saveModal() {
   const p = products.find(x => x.id === editingId);
   if (!p) return;
+  const brandId = parseInt(document.getElementById('m-brand').value);
+  const category = document.getElementById('m-category').value;
+  if (isNaN(brandId) || !category) { toast('Choose a brand and a category.'); return; }
   const payload = {
     name: document.getElementById('m-name').value.trim() || p.name,
     price: parseFloat(document.getElementById('m-price').value) || p.price,
     qty: parseInt(document.getElementById('m-qty').value) || 0,
     desc: document.getElementById('m-desc').value.trim(),
     trending: document.getElementById('m-trending').checked,
+    brand_id: brandId,
+    category,
   };
   apiFetch(`/admin/products/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) })
     .then(updated => {
@@ -411,7 +585,7 @@ function saveModal() {
       closeModal();
       toast('Product updated successfully!');
     })
-    .catch(() => toast('Failed to save changes.'));
+    .catch(e => toastError(e, 'Failed to save changes.'));
 }
 
 /* ── Restock modal ── */
@@ -488,19 +662,20 @@ function confirmDelete() {
 
 /* ── Add product form ── */
 function showView(view) {
-  ['dashboard','products','inventory','add','history','messages'].forEach(v => {
+  ['dashboard','products','inventory','add','history','messages','brands'].forEach(v => {
     document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
     const nav = document.getElementById(`nav-${v}`);
     if (nav) nav.classList.toggle('active', v === view);
   });
   currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages'};
+  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands'};
   document.getElementById('page-title').textContent = titles[view] || '';
   document.getElementById('topbar-search').classList.toggle('hidden', !['products','inventory','history'].includes(view));
 
   if (view === 'add' && !editingId) resetAddForm();
   if (view === 'messages' && !messagesLoaded) { messagesLoaded = true; loadMessages(); }
   if (view === 'history') loadOrders(); // reload on every open so new orders appear
+  if (view === 'brands') { renamingBrandId = null; renderBrandsTable(); loadBrands(); } // reload so product counts are current
 
   // Auto-close the mobile sidebar after navigating so its overlay doesn't
   // keep blocking the view that was just opened.
@@ -511,6 +686,7 @@ function resetAddForm() {
   document.getElementById('edit-id').value = '';
   document.getElementById('f-name').value = '';
   document.getElementById('f-brand').value = '';
+  cancelNewBrand();
   document.getElementById('f-category').value = '';
   document.getElementById('f-price').value = '';
   document.getElementById('f-qty').value = '';
@@ -529,7 +705,7 @@ function cancelEdit() {
 
 function submitProductForm() {
   const name     = document.getElementById('f-name').value.trim();
-  const brand    = document.getElementById('f-brand').value.trim();
+  const brandId  = parseInt(document.getElementById('f-brand').value); // NaN for the placeholder or "+ Add new brand…"
   const category = document.getElementById('f-category').value;
   const price    = parseFloat(document.getElementById('f-price').value);
   const qty      = parseInt(document.getElementById('f-qty').value);
@@ -537,14 +713,14 @@ function submitProductForm() {
   const trending = document.getElementById('f-trending').checked;
   const errEl    = document.getElementById('form-error');
 
-  if (!name || !brand || !category || isNaN(price) || isNaN(qty)) {
+  if (!name || isNaN(brandId) || !category || isNaN(price) || isNaN(qty)) {
     errEl.textContent = 'Please fill in all required fields (name, brand, category, price, qty).';
     errEl.classList.remove('hidden');
     return;
   }
   errEl.classList.add('hidden');
 
-  const payload = {name, brand, category, price, qty, desc, trending};
+  const payload = {name, brand_id: brandId, category, price, qty, desc, trending};
 
   if (editingId) {
     apiFetch(`/admin/products/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) })
@@ -556,8 +732,8 @@ function submitProductForm() {
         resetAddForm();
         showView('products');
       })
-      .catch(() => {
-        errEl.textContent = 'Failed to save product. Please try again.';
+      .catch(e => {
+        errEl.textContent = e.message || 'Failed to save product. Please try again.';
         errEl.classList.remove('hidden');
       });
   } else {
@@ -569,8 +745,8 @@ function submitProductForm() {
         resetAddForm();
         showView('products');
       })
-      .catch(() => {
-        errEl.textContent = 'Failed to add product. Please try again.';
+      .catch(e => {
+        errEl.textContent = e.message || 'Failed to add product. Please try again.';
         errEl.classList.remove('hidden');
       });
   }

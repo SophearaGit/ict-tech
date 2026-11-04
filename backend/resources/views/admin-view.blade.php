@@ -78,6 +78,10 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Add Products
     </button>
+    <button onclick="showView('brands')" id="nav-brands" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+      Brands
+    </button>
     <button onclick="showView('messages')" id="nav-messages" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       Message
@@ -358,20 +362,23 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1.5">Brand *</label>
-            <input id="f-brand" type="text" placeholder="e.g. Apple" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+            <select id="f-brand" onchange="onBrandChange(this)" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all cursor-pointer">
+              <option value="">Select brand…</option>
+              <option value="__new__">+ Add new brand…</option>
+            </select>
+            <div id="new-brand-box" class="hidden mt-2 flex gap-2">
+              <input id="new-brand-name" type="text" maxlength="50" placeholder="New brand name" onkeydown="if (event.key === 'Enter') saveNewBrand()" class="form-inp flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm"/>
+              <button type="button" onclick="saveNewBrand()" class="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-xl text-xs transition-colors">Save</button>
+              <button type="button" onclick="cancelNewBrand()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-colors">Cancel</button>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1.5">Category *</label>
             <select id="f-category" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all cursor-pointer">
               <option value="">Select category…</option>
-              <option value="Apple">Apple</option>
-              <option value="Sony">Sony</option>
-              <option value="JTrust">JTrust</option>
-              <option value="Xiaomi">Xiaomi</option>
-              <option value="Asus">Asus</option>
-              <option value="Anker">Anker</option>
-              <option value="Dell">Dell</option>
-              <option value="Samsung">Samsung</option>
+              @foreach (config('shop.categories') as $slug => $category)
+                <option value="{{ $slug }}">{{ $category['label'] }}</option>
+              @endforeach
             </select>
           </div>
           <div>
@@ -416,6 +423,31 @@
           <div class="text-4xl mb-3">📭</div>
           <p class="text-gray-500 dark:text-white font-medium">No messages yet</p>
           <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Submissions from the contact form will show up here.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──── BRANDS VIEW ──── -->
+    <div id="view-brands" class="hidden">
+      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="p-5 border-b border-gray-100 dark:border-neutral-600 flex flex-col sm:flex-row gap-3">
+          <input id="brand-add-name" type="text" maxlength="50" placeholder="New brand name, e.g. Huawei" onkeydown="if (event.key === 'Enter') addBrand()" class="form-inp flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+          <button onclick="addBrand()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Add Brand</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Brand</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
+            </tr></thead>
+            <tbody id="brands-tbody"></tbody>
+          </table>
+        </div>
+        <div id="brands-empty" class="hidden text-center py-16">
+          <div class="text-4xl mb-3">🏷️</div>
+          <p class="text-gray-500 dark:text-white font-medium">No brands yet</p>
+          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Add a brand above, then pick it when you add a product.</p>
         </div>
       </div>
     </div>
@@ -466,6 +498,23 @@
       <div>
         <label class="block text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1">Product Name</label>
         <input id="m-name" type="text" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1">Brand</label>
+          <select id="m-brand" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm cursor-pointer">
+            <option value="">Select brand…</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1">Category</label>
+          <select id="m-category" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm cursor-pointer">
+            <option value="">Select category…</option>
+            @foreach (config('shop.categories') as $slug => $category)
+              <option value="{{ $slug }}">{{ $category['label'] }}</option>
+            @endforeach
+          </select>
+        </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
