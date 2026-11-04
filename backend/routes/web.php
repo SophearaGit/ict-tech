@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\AdminAuthController;
@@ -73,6 +74,11 @@ Route::middleware('admin')->group(function () {
     Route::post('/admin/products', [ProductController::class, 'store'])->name('admin-products.store');
     Route::put('/admin/products/{product}', [ProductController::class, 'update'])->name('admin-products.update');
     Route::delete('/admin/products/{product}', [ProductController::class, 'destroy'])->name('admin-products.destroy');
+
+    Route::get('/admin/brands', [BrandController::class, 'index'])->name('admin-brands.index');
+    Route::post('/admin/brands', [BrandController::class, 'store'])->name('admin-brands.store');
+    Route::put('/admin/brands/{brand}', [BrandController::class, 'update'])->name('admin-brands.update');
+    Route::delete('/admin/brands/{brand}', [BrandController::class, 'destroy'])->name('admin-brands.destroy');
 
     Route::get('/admin/orders', [OrderController::class, 'index'])->name('admin-orders.index');
     Route::put('/admin/orders/{order}', [OrderController::class, 'update'])->name('admin-orders.update');
