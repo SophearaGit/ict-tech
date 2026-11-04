@@ -87,4 +87,5 @@ Route::middleware('admin')->group(function () {
     Route::get('/admin/analytics/summary', [AnalyticsController::class, 'summary'])->name('admin-analytics.summary');
 
     Route::get('/admin/reports/sales', [SalesReportController::class, 'show'])->name('admin-reports.sales');
+    Route::get('/admin/reports/sales/export', [SalesReportController::class, 'export'])->name('admin-reports.sales.export');
 });

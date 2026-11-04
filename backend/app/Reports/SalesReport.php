@@ -17,6 +17,12 @@ use InvalidArgumentException;
  */
 class SalesReport
 {
+    /** Column names of the CSV download. No customer details and no order total (one row per item). */
+    public const CSV_HEADER = ['Date', 'Time', 'Order', 'Status', 'Payment', 'Product', 'Brand', 'Quantity', 'Unit price', 'Line total'];
+
+    /** A spreadsheet runs a text cell that starts with one of these as a formula. */
+    private const FORMULA_STARTS = "=+-@\t\r";
+
     /** @var Collection<int, Order> */
     private Collection $orders;
 
@@ -138,6 +144,55 @@ class SalesReport
                 'revenue' => $this->money($p['cents']),
             ], $products),
         ];
+    }
+
+    /** e.g. sales-week-2026-11-02-to-2026-11-08.csv (for a day, both dates are the same). */
+    public function filename(): string
+    {
+        return sprintf('sales-%s-%s-to-%s.csv', $this->period, $this->from->toDateString(), $this->to->toDateString());
+    }
+
+    /**
+     * One row per item sold (header not included), in order of the order's time, then order id,
+     * then item id. Date and time are shop time; money has two decimals and no thousands separator.
+     *
+     * @return list<list<string>>
+     */
+    public function csvRows(): array
+    {
+        $timezone = config('shop.timezone');
+        $rows = [];
+
+        foreach ($this->orders as $order) {
+            $local = $order->created_at->copy()->setTimezone($timezone);
+
+            foreach ($order->items->sortBy('id') as $item) {
+                $unitCents = $this->cents($item->unit_price);
+
+                $rows[] = [
+                    $local->toDateString(),
+                    $local->format('H:i'),
+                    $this->safeText($order->number),
+                    $this->safeText($order->status),
+                    $this->safeText($order->payment_method),
+                    $this->safeText($item->name),
+                    $this->safeText($item->brand),
+                    (string) $item->quantity,
+                    number_format($unitCents / 100, 2, '.', ''),
+                    number_format($unitCents * $item->quantity / 100, 2, '.', ''),
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    /** Stop spreadsheets from running a cell as a formula by marking it as text with a leading '. */
+    private function safeText(?string $value): string
+    {
+        $value = (string) $value;
+
+        return $value !== '' && str_contains(self::FORMULA_STARTS, $value[0]) ? "'".$value : $value;
     }
 
     /**

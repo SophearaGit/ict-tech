@@ -7,6 +7,7 @@ use App\Reports\SalesReport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SalesReportController extends Controller
 {
@@ -15,6 +16,29 @@ class SalesReportController extends Controller
         $report = $this->report($request);
 
         return $report instanceof JsonResponse ? $report : response()->json($report->summary());
+    }
+
+    /** The same report as a CSV file: one row per item sold, no customer details. */
+    public function export(Request $request): StreamedResponse|JsonResponse
+    {
+        $report = $this->report($request);
+
+        if ($report instanceof JsonResponse) {
+            return $report;
+        }
+
+        return response()->streamDownload(function () use ($report) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // byte-order mark so Excel reads accents and Khmer correctly
+
+            // The empty escape character is required on PHP 8.4+ and keeps plain RFC 4180 quoting.
+            fputcsv($out, SalesReport::CSV_HEADER, ',', '"', '');
+            foreach ($report->csvRows() as $row) {
+                fputcsv($out, $row, ',', '"', '');
+            }
+
+            fclose($out);
+        }, $report->filename(), ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**
