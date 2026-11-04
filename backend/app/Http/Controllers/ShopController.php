@@ -22,7 +22,7 @@ class ShopController extends Controller
     /** All products — the full /shop page with category tabs and brand filter. */
     public function index()
     {
-        $products = Product::orderBy('id')->get()->map(fn (Product $p) => $this->transform($p));
+        $products = Product::with('brand')->orderBy('id')->get()->map(fn (Product $p) => $this->transform($p));
 
         return view('shop', [
             'products' => $products,
@@ -39,13 +39,13 @@ class ShopController extends Controller
      */
     public function category(string $category)
     {
-        $products = Product::where('category', $category)->orderBy('id')->get();
+        $products = Product::with('brand')->where('category', $category)->orderBy('id')->get();
 
         $brands = $products
-            ->groupBy(fn (Product $p) => mb_strtolower($p->brand))
+            ->groupBy(fn (Product $p) => mb_strtolower($p->brand->name))
             ->map(fn ($group, $id) => [
                 'id' => $id,
-                'label' => $group->first()->brand,
+                'label' => $group->first()->brand->name,
             ])
             ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
@@ -68,7 +68,7 @@ class ShopController extends Controller
         return [
             'id' => $p->id,
             'name' => $p->name,
-            'brand' => $p->brand,
+            'brand' => $p->brand->name,
             'type' => $p->type,
             'category' => $p->category,
             'price' => (float) $p->price,

@@ -27,7 +27,7 @@ class OrderModelsTest extends TestCase
         $order->items()->create([
             'product_id' => $product->id,
             'name' => $product->name,
-            'brand' => $product->brand,
+            'brand' => $product->brand->name,
             'unit_price' => '100.00',
             'quantity' => 2,
         ]);

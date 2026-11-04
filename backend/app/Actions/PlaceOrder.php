@@ -27,7 +27,8 @@ class PlaceOrder
         ksort($wanted);
 
         return DB::transaction(function () use ($user, $data, $wanted) {
-            $products = Product::whereIn('id', array_keys($wanted))
+            $products = Product::with('brand')
+                ->whereIn('id', array_keys($wanted))
                 ->orderBy('id')
                 ->lockForUpdate()
                 ->get()
@@ -73,7 +74,7 @@ class PlaceOrder
                 $order->items()->create([
                     'product_id' => $product->id,
                     'name' => $product->name,
-                    'brand' => $product->brand,
+                    'brand' => $product->brand->name,
                     'unit_price' => $product->price,
                     'quantity' => $quantity,
                 ]);

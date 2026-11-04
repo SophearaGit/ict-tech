@@ -38,7 +38,7 @@ Success criteria:
 4. A brand that still has products cannot be deleted.
 5. `/shop` and `/shop/{category}` show only brands that have products (in that
    category for the latter).
-6. Every existing product ends up linked to a brand (27 locally); old orders are
+6. Every existing product ends up linked to a brand (26 locally); old orders are
    unchanged.
 7. The full test suite is green.
 

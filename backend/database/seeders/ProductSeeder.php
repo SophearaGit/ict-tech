@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Brand;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
 
@@ -47,8 +48,11 @@ class ProductSeeder extends Seeder
             ['name' => 'Dell Inspiron 16 Plus', 'brand' => 'Dell', 'type' => 'Laptop', 'category' => 'laptops', 'price' => 999, 'qty' => 0, 'description' => '16" 2.5K display, Intel Core i7, 16GB RAM — the reliable everyday powerhouse.', 'specs' => ['2.5K display', 'Core i7', '16GB RAM', '512GB SSD'], 'image' => 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=600&q=80', 'image_alt' => 'Dell Inspiron 16 laptop open on a desk with bright display', 'trending' => false, 'badge' => 'Sale'],
         ];
 
-        foreach ($products as $product) {
-            Product::create($product);
+        foreach ($products as $row) {
+            $row['brand_id'] = Brand::firstOrCreate(['name' => $row['brand']])->id;
+            unset($row['brand']);
+
+            Product::create($row);
         }
     }
 }

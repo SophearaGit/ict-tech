@@ -4,6 +4,7 @@ namespace Tests\Concerns;
 
 use App\Actions\PlaceOrder;
 use App\Models\Admin;
+use App\Models\Brand;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -12,11 +13,21 @@ trait MakesShopData
 {
     private int $shopDataSequence = 0;
 
+    protected function makeBrand(string $name = 'Acme'): Brand
+    {
+        return Brand::firstOrCreate(['name' => $name]);
+    }
+
     protected function makeProduct(array $overrides = []): Product
     {
+        // Only create the default brand when the caller did not pick one, so tests that
+        // count brands are not polluted by a stray "Acme".
+        if (! isset($overrides['brand_id'])) {
+            $overrides['brand_id'] = $this->makeBrand()->id;
+        }
+
         return Product::create($overrides + [
             'name' => 'Test Phone',
-            'brand' => 'Acme',
             'category' => 'phones',
             'price' => '100.00',
             'qty' => 5,
