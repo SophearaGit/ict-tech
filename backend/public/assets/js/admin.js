@@ -662,13 +662,13 @@ function confirmDelete() {
 
 /* ── Add product form ── */
 function showView(view) {
-  ['dashboard','products','inventory','add','history','messages','brands'].forEach(v => {
+  ['dashboard','products','inventory','add','history','messages','brands','report'].forEach(v => {
     document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
     const nav = document.getElementById(`nav-${v}`);
     if (nav) nav.classList.toggle('active', v === view);
   });
   currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands'};
+  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands',report:'Sales Report'};
   document.getElementById('page-title').textContent = titles[view] || '';
   document.getElementById('topbar-search').classList.toggle('hidden', !['products','inventory','history'].includes(view));
 
@@ -676,6 +676,7 @@ function showView(view) {
   if (view === 'messages' && !messagesLoaded) { messagesLoaded = true; loadMessages(); }
   if (view === 'history') loadOrders(); // reload on every open so new orders appear
   if (view === 'brands') { renamingBrandId = null; renderBrandsTable(); loadBrands(); } // reload so product counts are current
+  if (view === 'report' && typeof initSalesReport === 'function') initSalesReport(); // sales-report.js loads after this file
 
   // Auto-close the mobile sidebar after navigating so its overlay doesn't
   // keep blocking the view that was just opened.

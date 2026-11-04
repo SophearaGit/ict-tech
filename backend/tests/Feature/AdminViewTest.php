@@ -23,4 +23,21 @@ class AdminViewTest extends TestCase
             ->assertSee('<option value="powerbanks">Power Banks</option>', false)
             ->assertDontSee('<option value="Apple">', false);
     }
+
+    public function test_admin_view_renders_the_sales_report_page(): void
+    {
+        $response = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('id="nav-report"', false)
+            ->assertSee("showView('report')", false)
+            ->assertSee('id="view-report"', false)
+            ->assertSee('id="report-date"', false)
+            ->assertSee('id="report-month"', false)
+            ->assertSee('id="report-days-tbody"', false)
+            ->assertSee('id="report-orders-tbody"', false)
+            ->assertSee('id="report-products-tbody"', false)
+            ->assertSee('id="admin-main"', false)
+            ->assertSee('@media print', false)
+            ->assertSee('assets/js/sales-report.js', false);
+    }
 }

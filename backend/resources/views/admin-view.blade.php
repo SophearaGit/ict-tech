@@ -42,6 +42,16 @@
   /* Sidebar nav active state */
   .nav-item.active{background:#1f2937;color:#fff;}
   .dark .nav-item.active{background:#525252;}
+
+  /* Printing (Sales Report): only the report, on plain white, whatever the theme */
+  @media print {
+    .no-print{display:none !important;}
+    #admin-main{margin-left:0 !important;}
+    html, body{background:#fff !important;}
+    .glass-panel{box-shadow:none !important;background:#fff !important;border:1px solid #e5e7eb !important;}
+    #view-report :not([class*="badge-"]){color:#111 !important;}
+    #view-report thead tr{background:#f1f5f9 !important;}
+  }
 </style>
 @endsection
 
@@ -49,7 +59,7 @@
 <!-- ══════════════════════════════════════════════
     SIDEBAR
 ══════════════════════════════════════════════ -->
-<aside id="sidebar" class="sidebar glass-nav fixed dark:bg-neutral-800 dark:border-none top-0 left-0 h-full w-64 max-w-[85vw] bg-white border-r border-gray-100 shadow-sm z-40 flex flex-col -translate-x-full lg:translate-x-0">
+<aside id="sidebar" class="no-print sidebar glass-nav fixed dark:bg-neutral-800 dark:border-none top-0 left-0 h-full w-64 max-w-[85vw] bg-white border-r border-gray-100 shadow-sm z-40 flex flex-col -translate-x-full lg:translate-x-0">
   <!-- Logo -->
   <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between dark:border-none">
     <a href="{{ route('home') }}" class="flex items-center gap-2">
@@ -94,6 +104,10 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Orders
     </button>
+    <button onclick="showView('report')" id="nav-report" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6m4 6V7m4 10v-3M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      Sales Report
+    </button>
   </nav>
 
   <!-- User -->
@@ -115,14 +129,14 @@
 </aside>
 
 <!-- Mobile sidebar overlay -->
-<div id="mob-overlay" onclick="closeSidebar()" class="hidden fixed inset-0 bg-black/30 z-30 lg:hidden"></div>
+<div id="mob-overlay" onclick="closeSidebar()" class="no-print hidden fixed inset-0 bg-black/30 z-30 lg:hidden"></div>
 
 <!-- ══════════════════════════════════════════════
     MAIN CONTENT
 ══════════════════════════════════════════════ -->
-<div class="w-full lg:ml-64 flex flex-col dark:bg-neutral-800 dark:border-none">
+<div id="admin-main" class="w-full lg:ml-64 flex flex-col dark:bg-neutral-800 dark:border-none">
   <!-- Top bar -->
-  <div class="glass-nav sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-100 px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2 dark:bg-neutral-800 dark:border-none">
+  <div class="no-print glass-nav sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-100 px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2 dark:bg-neutral-800 dark:border-none">
     <!-- Left -->
     <div class="flex items-center gap-2 sm:gap-3 min-w-0">
       <button onclick="toggleSidebar()" class="glass-icon-btn border border-transparent p-2 rounded-xl transition-colors shrink-0">
@@ -478,6 +492,105 @@
       </div>
     </div>
 
+    <!-- ──── SALES REPORT VIEW ──── -->
+    <div id="view-report" class="hidden space-y-5">
+      <!-- Controls (not printed) -->
+      <div class="no-print glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none flex flex-col lg:flex-row lg:items-center gap-3">
+        <div class="inline-flex self-start rounded-xl bg-gray-100 dark:bg-neutral-600 p-1" role="group" aria-label="Report period">
+          <button id="report-period-day" onclick="setReportPeriod('day')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors">Day</button>
+          <button id="report-period-week" onclick="setReportPeriod('week')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors">Week</button>
+          <button id="report-period-month" onclick="setReportPeriod('month')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors">Month</button>
+        </div>
+        <input id="report-date" type="date" min="2000-01-01" max="2100-12-31" onchange="loadSalesReport()" aria-label="Report date" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all"/>
+        <input id="report-month" type="month" min="2000-01" max="2100-12" onchange="loadSalesReport()" aria-label="Report month" class="hidden form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all"/>
+        <div class="flex gap-2 lg:ml-auto">
+          <button onclick="downloadSalesReportCsv()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">Download CSV</button>
+          <button onclick="printSalesReport()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">Print</button>
+        </div>
+      </div>
+
+      <div id="report-error" class="hidden bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3"></div>
+
+      <!-- Title (printed too) -->
+      <h3 id="report-title" class="font-display font-bold text-lg text-gray-900 dark:text-white">Sales report</h3>
+
+      <!-- Totals -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 dark:bg-neutral-700 dark:border-none">
+          <p class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Orders</p>
+          <p id="report-orders" class="font-display font-bold text-2xl text-gray-900 dark:text-white mt-1">—</p>
+        </div>
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 dark:bg-neutral-700 dark:border-none">
+          <p class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Items sold</p>
+          <p id="report-items" class="font-display font-bold text-2xl text-gray-900 dark:text-white mt-1">—</p>
+        </div>
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 dark:bg-neutral-700 dark:border-none">
+          <p class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Revenue</p>
+          <p id="report-revenue" class="font-display font-bold text-2xl text-gray-900 dark:text-white mt-1">—</p>
+        </div>
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 dark:bg-neutral-700 dark:border-none">
+          <p class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Average order</p>
+          <p id="report-average" class="font-display font-bold text-2xl text-gray-900 dark:text-white mt-1">—</p>
+        </div>
+      </div>
+
+      <div id="report-empty" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-16 dark:bg-neutral-700 dark:border-none">
+        <div class="text-4xl mb-3">🧾</div>
+        <p class="text-gray-500 dark:text-white font-medium">No sales in this period</p>
+        <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Pick another day, week or month.</p>
+      </div>
+
+      <!-- By day (Week and Month) -->
+      <div id="report-days-card" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <h4 class="px-5 pt-4 pb-2 font-display font-bold text-sm text-gray-900 dark:text-white">By day</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3 text-xs font-semibold text-gray-700 dark:text-white">Date</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Orders</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Items</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Revenue</th>
+            </tr></thead>
+            <tbody id="report-days-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Orders (Day only) -->
+      <div id="report-orders-card" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <h4 class="px-5 pt-4 pb-2 font-display font-bold text-sm text-gray-900 dark:text-white">Orders</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3 text-xs font-semibold text-gray-700 dark:text-white">Order</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Time</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Payment</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Items</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Total</th>
+            </tr></thead>
+            <tbody id="report-orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- What sold -->
+      <div id="report-products-card" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <h4 class="px-5 pt-4 pb-2 font-display font-bold text-sm text-gray-900 dark:text-white">What sold</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3 text-xs font-semibold text-gray-700 dark:text-white">Product</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Brand</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Quantity</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Revenue</th>
+            </tr></thead>
+            <tbody id="report-products-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 
 </div>
@@ -587,7 +700,7 @@
 </div>
 
 <!-- Toast -->
-<div id="admin-toast" class="fixed bottom-6 right-6 z-[200] pointer-events-none"></div>
+<div id="admin-toast" class="no-print fixed bottom-6 right-6 z-[200] pointer-events-none"></div>
 @endsection
 
 @section('extra-scripts')
@@ -604,4 +717,5 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="{{ asset('assets/js/admin.js') }}"></script>
 <script src="{{ asset('assets/js/analytics.js') }}"></script>
+<script src="{{ asset('assets/js/sales-report.js') }}"></script>
 @endsection
