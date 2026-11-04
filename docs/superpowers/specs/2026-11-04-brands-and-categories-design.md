@@ -80,6 +80,11 @@ Migrations (three files, in order):
    trimming; the brand's name is the spelling used by the most products (ties →
    the spelling on the lowest product id); insert the brands; set every
    product's `brand_id`. Names are copied as they are (no charset check).
+   Safe to fail: a name longer than 50 characters stops the migration before
+   anything is written, with a message naming it (the admin shortens it and runs
+   `migrate` again); all writes run in one transaction; and a name the database
+   already treats as an existing brand (for example `Café` and `Cafe` under
+   MySQL's collation) joins that brand instead of failing.
 3. Make `brand_id` NOT NULL, add the foreign key, drop `products.brand`.
 
 `down()` of each step reverses it; reversing step 3 re-adds `brand` and refills

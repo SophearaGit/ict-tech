@@ -7,6 +7,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 use Tests\Concerns\MakesShopData;
 use Tests\TestCase;
 
@@ -18,6 +19,10 @@ use Tests\TestCase;
 class BrandsMigrationTest extends TestCase
 {
     use DatabaseMigrations, MakesShopData;
+
+    private const CREATE_MIGRATION = '2026_11_04_100000_create_brands_table_and_add_brand_id_to_products.php';
+
+    private const BACKFILL_MIGRATION = '2026_11_04_100100_backfill_product_brands.php';
 
     /** Back to the legacy shape: products.brand is a text column and there is no brands table. */
     private function rollBackBrandMigrations(): void
@@ -87,6 +92,27 @@ class BrandsMigrationTest extends TestCase
 
         $this->assertSame(['Sony'], Brand::pluck('name')->all());
         $this->assertSame(0, DB::table('products')->whereNull('brand_id')->count());
+    }
+
+    public function test_backfill_refuses_a_legacy_brand_name_longer_than_fifty_characters_and_changes_nothing(): void
+    {
+        $this->rollBackBrandMigrations();
+        // Only the first migration: brands exists and products.brand_id is still empty.
+        $this->artisan('migrate', ['--path' => 'database/migrations/'.self::CREATE_MIGRATION])->assertExitCode(0);
+        $this->insertLegacyProduct('Apple');
+        $this->insertLegacyProduct(str_repeat('x', 51));
+
+        $stopped = null;
+        try {
+            (require database_path('migrations/'.self::BACKFILL_MIGRATION))->up();
+        } catch (RuntimeException $e) {
+            $stopped = $e;
+        }
+
+        $this->assertNotNull($stopped, 'A brand name that does not fit in brands.name should stop the backfill.');
+        $this->assertStringContainsString('longer than 50 characters', $stopped->getMessage());
+        $this->assertSame(0, Brand::count());
+        $this->assertSame(0, DB::table('products')->whereNotNull('brand_id')->count());
     }
 
     public function test_legacy_names_outside_the_allowed_characters_are_kept(): void
