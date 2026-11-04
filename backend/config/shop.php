@@ -6,6 +6,10 @@
  * must match the `products.category` column values.
  */
 return [
+    // The shop runs on Phnom Penh time (UTC+7, no daylight saving); the app and the database
+    // stay on UTC. Day boundaries in the dashboard chart and the sales report use this.
+    'timezone' => 'Asia/Phnom_Penh',
+
     'categories' => [
         'phones' => [
             'label' => 'Phones',

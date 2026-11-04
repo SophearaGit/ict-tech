@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SalesReportController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
@@ -84,4 +85,6 @@ Route::middleware('admin')->group(function () {
     Route::put('/admin/orders/{order}', [OrderController::class, 'update'])->name('admin-orders.update');
 
     Route::get('/admin/analytics/summary', [AnalyticsController::class, 'summary'])->name('admin-analytics.summary');
+
+    Route::get('/admin/reports/sales', [SalesReportController::class, 'show'])->name('admin-reports.sales');
 });
