@@ -47,8 +47,16 @@
   @media print {
     .no-print{display:none !important;}
     #admin-main{margin-left:0 !important;}
-    html, body{background:#fff !important;}
-    .glass-panel{box-shadow:none !important;background:#fff !important;border:1px solid #e5e7eb !important;}
+    /* A plain block page: the screen layout is a flex body with hidden overflow, which some
+       browsers cut off after the first printed page. */
+    html, body{display:block !important;background:#fff !important;overflow:visible !important;max-width:none !important;height:auto !important;}
+    /* Dark mode paints the page dark grey; the printed text is forced dark, so keep the page white. */
+    #admin-main, #admin-main main{background:#fff !important;}
+    .glass-panel{box-shadow:none !important;background:#fff !important;border:1px solid #e5e7eb !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
+    /* Long tables must flow across pages, never clip inside a scroll box. */
+    #view-report .overflow-hidden, #view-report .overflow-x-auto{overflow:visible !important;}
+    #view-report tr{break-inside:avoid;}
+    #view-report thead{display:table-header-group;}
     #view-report :not([class*="badge-"]){color:#111 !important;}
     #view-report thead tr{background:#f1f5f9 !important;}
   }
