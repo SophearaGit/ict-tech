@@ -18,6 +18,7 @@
   .badge-in   {background:#dcfce7;color:#16a34a;}
   .badge-low  {background:#fef9c3;color:#ca8a04;}
   .badge-out  {background:#fee2e2;color:#dc2626;}
+  .badge-paid {background:#e0e7ff;color:#4f46e5;}
 
   /* Modal */
   .modal-backdrop{background:rgba(0,0,0,0.25);backdrop-filter:blur(4px);}
@@ -41,6 +42,24 @@
   /* Sidebar nav active state */
   .nav-item.active{background:#1f2937;color:#fff;}
   .dark .nav-item.active{background:#525252;}
+
+  /* Printing (Sales Report): only the report, on plain white, whatever the theme */
+  @media print {
+    .no-print{display:none !important;}
+    #admin-main{margin-left:0 !important;}
+    /* A plain block page: the screen layout is a flex body with hidden overflow, which some
+       browsers cut off after the first printed page. */
+    html, body{display:block !important;background:#fff !important;overflow:visible !important;max-width:none !important;height:auto !important;}
+    /* Dark mode paints the page dark grey; the printed text is forced dark, so keep the page white. */
+    #admin-main, #admin-main main{background:#fff !important;}
+    .glass-panel{box-shadow:none !important;background:#fff !important;border:1px solid #e5e7eb !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
+    /* Long tables must flow across pages, never clip inside a scroll box. */
+    #view-report .overflow-hidden, #view-report .overflow-x-auto{overflow:visible !important;}
+    #view-report tr{break-inside:avoid;}
+    #view-report thead{display:table-header-group;}
+    #view-report :not([class*="badge-"]){color:#111 !important;}
+    #view-report thead tr{background:#f1f5f9 !important;}
+  }
 </style>
 @endsection
 
@@ -48,7 +67,7 @@
 <!-- ══════════════════════════════════════════════
     SIDEBAR
 ══════════════════════════════════════════════ -->
-<aside id="sidebar" class="sidebar glass-nav fixed dark:bg-neutral-800 dark:border-none top-0 left-0 h-full w-64 max-w-[85vw] bg-white border-r border-gray-100 shadow-sm z-40 flex flex-col -translate-x-full lg:translate-x-0">
+<aside id="sidebar" class="no-print sidebar glass-nav fixed dark:bg-neutral-800 dark:border-none top-0 left-0 h-full w-64 max-w-[85vw] bg-white border-r border-gray-100 shadow-sm z-40 flex flex-col -translate-x-full lg:translate-x-0">
   <!-- Logo -->
   <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between dark:border-none">
     <a href="{{ route('home') }}" class="flex items-center gap-2">
@@ -77,6 +96,10 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Add Products
     </button>
+    <button onclick="showView('brands')" id="nav-brands" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+      Brands
+    </button>
     <button onclick="showView('messages')" id="nav-messages" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       Message
@@ -87,16 +110,20 @@
     </a>
     <button onclick="showView('history')" id="nav-history" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      History
+      Orders
+    </button>
+    <button onclick="showView('report')" id="nav-report" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6m4 6V7m4 10v-3M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      Sales Report
     </button>
   </nav>
 
   <!-- User -->
   <div class="px-4 py-4 border-t border-gray-100 dark:border-none flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-600">{{ substr(Auth::user()->name, 0, 1) }}</div>
+      <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-600">{{ substr(Auth::guard('admin')->user()->name, 0, 1) }}</div>
       <div>
-        <p class="text-xs font-semibold text-gray-800 dark:text-white" id="admin-name">{{ Auth::user()->name }}</p>
+        <p class="text-xs font-semibold text-gray-800 dark:text-white" id="admin-name">{{ Auth::guard('admin')->user()->name }}</p>
         <p class="text-[10px] text-gray-400">Super Admin</p>
       </div>
     </div>
@@ -110,14 +137,14 @@
 </aside>
 
 <!-- Mobile sidebar overlay -->
-<div id="mob-overlay" onclick="closeSidebar()" class="hidden fixed inset-0 bg-black/30 z-30 lg:hidden"></div>
+<div id="mob-overlay" onclick="closeSidebar()" class="no-print hidden fixed inset-0 bg-black/30 z-30 lg:hidden"></div>
 
 <!-- ══════════════════════════════════════════════
     MAIN CONTENT
 ══════════════════════════════════════════════ -->
-<div class="w-full lg:ml-64 flex flex-col dark:bg-neutral-800 dark:border-none">
+<div id="admin-main" class="w-full lg:ml-64 flex flex-col dark:bg-neutral-800 dark:border-none">
   <!-- Top bar -->
-  <div class="glass-nav sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-100 px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2 dark:bg-neutral-800 dark:border-none">
+  <div class="no-print glass-nav sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-100 px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2 dark:bg-neutral-800 dark:border-none">
     <!-- Left -->
     <div class="flex items-center gap-2 sm:gap-3 min-w-0">
       <button onclick="toggleSidebar()" class="glass-icon-btn border border-transparent p-2 rounded-xl transition-colors shrink-0">
@@ -154,55 +181,56 @@
 
     <!-- ──── DASHBOARD VIEW ──── -->
     <div id="view-dashboard">
-      <!-- Visitor & Sales Analytics -->
+      <!-- Sales Analytics -->
       <div class="mb-6">
-        <h3 class="font-display font-bold text-sm text-gray-900 dark:text-white mb-3">Visitor &amp; Sales Analytics</h3>
+        <h3 class="font-display font-bold text-sm text-gray-900 dark:text-white mb-3">Sales Analytics (last 14 days)</h3>
 
         <!-- KPI cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Visitors</span>
+              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Orders</span>
               <div class="w-8 h-8 bg-indigo-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
               </div>
             </div>
-            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-visitors">0</p>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-orders">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">last 14 days</p>
           </div>
           <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Purchases</span>
+              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Order Value</span>
               <div class="w-8 h-8 bg-green-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m-10 0a1 1 0 100 2 1 1 0 000-2zm10 0a1 1 0 100 2 1 1 0 000-2z"/></svg>
+                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               </div>
             </div>
-            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-purchases">0</p>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-revenue">$0.00</p>
             <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">last 14 days</p>
           </div>
           <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Conversion Rate</span>
+              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Average Order Value</span>
               <div class="w-8 h-8 bg-amber-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
               </div>
             </div>
-            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-conversion">0%</p>
-            <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">purchases ÷ visitors</p>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-average">$0.00</p>
+            <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">per order, last 14 days</p>
           </div>
         </div>
 
         <!-- Chart -->
         <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
           <div class="flex items-center justify-between mb-4">
-            <h4 class="font-display font-bold text-sm text-gray-900 dark:text-white">Visitors vs Purchases</h4>
+            <h4 class="font-display font-bold text-sm text-gray-900 dark:text-white">Orders vs Order Value</h4>
             <div class="flex items-center gap-3 text-[10px] text-gray-400 dark:text-gray-300">
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>Visitors</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Purchases</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>Orders</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Order value ($)</span>
             </div>
           </div>
           <div class="relative w-full" style="height:280px">
             <canvas id="analytics-chart"></canvas>
+            <p id="analytics-unavailable" class="hidden absolute inset-0 flex items-center justify-center text-sm text-gray-400 dark:text-gray-300">Analytics unavailable</p>
           </div>
         </div>
       </div>
@@ -356,20 +384,23 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1.5">Brand *</label>
-            <input id="f-brand" type="text" placeholder="e.g. Apple" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+            <select id="f-brand" onchange="onBrandChange(this)" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all cursor-pointer">
+              <option value="">Select brand…</option>
+              <option value="__new__">+ Add new brand…</option>
+            </select>
+            <div id="new-brand-box" class="hidden mt-2 flex gap-2">
+              <input id="new-brand-name" type="text" maxlength="50" placeholder="New brand name" onkeydown="if (event.key === 'Enter') saveNewBrand()" class="form-inp flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm"/>
+              <button type="button" onclick="saveNewBrand()" class="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-xl text-xs transition-colors">Save</button>
+              <button type="button" onclick="cancelNewBrand()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-colors">Cancel</button>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1.5">Category *</label>
             <select id="f-category" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all cursor-pointer">
               <option value="">Select category…</option>
-              <option value="Apple">Apple</option>
-              <option value="Sony">Sony</option>
-              <option value="JTrust">JTrust</option>
-              <option value="Xiaomi">Xiaomi</option>
-              <option value="Asus">Asus</option>
-              <option value="Anker">Anker</option>
-              <option value="Dell">Dell</option>
-              <option value="Samsung">Samsung</option>
+              @foreach (config('shop.categories') as $slug => $category)
+                <option value="{{ $slug }}">{{ $category['label'] }}</option>
+              @endforeach
             </select>
           </div>
           <div>
@@ -418,27 +449,152 @@
       </div>
     </div>
 
-    <!-- ──── HISTORY VIEW ──── -->
+    <!-- ──── BRANDS VIEW ──── -->
+    <div id="view-brands" class="hidden">
+      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="p-5 border-b border-gray-100 dark:border-neutral-600 flex flex-col sm:flex-row gap-3">
+          <input id="brand-add-name" type="text" maxlength="50" placeholder="New brand name, e.g. Huawei" onkeydown="if (event.key === 'Enter') addBrand()" class="form-inp flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+          <button onclick="addBrand()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Add Brand</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Brand</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
+            </tr></thead>
+            <tbody id="brands-tbody"></tbody>
+          </table>
+        </div>
+        <div id="brands-empty" class="hidden text-center py-16">
+          <div class="text-4xl mb-3">🏷️</div>
+          <p class="text-gray-500 dark:text-white font-medium">No brands yet</p>
+          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Add a brand above, then pick it when you add a product.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──── ORDERS VIEW (element ids keep their old "history" names) ──── -->
     <div id="view-history" class="hidden">
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
-              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">No</th>
-              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
-              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden sm:table-cell">Branch</th>
-              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">QTY</th>
-              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Price</th>
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Order</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Customer</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden sm:table-cell">Items</th>
               <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Total</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden md:table-cell">Payment</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
               <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white hidden md:table-cell">Date</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
             </tr></thead>
             <tbody id="history-tbody"></tbody>
           </table>
         </div>
         <div id="history-empty" class="hidden text-center py-16">
-          <div class="text-4xl mb-3">🕘</div>
-          <p class="text-gray-500 dark:text-white font-medium">No sales history yet</p>
-          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your search.</p>
+          <div class="text-4xl mb-3">🧾</div>
+          <p id="history-empty-title" class="text-gray-500 dark:text-white font-medium">No orders yet</p>
+          <p id="history-empty-hint" class="text-gray-400 dark:text-gray-300 text-sm mt-1">Orders placed in the store will show up here.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──── SALES REPORT VIEW ──── -->
+    <div id="view-report" class="hidden space-y-5">
+      <!-- Controls (not printed) -->
+      <div class="no-print glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 dark:bg-neutral-700 dark:border-none flex flex-col lg:flex-row lg:items-center gap-3">
+        <div class="inline-flex self-start rounded-xl bg-gray-100 dark:bg-neutral-600 p-1" role="group" aria-label="Report period">
+          <button id="report-period-day" onclick="setReportPeriod('day')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors">Day</button>
+          <button id="report-period-week" onclick="setReportPeriod('week')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors">Week</button>
+          <button id="report-period-month" onclick="setReportPeriod('month')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors">Month</button>
+        </div>
+        <input id="report-date" type="date" min="2000-01-01" max="2100-12-31" onchange="loadSalesReport()" aria-label="Report date" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all"/>
+        <input id="report-month" type="month" min="2000-01" max="2100-12" onchange="loadSalesReport()" aria-label="Report month" class="hidden form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all"/>
+        <div class="flex gap-2 lg:ml-auto">
+          <button onclick="downloadSalesReportCsv()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">Download CSV</button>
+          <button onclick="printSalesReport()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">Print</button>
+        </div>
+      </div>
+
+      <div id="report-error" class="hidden bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3"></div>
+
+      <!-- Title (printed too) -->
+      <h3 id="report-title" class="font-display font-bold text-lg text-gray-900 dark:text-white">Sales report</h3>
+
+      <!-- Totals -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 dark:bg-neutral-700 dark:border-none">
+          <p class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Orders</p>
+          <p id="report-orders" class="font-display font-bold text-2xl text-gray-900 dark:text-white mt-1">—</p>
+        </div>
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 dark:bg-neutral-700 dark:border-none">
+          <p class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Items sold</p>
+          <p id="report-items" class="font-display font-bold text-2xl text-gray-900 dark:text-white mt-1">—</p>
+        </div>
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 dark:bg-neutral-700 dark:border-none">
+          <p class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Revenue</p>
+          <p id="report-revenue" class="font-display font-bold text-2xl text-gray-900 dark:text-white mt-1">—</p>
+        </div>
+        <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm p-4 dark:bg-neutral-700 dark:border-none">
+          <p class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Average order</p>
+          <p id="report-average" class="font-display font-bold text-2xl text-gray-900 dark:text-white mt-1">—</p>
+        </div>
+      </div>
+
+      <div id="report-empty" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-16 dark:bg-neutral-700 dark:border-none">
+        <div class="text-4xl mb-3">🧾</div>
+        <p class="text-gray-500 dark:text-white font-medium">No sales in this period</p>
+        <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Pick another day, week or month.</p>
+      </div>
+
+      <!-- By day (Week and Month) -->
+      <div id="report-days-card" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <h4 class="px-5 pt-4 pb-2 font-display font-bold text-sm text-gray-900 dark:text-white">By day</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3 text-xs font-semibold text-gray-700 dark:text-white">Date</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Orders</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Items</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Revenue</th>
+            </tr></thead>
+            <tbody id="report-days-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Orders (Day only) -->
+      <div id="report-orders-card" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <h4 class="px-5 pt-4 pb-2 font-display font-bold text-sm text-gray-900 dark:text-white">Orders</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3 text-xs font-semibold text-gray-700 dark:text-white">Order</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Time</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Payment</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Items</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Total</th>
+            </tr></thead>
+            <tbody id="report-orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- What sold -->
+      <div id="report-products-card" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <h4 class="px-5 pt-4 pb-2 font-display font-bold text-sm text-gray-900 dark:text-white">What sold</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3 text-xs font-semibold text-gray-700 dark:text-white">Product</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Brand</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Quantity</th>
+              <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Revenue</th>
+            </tr></thead>
+            <tbody id="report-products-tbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -463,6 +619,23 @@
       <div>
         <label class="block text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1">Product Name</label>
         <input id="m-name" type="text" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1">Brand</label>
+          <select id="m-brand" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm cursor-pointer">
+            <option value="">Select brand…</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1">Category</label>
+          <select id="m-category" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm cursor-pointer">
+            <option value="">Select category…</option>
+            @foreach (config('shop.categories') as $slug => $category)
+              <option value="{{ $slug }}">{{ $category['label'] }}</option>
+            @endforeach
+          </select>
+        </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -535,7 +708,7 @@
 </div>
 
 <!-- Toast -->
-<div id="admin-toast" class="fixed bottom-6 right-6 z-[200] pointer-events-none"></div>
+<div id="admin-toast" class="no-print fixed bottom-6 right-6 z-[200] pointer-events-none"></div>
 @endsection
 
 @section('extra-scripts')
@@ -552,4 +725,5 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="{{ asset('assets/js/admin.js') }}"></script>
 <script src="{{ asset('assets/js/analytics.js') }}"></script>
+<script src="{{ asset('assets/js/sales-report.js') }}"></script>
 @endsection

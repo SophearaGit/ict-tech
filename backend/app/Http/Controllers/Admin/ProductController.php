@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
     public function index()
     {
         return response()->json(
-            Product::orderBy('id')->get()->map(fn (Product $p) => $this->transform($p))
+            Product::with('brand')->orderBy('id')->get()->map(fn (Product $p) => $this->transform($p))
         );
     }
 
@@ -19,8 +20,8 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'brand' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'string', 'max:255'],
+            'brand_id' => ['bail', 'required', 'integer', 'exists:brands,id'],
+            'category' => ['required', Rule::in($this->categorySlugs())],
             'price' => ['required', 'numeric', 'min:0'],
             'qty' => ['required', 'integer', 'min:0'],
             'desc' => ['nullable', 'string'],
@@ -29,7 +30,7 @@ class ProductController extends Controller
 
         $product = Product::create([
             'name' => $validated['name'],
-            'brand' => $validated['brand'],
+            'brand_id' => $validated['brand_id'],
             'category' => $validated['category'],
             'price' => $validated['price'],
             'qty' => $validated['qty'],
@@ -37,15 +38,15 @@ class ProductController extends Controller
             'trending' => $validated['trending'] ?? false,
         ]);
 
-        return response()->json($this->transform($product), 201);
+        return response()->json($this->transform($product->load('brand')), 201);
     }
 
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'brand' => ['sometimes', 'string', 'max:255'],
-            'category' => ['sometimes', 'string', 'max:255'],
+            'brand_id' => ['bail', 'sometimes', 'integer', 'exists:brands,id'],
+            'category' => ['sometimes', Rule::in($this->categorySlugs())],
             'price' => ['sometimes', 'numeric', 'min:0'],
             'qty' => ['sometimes', 'integer', 'min:0'],
             'desc' => ['sometimes', 'nullable', 'string'],
@@ -59,7 +60,7 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return response()->json($this->transform($product));
+        return response()->json($this->transform($product->load('brand')));
     }
 
     public function destroy(Product $product)
@@ -69,18 +70,26 @@ class ProductController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /** The real category slugs (config/shop.php is the single source of truth). */
+    protected function categorySlugs(): array
+    {
+        return array_keys(config('shop.categories'));
+    }
+
     /**
      * Shape the product for the admin dashboard JS, which expects the same
      * field names as the original static prototype's product objects
      * (`desc` and `imageAlt`, not `description`/`image_alt`), and string ids
      * since every admin.js onclick handler passes ids through as strings.
+     * `brand` is the brand's name; `brandId` is what the form's select posts back.
      */
     protected function transform(Product $product): array
     {
         return [
             'id' => (string) $product->id,
             'name' => $product->name,
-            'brand' => $product->brand,
+            'brand' => $product->brand->name,
+            'brandId' => (int) $product->brand_id,
             'type' => $product->type,
             'category' => $product->category,
             'price' => (float) $product->price,

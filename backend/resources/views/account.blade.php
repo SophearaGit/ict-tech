@@ -69,6 +69,12 @@
           <div class="bg-green-50 border border-green-100 text-green-700 text-sm rounded-xl px-4 py-3 mb-6 text-left">
             ✅ <strong>${escapeHtml(addedItemName)}</strong> was added to your cart.
           </div>` : ''}
+        <div class="text-left mb-6">
+          <h2 class="font-display font-semibold text-sm text-gray-900 dark:text-white mb-3">My orders</h2>
+          <div id="my-orders" class="flex flex-col gap-3 max-h-72 overflow-y-auto">
+            <p class="text-sm text-gray-400">Loading…</p>
+          </div>
+        </div>
         <div class="flex flex-col gap-3">
           <a href="${getContinueHref()}"
             class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl text-sm transition-all duration-200 hover:-translate-y-0.5">
@@ -80,6 +86,44 @@
           </button>
         </div>
       </div>`;
+    loadMyOrders();
+  }
+
+  const ORDER_STATUS_STYLE = {
+    pending: 'bg-yellow-100 text-yellow-700',
+    paid: 'bg-indigo-100 text-indigo-700',
+    delivered: 'bg-green-100 text-green-700',
+    cancelled: 'bg-red-100 text-red-600',
+  };
+
+  /* Every value from the server goes through escapeHtml — names and numbers end up in innerHTML. */
+  async function loadMyOrders() {
+    const box = document.getElementById('my-orders');
+    if (!box) return;
+    try {
+      const res = await fetch('/orders', { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('orders request failed');
+      const orders = await res.json();
+
+      if (orders.length === 0) {
+        box.innerHTML = '<p class="text-sm text-gray-400">No orders yet</p>';
+        return;
+      }
+      box.innerHTML = orders.map(o => `
+        <div class="border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-sm">
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <span class="font-semibold text-gray-900 dark:text-white">${escapeHtml(o.number)}</span>
+            <span class="${ORDER_STATUS_STYLE[o.status] || 'bg-gray-100 text-gray-600'} text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize">${escapeHtml(o.status)}</span>
+          </div>
+          <p class="text-xs text-gray-400 mb-1.5">${escapeHtml(new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))}</p>
+          <ul class="text-gray-600 dark:text-gray-300 mb-1.5">
+            ${o.items.map(i => `<li>${Number(i.quantity)} × ${escapeHtml(i.name)}</li>`).join('')}
+          </ul>
+          <p class="font-semibold text-gray-900 dark:text-white">$${Number(o.total).toFixed(2)}</p>
+        </div>`).join('');
+    } catch (e) {
+      box.innerHTML = '<p class="text-sm text-red-500">Could not load your orders. Please refresh.</p>';
+    }
   }
 
   function authMsg(msg, type) {

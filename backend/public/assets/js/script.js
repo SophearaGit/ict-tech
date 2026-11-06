@@ -490,7 +490,8 @@ const _checkoutPinIcon = (typeof L !== 'undefined') ? L.icon({
 }) : null;
 
 let _checkoutState = null;   // null | 'contact' | 'payment' | 'expired' | 'success'
-let _checkoutOrder = null;   // { id, phone, address, coords, total, expiresAt, paymentMethod }
+let _checkoutOrder = null;   // { phone, address, coords, total, expiresAt, paymentMethod, number } — number/total come from the server on success
+let _checkoutSubmitting = false; // true while POST /checkout is in flight (blocks double-clicks)
 let _checkoutCoords = null;  // { lat, lng } once shared
 let _checkoutTimerId = null;
 let _checkoutMap = null;     // Leaflet map instance, once the pin map is shown
@@ -602,7 +603,6 @@ function handleCheckoutContactSubmit() {
 
   const total = Cart.getItems().reduce((sum, i) => sum + (Number(i.price) || 0) * i.qty, 0);
   _checkoutOrder = {
-    id: 'ORD' + Date.now().toString(36).toUpperCase(),
     phone, address,
     coords: _checkoutCoords,
     total,
@@ -641,14 +641,73 @@ function startCheckoutCountdown() {
   _checkoutTimerId = setInterval(tick, 1000);
 }
 
-function completeCheckoutPayment() {
-  clearInterval(_checkoutTimerId);
-  _checkoutState = 'success';
-  renderCartDrawer();
-  setTimeout(() => {
+async function completeCheckoutPayment() {
+  if (_checkoutSubmitting) return;
+  _checkoutSubmitting = true;
+  const confirmBtn = document.getElementById('checkout-confirm-btn');
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  try {
+    const order = _checkoutOrder;
+    const res = await fetch('/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+      },
+      body: JSON.stringify({
+        phone: order.phone,
+        address: order.address,
+        payment_method: order.paymentMethod,
+        lat: order.coords ? order.coords.lat : null,
+        lng: order.coords ? order.coords.lng : null,
+        items: Cart.getItems().map(i => ({ product_id: i.id, quantity: i.qty })),
+      }),
+    });
+    let data = null;
+    try { data = await res.json(); } catch (e) {}
+
+    if (res.status === 401) {
+      showToast('Please sign in to place your order');
+      setTimeout(() => {
+        const page = window.location.pathname || '/';
+        window.location.href = `/account?redirect=${encodeURIComponent(page)}`;
+      }, 900);
+      return;
+    }
+    if (!data || !data.ok) {
+      _checkoutMsg(
+        (data && data.error) || (res.status === 429
+          ? 'Too many attempts — please wait a minute and try again.'
+          : 'Something went wrong. Please try again.'),
+        'error'
+      );
+      return;
+    }
+
+    // The order now exists on the server — empty the cart straight away so it can't be submitted twice.
+    clearInterval(_checkoutTimerId);
+    _checkoutOrder.number = data.order.number;
+    _checkoutOrder.total = data.order.total;
     Cart.clear();
-    toggleCart(); // closes the drawer; toggleCart() resets checkout state
-  }, 2200);
+    if (cartOpen) {
+      _checkoutState = 'success';
+      renderCartDrawer();
+      setTimeout(() => {
+        if (cartOpen && _checkoutState === 'success') toggleCart(); // closes the drawer; toggleCart() resets checkout state
+      }, 2200);
+    } else {
+      _checkoutState = null;
+      showToast(`Order ${data.order.number} placed`);
+    }
+  } catch (e) {
+    _checkoutMsg('Network error — please try again.', 'error');
+  } finally {
+    _checkoutSubmitting = false;
+    const btn = document.getElementById('checkout-confirm-btn');
+    if (btn) btn.disabled = false;
+  }
 }
 
 function _checkoutMsg(msg, type) {
@@ -723,18 +782,18 @@ function checkoutPaymentStepHTML() {
   if (order.paymentMethod === 'cod') {
     return `
       <div class="flex flex-col items-center text-center py-6">
+        <div id="checkout-contact-message" class="hidden"></div>
         <div class="text-5xl mb-3" aria-hidden="true">💵</div>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Order <span class="font-semibold text-gray-800 dark:text-white">#${escapeHtml(order.id)}</span></p>
         <p class="text-2xl font-bold text-gray-900 dark:text-white mb-2">$${order.total.toFixed(2)}</p>
         <p class="text-sm text-gray-500 dark:text-gray-400 max-w-xs">Pay in cash to the delivery person when your order arrives.</p>
       </div>`;
   }
 
-  const qrPayload = `ICTTECH-PAY|order:${order.id}|amount:${order.total.toFixed(2)}|phone:${order.phone}`;
+  const qrPayload = `ICTTECH-PAY|amount:${order.total.toFixed(2)}|phone:${order.phone}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrPayload)}`;
   return `
     <div class="flex flex-col items-center text-center py-4">
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Order <span class="font-semibold text-gray-800 dark:text-white">#${escapeHtml(order.id)}</span></p>
+      <div id="checkout-contact-message" class="hidden"></div>
       <div class="glass-panel bg-white p-4 rounded-2xl border border-gray-100 my-4">
         <img src="${qrUrl}" alt="ABA KHQR payment code" width="220" height="220" class="rounded-xl" />
       </div>
@@ -762,6 +821,7 @@ function checkoutSuccessStepHTML() {
     <div class="flex flex-col items-center text-center py-10">
       <div class="text-5xl mb-3">✅</div>
       <h3 class="font-bold text-gray-900 dark:text-white mb-1">Booking confirmed!</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Order <span class="font-semibold text-gray-800 dark:text-white">#${escapeHtml(order.number)}</span></p>
       <p class="text-sm text-gray-400">We'll contact you at ${escapeHtml(order.phone)} to confirm delivery.</p>
       ${codNote}
     </div>`;
@@ -780,7 +840,7 @@ function renderCheckoutStep(itemsEl, footerEl) {
     itemsEl.innerHTML = checkoutPaymentStepHTML();
     const isCod = _checkoutOrder.paymentMethod === 'cod';
     footerEl.innerHTML = `
-      <button onclick="completeCheckoutPayment()" class="${primaryBtnClasses} bg-green-600 hover:bg-green-700">${isCod ? 'Confirm Order' : "I've completed payment"}</button>
+      <button id="checkout-confirm-btn" onclick="completeCheckoutPayment()" class="${primaryBtnClasses} bg-green-600 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed">${isCod ? 'Confirm Order' : "I've completed payment"}</button>
       ${cancelBtnHTML}`;
   } else if (_checkoutState === 'expired') {
     itemsEl.innerHTML = checkoutExpiredStepHTML();

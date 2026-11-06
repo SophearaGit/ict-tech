@@ -1,44 +1,43 @@
 /* ══════════════════════════════════════════════
-   Visitor & Sales Analytics — dashboard module
-   Data layer is isolated in fetchAnalyticsData().
-   Swap its body for a real API call once the PHP/Laravel
-   backend is ready, e.g.:
-     const res = await fetch('/api/analytics/summary');
-     return await res.json();
-   Expected shape: { labels: string[], visitors: number[], purchases: number[] }
+   Sales Analytics — dashboard module (real orders, last 14 days)
+   Data comes from GET /admin/analytics/summary, which returns
+     { labels: 'Y-m-d'[14], orders: number[14], revenue: number[14] }
+   Cancelled orders are already excluded by the server. When the request
+   fails the dashboard says so — it never shows made-up numbers.
 ══════════════════════════════════════════════ */
 
 async function fetchAnalyticsData() {
-  const visitors  = [200, 250, 300, 280, 320, 400, 380, 350, 420, 390, 450, 470, 430, 500];
-  const purchases = [20, 30, 25, 28, 35, 45, 40, 38, 48, 42, 50, 55, 47, 60];
+  const res = await fetch('/admin/analytics/summary', { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error(`Analytics request failed (${res.status})`);
+  const data = await res.json();
 
-  const labels = [];
-  const start = new Date();
-  start.setDate(start.getDate() - (visitors.length - 1));
-  for (let i = 0; i < visitors.length; i++) {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    labels.push(d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }));
-  }
-
-  return { labels, visitors, purchases };
+  const labels = data.labels.map(iso => {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  });
+  return { labels, orders: data.orders, revenue: data.revenue };
 }
 
-function computeAnalyticsSummary({ visitors, purchases }) {
-  const totalVisitors = visitors.reduce((a, b) => a + b, 0);
-  const totalPurchases = purchases.reduce((a, b) => a + b, 0);
-  const conversionRate = totalVisitors > 0 ? (totalPurchases / totalVisitors) * 100 : 0;
-  return { totalVisitors, totalPurchases, conversionRate };
+function computeAnalyticsSummary({ orders, revenue }) {
+  const totalOrders = orders.reduce((a, b) => a + b, 0);
+  // Add whole cents so the dollar total doesn't pick up float noise.
+  const totalRevenue = revenue.reduce((a, b) => a + Math.round(b * 100), 0) / 100;
+  const averageOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  return { totalOrders, totalRevenue, averageOrder };
 }
 
-function renderAnalyticsKpis({ totalVisitors, totalPurchases, conversionRate }) {
-  document.getElementById('kpi-visitors').textContent = totalVisitors.toLocaleString();
-  document.getElementById('kpi-purchases').textContent = totalPurchases.toLocaleString();
-  document.getElementById('kpi-conversion').textContent = conversionRate.toFixed(1) + '%';
+function formatAnalyticsMoney(amount) {
+  return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderAnalyticsKpis({ totalOrders, totalRevenue, averageOrder }) {
+  document.getElementById('kpi-orders').textContent = totalOrders.toLocaleString();
+  document.getElementById('kpi-revenue').textContent = formatAnalyticsMoney(totalRevenue);
+  document.getElementById('kpi-average').textContent = formatAnalyticsMoney(averageOrder);
 }
 
 let analyticsChart = null;
-function renderAnalyticsChart({ labels, visitors, purchases }) {
+function renderAnalyticsChart({ labels, orders, revenue }) {
   const canvas = document.getElementById('analytics-chart');
   if (!canvas || typeof Chart === 'undefined') return;
 
@@ -53,8 +52,9 @@ function renderAnalyticsChart({ labels, visitors, purchases }) {
       labels,
       datasets: [
         {
-          label: 'Visitors',
-          data: visitors,
+          label: 'Orders',
+          data: orders,
+          yAxisID: 'y',
           borderColor: '#6366f1',
           backgroundColor: 'rgba(99,102,241,0.12)',
           tension: 0.35,
@@ -64,12 +64,13 @@ function renderAnalyticsChart({ labels, visitors, purchases }) {
           borderWidth: 2
         },
         {
-          label: 'Purchases',
-          data: purchases,
+          label: 'Order value ($)',
+          data: revenue,
+          yAxisID: 'y1',
           borderColor: '#22c55e',
           backgroundColor: 'rgba(34,197,94,0.12)',
           tension: 0.35,
-          fill: true,
+          fill: false,
           pointRadius: 3,
           pointHoverRadius: 5,
           borderWidth: 2
@@ -86,16 +87,47 @@ function renderAnalyticsChart({ labels, visitors, purchases }) {
       },
       scales: {
         x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 10 } } },
-        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 } } }
+        y: {
+          position: 'left',
+          beginAtZero: true,
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { size: 10 }, precision: 0 }
+        },
+        y1: {
+          position: 'right',
+          beginAtZero: true,
+          grid: { drawOnChartArea: false },
+          ticks: { color: tickColor, font: { size: 10 }, callback: v => '$' + v }
+        }
       }
     }
   });
 }
 
+function setAnalyticsUnavailable(unavailable) {
+  const canvas = document.getElementById('analytics-chart');
+  const message = document.getElementById('analytics-unavailable');
+  if (canvas) canvas.classList.toggle('hidden', unavailable);
+  if (message) message.classList.toggle('hidden', !unavailable);
+}
+
 let lastAnalyticsData = null;
 async function initAnalyticsDashboard() {
-  const data = await fetchAnalyticsData();
+  let data;
+  try {
+    data = await fetchAnalyticsData();
+  } catch (e) {
+    lastAnalyticsData = null;
+    if (analyticsChart) { analyticsChart.destroy(); analyticsChart = null; }
+    setAnalyticsUnavailable(true);
+    ['kpi-orders', 'kpi-revenue', 'kpi-average'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    return;
+  }
+
   lastAnalyticsData = data;
+  setAnalyticsUnavailable(false);
   renderAnalyticsKpis(computeAnalyticsSummary(data));
   renderAnalyticsChart(data);
 }

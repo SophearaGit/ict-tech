@@ -1,11 +1,17 @@
 <?php
 
+use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SalesReportController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ShopController;
 use Illuminate\Support\Facades\Route;
@@ -51,7 +57,10 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->
 Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites');
 Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
 
-Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin-login');
+Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout');
+Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
+
+Route::get('/admin/login',[AdminAuthController::class, 'showLoginForm'])->name('admin-login');
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin-login.attempt');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin-logout');
 
@@ -66,4 +75,17 @@ Route::middleware('admin')->group(function () {
     Route::post('/admin/products', [ProductController::class, 'store'])->name('admin-products.store');
     Route::put('/admin/products/{product}', [ProductController::class, 'update'])->name('admin-products.update');
     Route::delete('/admin/products/{product}', [ProductController::class, 'destroy'])->name('admin-products.destroy');
+
+    Route::get('/admin/brands', [BrandController::class, 'index'])->name('admin-brands.index');
+    Route::post('/admin/brands', [BrandController::class, 'store'])->name('admin-brands.store');
+    Route::put('/admin/brands/{brand}', [BrandController::class, 'update'])->name('admin-brands.update');
+    Route::delete('/admin/brands/{brand}', [BrandController::class, 'destroy'])->name('admin-brands.destroy');
+
+    Route::get('/admin/orders', [OrderController::class, 'index'])->name('admin-orders.index');
+    Route::put('/admin/orders/{order}', [OrderController::class, 'update'])->name('admin-orders.update');
+
+    Route::get('/admin/analytics/summary', [AnalyticsController::class, 'summary'])->name('admin-analytics.summary');
+
+    Route::get('/admin/reports/sales', [SalesReportController::class, 'show'])->name('admin-reports.sales');
+    Route::get('/admin/reports/sales/export', [SalesReportController::class, 'export'])->name('admin-reports.sales.export');
 });

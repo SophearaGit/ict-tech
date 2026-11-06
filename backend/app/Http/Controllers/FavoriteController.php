@@ -19,6 +19,7 @@ class FavoriteController extends Controller
         }
 
         $products = $request->user()->favoriteProducts()
+            ->with('brand')
             ->orderByDesc('favorites.created_at')
             ->get()
             ->map(fn (Product $p) => $this->transform($p));
@@ -63,7 +64,7 @@ class FavoriteController extends Controller
         return [
             'id' => $p->id,
             'name' => $p->name,
-            'brand' => $p->brand,
+            'brand' => $p->brand->name,
             'type' => $p->type,
             'category' => $p->category,
             'price' => (float) $p->price,
