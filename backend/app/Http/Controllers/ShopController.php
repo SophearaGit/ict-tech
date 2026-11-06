@@ -15,13 +15,14 @@ class ShopController extends Controller
      */
     public function index()
     {
-        $products = Product::with('brand')->orderBy('id')->get()->map(fn (Product $p) => $this->transform($p));
+        // visible(): products of a switched-off brand are not shown, and neither is the brand's button.
+        $products = Product::visible()->with('brand')->orderBy('id')->get()->map(fn (Product $p) => $this->transform($p));
 
         return view('shop', [
             'products' => $products,
             'favoriteIds' => $this->favoriteIds(),
             'category' => null,
-            'brands' => $this->brandPills(Brand::whereHas('products')->get()),
+            'brands' => $this->brandPills(Brand::active()->whereHas('products')->get()),
         ]);
     }
 
@@ -31,8 +32,8 @@ class ShopController extends Controller
      */
     public function category(string $category)
     {
-        $products = Product::with('brand')->where('category', $category)->orderBy('id')->get();
-        $brands = Brand::whereHas('products', fn ($query) => $query->where('category', $category))->get();
+        $products = Product::visible()->with('brand')->where('category', $category)->orderBy('id')->get();
+        $brands = Brand::active()->whereHas('products', fn ($query) => $query->where('category', $category))->get();
 
         return view('shop', [
             'products' => $products->map(fn (Product $p) => $this->transform($p))->values(),
@@ -44,14 +45,15 @@ class ShopController extends Controller
 
     /**
      * The brand filter buttons shop.js builds from `BRANDS`: id is the lowercase name (what
-     * shop.js compares against `p.brand.toLowerCase()`), label is the name as written.
-     * Sorted ignoring case in PHP so MySQL and SQLite order them the same way.
+     * shop.js compares against `p.brand.toLowerCase()`), label is the name as written, logo is
+     * the picture's address or null. Sorted ignoring case in PHP so MySQL and SQLite order them
+     * the same way.
      */
     private function brandPills(iterable $brands): array
     {
         return collect($brands)
             ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
-            ->map(fn (Brand $brand) => ['id' => mb_strtolower($brand->name), 'label' => $brand->name])
+            ->map(fn (Brand $brand) => ['id' => mb_strtolower($brand->name), 'label' => $brand->name, 'logo' => $brand->logo_url])
             ->values()
             ->all();
     }
