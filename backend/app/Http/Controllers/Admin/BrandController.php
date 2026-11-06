@@ -84,7 +84,7 @@ class BrandController extends Controller
         return response()->json($this->transform($brand->loadCount('products')));
     }
 
-    public function destroy(Brand $brand): JsonResponse
+    public function destroy(Brand $brand, BrandLogoStorage $logos): JsonResponse
     {
         $count = $brand->products()->count();
 
@@ -96,8 +96,41 @@ class BrandController extends Controller
         }
 
         $brand->delete();
+        $logos->delete($brand->logo); // after the row: a failed delete must never lose the logo
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Replace the logo. Order matters: save the new file, point the row at it, and only then delete
+     * the old file, so a failure at any step leaves at worst an orphan file, never a brand whose logo is missing.
+     */
+    public function storeLogo(Request $request, Brand $brand, BrandLogoStorage $logos): JsonResponse
+    {
+        $request->validate(['logo' => $this->logoRules(required: true)], $this->logoMessages());
+
+        $old = $brand->logo;
+        $new = $logos->store($request->file('logo'));
+
+        try {
+            $brand->forceFill(['logo' => $new])->save();
+        } catch (Throwable $e) {
+            $logos->delete($new);
+            throw $e;
+        }
+
+        $logos->delete($old);
+
+        return response()->json($this->transform($brand->loadCount('products')));
+    }
+
+    public function destroyLogo(Brand $brand, BrandLogoStorage $logos): JsonResponse
+    {
+        $old = $brand->logo;
+        $brand->forceFill(['logo' => null])->save();
+        $logos->delete($old);
+
+        return response()->json($this->transform($brand->loadCount('products')));
     }
 
     /**
@@ -131,9 +164,9 @@ class BrandController extends Controller
      * at most 800 KB (the live nginx refuses request bodies over 1 MB by default) and between
      * 32 and 4000 pixels each way. SVG is not allowed: it can carry scripts.
      */
-    private function logoRules(): array
+    private function logoRules(bool $required = false): array
     {
-        return ['nullable', 'bail', 'file', 'mimes:png,jpg,jpeg,webp', 'max:800', 'dimensions:min_width=32,min_height=32,max_width=4000,max_height=4000'];
+        return [$required ? 'required' : 'nullable', 'bail', 'file', 'mimes:png,jpg,jpeg,webp', 'max:800', 'dimensions:min_width=32,min_height=32,max_width=4000,max_height=4000'];
     }
 
     private function logoMessages(): array
@@ -141,6 +174,7 @@ class BrandController extends Controller
         $refused = 'The logo must be a PNG, JPG or WebP image under 800 KB.';
 
         return [
+            'logo.required' => 'Choose a logo image first.',
             'logo.file' => $refused,
             'logo.uploaded' => $refused, // Laravel's own message when PHP rejected the upload (for example over its size limit)
             'logo.mimes' => $refused,

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Admin;
 use App\Models\Brand;
+use App\Support\BrandLogoStorage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -39,6 +40,123 @@ class AdminBrandLogoTest extends TestCase
     private function addBrand(string $name, ?UploadedFile $logo = null)
     {
         return $this->actingAsAdmin()->post(route('admin-brands.store'), array_filter(['name' => $name, 'logo' => $logo]), ['Accept' => 'application/json']);
+    }
+
+    /** A brand that already has a stored logo (saved through the real storage class). */
+    private function brandWithLogo(string $name = 'Huawei'): Brand
+    {
+        $brand = $this->makeBrand($name);
+        $brand->forceFill(['logo' => app(BrandLogoStorage::class)->store($this->fakeLogo())])->save();
+
+        return $brand;
+    }
+
+    private function putLogo(Brand $brand, ?UploadedFile $logo)
+    {
+        return $this->actingAsAdmin()->post(route('admin-brands.logo.store', $brand), array_filter(['logo' => $logo]), ['Accept' => 'application/json']);
+    }
+
+    public function test_a_logo_can_be_replaced_and_the_old_file_is_deleted(): void
+    {
+        $brand = $this->brandWithLogo();
+        $old = $brand->logo;
+
+        $response = $this->putLogo($brand, $this->fakeLogo('new.png', 80, 80))->assertOk();
+
+        $files = $this->logoFilesIn($this->logoDir);
+        $this->assertCount(1, $files);
+        $this->assertNotSame($old, $files[0]);
+        $this->assertSame(asset('uploads/brands/'.$files[0]), $response->json('logoUrl'));
+        $this->assertSame($files[0], $brand->fresh()->logo);
+    }
+
+    public function test_replacing_needs_a_file(): void
+    {
+        $brand = $this->brandWithLogo();
+
+        $this->putLogo($brand, null)->assertUnprocessable()->assertJsonValidationErrors(['logo']);
+        $this->assertSame([$brand->logo], $this->logoFilesIn($this->logoDir));
+    }
+
+    public function test_a_refused_replacement_keeps_the_old_logo(): void
+    {
+        $brand = $this->brandWithLogo();
+        $old = $brand->logo;
+
+        $this->putLogo($brand, $this->uploadWithContent('just some text, not an image', 'x.png'))
+            ->assertUnprocessable()->assertJsonValidationErrors(['logo']);
+
+        $this->assertSame([$old], $this->logoFilesIn($this->logoDir));
+        $this->assertSame($old, $brand->fresh()->logo);
+    }
+
+    public function test_a_logo_can_be_removed(): void
+    {
+        $brand = $this->brandWithLogo();
+
+        $this->actingAsAdmin()->deleteJson(route('admin-brands.logo.destroy', $brand))
+            ->assertOk()->assertJsonPath('logoUrl', null);
+
+        $this->assertSame([], $this->logoFilesIn($this->logoDir));
+        $this->assertNull($brand->fresh()->logo);
+    }
+
+    public function test_a_logo_whose_file_is_already_gone_can_be_replaced_removed_and_its_brand_deleted(): void
+    {
+        $vanish = fn (Brand $brand) => unlink($this->logoDir.DIRECTORY_SEPARATOR.$brand->logo);
+
+        $replaced = $this->brandWithLogo('Alpha');
+        $vanish($replaced);
+        $this->putLogo($replaced, $this->fakeLogo())->assertOk();
+
+        $removed = $this->brandWithLogo('Bravo');
+        $vanish($removed);
+        $this->actingAsAdmin()->deleteJson(route('admin-brands.logo.destroy', $removed))->assertOk()->assertJsonPath('logoUrl', null);
+
+        $deleted = $this->brandWithLogo('Charlie');
+        $vanish($deleted);
+        $this->actingAsAdmin()->deleteJson(route('admin-brands.destroy', $deleted))->assertOk()->assertJson(['ok' => true]);
+        $this->assertNull(Brand::find($deleted->id));
+    }
+
+    public function test_deleting_a_brand_deletes_its_logo_file(): void
+    {
+        $brand = $this->brandWithLogo();
+        $this->assertCount(1, $this->logoFilesIn($this->logoDir));
+
+        $this->actingAsAdmin()->deleteJson(route('admin-brands.destroy', $brand))->assertOk();
+
+        $this->assertSame([], $this->logoFilesIn($this->logoDir));
+    }
+
+    public function test_a_brand_with_products_keeps_its_logo_when_the_delete_is_refused(): void
+    {
+        $brand = $this->brandWithLogo();
+        $this->makeProduct(['brand_id' => $brand->id]);
+
+        $this->actingAsAdmin()->deleteJson(route('admin-brands.destroy', $brand))->assertUnprocessable();
+
+        $this->assertSame([$brand->logo], $this->logoFilesIn($this->logoDir));
+    }
+
+    public function test_renaming_a_brand_keeps_its_logo(): void
+    {
+        $brand = $this->brandWithLogo('huawei');
+
+        $this->actingAsAdmin()->putJson(route('admin-brands.update', $brand), ['name' => 'Huawei'])
+            ->assertOk()->assertJsonPath('logoUrl', asset('uploads/brands/'.$brand->logo));
+        $this->assertSame([$brand->logo], $this->logoFilesIn($this->logoDir));
+    }
+
+    public function test_guests_and_customers_are_redirected_for_the_logo_routes(): void
+    {
+        $brand = $this->makeBrand('Huawei');
+
+        foreach ([null, $this->makeCustomer()] as $who) {
+            $client = $who ? $this->actingAs($who) : $this;
+            $client->postJson(route('admin-brands.logo.store', $brand), [])->assertRedirect(route('admin-login'));
+            $client->deleteJson(route('admin-brands.logo.destroy', $brand))->assertRedirect(route('admin-login'));
+        }
     }
 
     public function test_a_brand_can_be_added_with_a_logo(): void

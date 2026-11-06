@@ -80,6 +80,8 @@ Route::middleware('admin')->group(function () {
     Route::post('/admin/brands', [BrandController::class, 'store'])->name('admin-brands.store');
     Route::put('/admin/brands/{brand}', [BrandController::class, 'update'])->name('admin-brands.update');
     Route::delete('/admin/brands/{brand}', [BrandController::class, 'destroy'])->name('admin-brands.destroy');
+    Route::post('/admin/brands/{brand}/logo', [BrandController::class, 'storeLogo'])->name('admin-brands.logo.store');
+    Route::delete('/admin/brands/{brand}/logo', [BrandController::class, 'destroyLogo'])->name('admin-brands.logo.destroy');
 
     Route::get('/admin/orders', [OrderController::class, 'index'])->name('admin-orders.index');
     Route::put('/admin/orders/{order}', [OrderController::class, 'update'])->name('admin-orders.update');
