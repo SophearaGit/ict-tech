@@ -24,6 +24,18 @@ class AdminViewTest extends TestCase
             ->assertDontSee('<option value="Apple">', false);
     }
 
+    public function test_admin_view_renders_the_brand_switch_and_logo_controls(): void
+    {
+        $response = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('id="brand-add-logo"', false)
+            ->assertSee('id="brand-add-preview"', false)
+            ->assertSee('id="brand-logo-input"', false)
+            ->assertSeeInOrder([
+                'id="view-brands"', '>Logo</th>', '>Brand</th>', '>Products</th>', '>Status</th>', '>Actions</th>',
+            ], false);
+    }
+
     public function test_admin_view_renders_the_sales_report_page(): void
     {
         $response = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk();

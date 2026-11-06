@@ -38,6 +38,12 @@
 
   .tab-btn.active-tab{border-bottom:2px solid #6366f1;color:#4f46e5;font-weight:600;margin-bottom:-1px;}
 
+  /* Brand ON/OFF switch (Brands page). Off is a mid grey, On is indigo; both are 3:1 or better on the card. */
+  .brand-switch-track{position:relative;display:inline-block;width:2.25rem;height:1.25rem;border-radius:9999px;background:#6b7280;transition:background 0.15s;}
+  .brand-switch-knob{position:absolute;top:0.125rem;left:0.125rem;width:1rem;height:1rem;border-radius:9999px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.3);transition:transform 0.15s;}
+  .brand-switch.is-on .brand-switch-track{background:#4f46e5;}
+  .brand-switch.is-on .brand-switch-knob{transform:translateX(1rem);}
+
   /* Sidebar nav active state */
   .nav-item.active{background:#1f2937;color:#fff;}
 
@@ -450,15 +456,27 @@
     <!-- ──── BRANDS VIEW ──── -->
     <div id="view-brands" class="hidden">
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
-        <div class="p-5 border-b border-gray-100 dark:border-neutral-600 flex flex-col sm:flex-row gap-3">
+        <div class="p-5 border-b border-gray-100 dark:border-neutral-600 flex flex-col sm:flex-row sm:items-center gap-3">
           <input id="brand-add-name" type="text" maxlength="50" placeholder="New brand name, e.g. Huawei" onkeydown="if (event.key === 'Enter') addBrand()" class="form-inp flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+          {{-- Optional logo: PNG, JPG or WebP under 800 KB. The real input is visually hidden but keyboard-reachable. --}}
+          <label class="brand-logo-picker flex items-center gap-2.5 cursor-pointer rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 focus-within:ring-2 focus-within:ring-indigo-500">
+            <span id="brand-add-preview" class="w-8 h-8 shrink-0 rounded-full bg-gray-200 flex items-center justify-center text-gray-500" aria-hidden="true">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4-4a3 3 0 014 0l4 4m-2-2l1-1a3 3 0 014 0l2 2M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1zm10-11h.01"/></svg>
+            </span>
+            <span id="brand-add-logo-label">Choose logo (optional)</span>
+            <input id="brand-add-logo" type="file" accept="image/png,image/jpeg,image/webp" onchange="previewNewBrandLogo(this)" class="sr-only"/>
+          </label>
           <button onclick="addBrand()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Add Brand</button>
         </div>
+        {{-- One hidden picker shared by every row's "Change logo" button (pickBrandLogo sets the target brand). --}}
+        <input id="brand-logo-input" type="file" accept="image/png,image/jpeg,image/webp" onchange="brandLogoPicked(this)" class="hidden"/>
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
-              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Brand</th>
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Logo</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Brand</th>
               <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
               <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
             </tr></thead>
             <tbody id="brands-tbody"></tbody>

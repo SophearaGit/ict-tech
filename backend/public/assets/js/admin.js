@@ -6,7 +6,8 @@ function apiFetch(url, options = {}) {
     headers: {
       'Accept': 'application/json',
       'X-CSRF-TOKEN': token,
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      // A FormData body (a logo upload) must NOT get a JSON Content-Type: the browser has to add its own multipart boundary.
+      ...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
       ...(options.headers || {}),
     },
   }).then(async res => {
@@ -17,6 +18,8 @@ function apiFetch(url, options = {}) {
       expired.sessionExpired = true;
       throw expired;
     }
+    // nginx answers a body over its limit with an HTML 413 page, never JSON; say what happened in plain words.
+    if (res.status === 413) throw new Error('That file is too big. Logos must be under 800 KB.');
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || err.message || `Request failed (${res.status})`);
@@ -345,6 +348,7 @@ function renderBrandsTable() {
 
   empty.classList.toggle('hidden', brands.length > 0);
   const btn = 'px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors';
+  const soft = `${btn} bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white`;
   tbody.innerHTML = brands.map(b => {
     const renaming = b.id === renamingBrandId;
     const nameCell = renaming
@@ -354,14 +358,20 @@ function renderBrandsTable() {
       : escapeHtml(b.name);
     const actions = renaming
       ? `<button onclick="saveRenameBrand(${b.id})" class="${btn} bg-indigo-500 hover:bg-indigo-600 text-white">Save</button>
-         <button onclick="cancelRenameBrand()" class="${btn} bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white">Cancel</button>`
-      : `<button onclick="startRenameBrand(${b.id})" class="${btn} bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white">Rename</button>
-         <button onclick="deleteBrand(${b.id})" class="${btn} bg-red-50 hover:bg-red-100 text-red-600">Delete</button>`;
+         <button onclick="cancelRenameBrand()" class="${soft}">Cancel</button>`
+      : `<button onclick="startRenameBrand(${b.id})" class="${soft}">Rename</button>
+         <button onclick="pickBrandLogo(${b.id})" class="${soft}">${b.logoUrl ? 'Change logo' : 'Add logo'}</button>
+         ${b.logoUrl ? `<button onclick="removeBrandLogo(${b.id})" class="${soft}">Remove logo</button>` : ''}
+         <button onclick="deleteBrand(${b.id})" class="${btn} bg-red-50 hover:bg-red-100 text-red-700 dark:text-red-300">Delete</button>`;
+    // An OFF brand reads as muted text (not a faded row: fading would drop the contrast below AA).
+    const nameClass = b.isActive ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-300';
     return `
       <tr class="border-t border-gray-100 dark:border-neutral-600">
-        <td class="px-5 py-3.5 text-sm font-medium text-gray-900 dark:text-white">${nameCell}</td>
+        <td class="px-5 py-3">${brandLogoHtml(b)}</td>
+        <td class="px-3 py-3.5 text-sm font-medium ${nameClass}">${nameCell}${b.isActive ? '' : ' <span class="ml-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-neutral-600 dark:text-white">Off</span>'}</td>
         <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white">${b.productCount}</td>
-        <td class="px-3 py-3.5"><div class="flex gap-2">${actions}</div></td>
+        <td class="px-3 py-3.5">${brandSwitchHtml(b)}</td>
+        <td class="px-3 py-3.5"><div class="flex flex-wrap gap-2">${actions}</div></td>
       </tr>`;
   }).join('');
 
@@ -376,11 +386,18 @@ function addBrand() {
   const name = input.value.trim();
   if (!name) { toast('Type a brand name.'); return; }
 
-  apiFetch('/admin/brands', { method: 'POST', body: JSON.stringify({ name }) })
+  // Multipart (not JSON) so the optional logo travels in the same request as the name.
+  const form = new FormData();
+  form.append('name', name);
+  const logo = document.getElementById('brand-add-logo').files[0];
+  if (logo) form.append('logo', logo);
+
+  apiFetch('/admin/brands', { method: 'POST', body: form })
     .then(created => {
       brands.push(created);
       sortBrands();
       input.value = '';
+      clearNewBrandLogo();
       renderBrandsTable();
       renderBrandSelects();
       toast('Brand added!');
@@ -427,6 +444,122 @@ function deleteBrand(id) {
       toast('Brand deleted.');
     })
     .catch(e => toastError(e, 'Failed to delete brand.'));
+}
+
+/* ── Brand ON/OFF switch and logos ── */
+const BRAND_LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const BRAND_LOGO_MAX_BYTES = 800 * 1024; // the live nginx refuses request bodies over 1 MB by default
+const BRAND_LOGO_PROBLEM = 'The logo must be a PNG, JPG or WebP image under 800 KB.';
+let brandLogoTargetId = null;   // the row whose "Change logo" opened the shared file picker
+let newBrandLogoUrl = null;     // object URL of the preview in the Add Brand form (revoked when replaced)
+
+// Quick feedback before uploading; the server stays the authority (it checks the real content).
+function brandLogoProblem(file) {
+  return !BRAND_LOGO_TYPES.includes(file.type) || file.size > BRAND_LOGO_MAX_BYTES ? BRAND_LOGO_PROBLEM : null;
+}
+
+// Round thumbnail, or the brand's first letter on a tinted circle. An OFF brand's picture is dimmed.
+function brandLogoHtml(b) {
+  const size = 'w-9 h-9 rounded-full shrink-0';
+  if (b.logoUrl) {
+    return `<img src="${escapeAttr(b.logoUrl)}" alt="" loading="lazy"
+      class="${size} object-cover border border-gray-200 dark:border-neutral-600 ${b.isActive ? '' : 'opacity-50 grayscale'}">`;
+  }
+  return `<span class="${size} bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold ${b.isActive ? '' : 'opacity-50'}"
+    aria-hidden="true">${escapeHtml(b.name.charAt(0).toUpperCase())}</span>`;
+}
+
+// The switch carries the words On/Off as well as its position, so it never relies on colour alone.
+function brandSwitchHtml(b) {
+  const on = b.isActive;
+  return `<button type="button" role="switch" aria-checked="${on}" aria-label="${escapeAttr(b.name)} is shown in the shop" onclick="toggleBrand(${b.id})"
+      class="brand-switch ${on ? 'is-on' : 'is-off'} inline-flex items-center gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+      <span class="brand-switch-track"><span class="brand-switch-knob"></span></span>
+      <span class="text-xs font-semibold text-gray-700 dark:text-white">${on ? 'On' : 'Off'}</span>
+    </button>`;
+}
+
+function toggleBrand(id) {
+  const b = brands.find(x => x.id === id);
+  if (!b) return;
+
+  apiFetch(`/admin/brands/${id}`, { method: 'PUT', body: JSON.stringify({ is_active: !b.isActive }) })
+    .then(updated => {
+      Object.assign(b, updated);
+      products.forEach(p => { if (p.brandId === id) p.brandActive = updated.isActive; });
+      renderBrandsTable();
+      renderBrandSelects();
+      refreshAll();
+      const n = updated.productCount;
+      toast(updated.isActive
+        ? `${escapeHtml(updated.name)} is ON again.`
+        : `${escapeHtml(updated.name)} is OFF. Its ${n} ${n === 1 ? 'product is' : 'products are'} hidden from the shop.`);
+    })
+    .catch(e => toastError(e, 'Failed to change the brand.'));
+}
+
+function pickBrandLogo(id) {
+  brandLogoTargetId = id;
+  document.getElementById('brand-logo-input').click();
+}
+
+function brandLogoPicked(input) {
+  const file = input.files[0];
+  input.value = ''; // so picking the same file again still fires onchange
+  if (!file || brandLogoTargetId === null) return;
+
+  const problem = brandLogoProblem(file);
+  if (problem) { toast(problem); return; }
+  uploadBrandLogo(brandLogoTargetId, file);
+}
+
+function uploadBrandLogo(id, file) {
+  const form = new FormData();
+  form.append('logo', file);
+
+  apiFetch(`/admin/brands/${id}/logo`, { method: 'POST', body: form })
+    .then(updated => {
+      const b = brands.find(x => x.id === id);
+      if (b) Object.assign(b, updated);
+      renderBrandsTable();
+      toast('Logo updated.');
+    })
+    .catch(e => toastError(e, 'Failed to upload the logo.'));
+}
+
+function removeBrandLogo(id) {
+  apiFetch(`/admin/brands/${id}/logo`, { method: 'DELETE' })
+    .then(updated => {
+      const b = brands.find(x => x.id === id);
+      if (b) Object.assign(b, updated);
+      renderBrandsTable();
+      toast('Logo removed.');
+    })
+    .catch(e => toastError(e, 'Failed to remove the logo.'));
+}
+
+// Add Brand form: show the chosen picture in the round preview, or refuse a bad file straight away.
+function previewNewBrandLogo(input) {
+  const file = input.files[0];
+  if (!file) { clearNewBrandLogo(); return; }
+
+  const problem = brandLogoProblem(file);
+  if (problem) { toast(problem); clearNewBrandLogo(); return; }
+
+  if (newBrandLogoUrl) URL.revokeObjectURL(newBrandLogoUrl);
+  newBrandLogoUrl = URL.createObjectURL(file);
+  const preview = document.getElementById('brand-add-preview');
+  preview.dataset.empty ??= preview.innerHTML; // remember the placeholder icon once
+  preview.innerHTML = `<img src="${escapeAttr(newBrandLogoUrl)}" alt="" class="w-8 h-8 rounded-full object-cover">`;
+  document.getElementById('brand-add-logo-label').textContent = file.name; // textContent: the file name is not ours
+}
+
+function clearNewBrandLogo() {
+  document.getElementById('brand-add-logo').value = '';
+  if (newBrandLogoUrl) { URL.revokeObjectURL(newBrandLogoUrl); newBrandLogoUrl = null; }
+  const preview = document.getElementById('brand-add-preview');
+  if (preview.dataset.empty) preview.innerHTML = preview.dataset.empty;
+  document.getElementById('brand-add-logo-label').textContent = 'Choose logo (optional)';
 }
 
 /* ── Orders (real orders placed in the store — this view was the "History" placeholder) ── */
@@ -771,10 +904,13 @@ function toggleSidebar() {
   o.classList.toggle('hidden');
 }
 /* ── Toast ── */
+let toastTimer = null;
 function toast(msg) {
   const el = document.getElementById('admin-toast');
   el.innerHTML = `<div class="toast-enter bg-gray-900 text-white text-sm px-5 py-3 rounded-full shadow-lg">${msg}</div>`;
-  setTimeout(() => el.innerHTML = '', 2800);
+  // Cancel the previous message's timer, or it would wipe this newer message early.
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.innerHTML = '', 2800);
 }
 
 /* ── Fix sidebar on desktop ── */
