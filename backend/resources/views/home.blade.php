@@ -64,11 +64,18 @@
 
   <!-- ==================== HERO (video background) ========================= -->
   <section class="relative min-h-screen flex items-end overflow-hidden bg-neutral-900">
+    <!-- Still image UNDER the video. The video layer below stays invisible until YouTube reports ready,
+         so when YouTube is blocked, slow or errors, this is what the visitor sees instead of an empty box. -->
+    <img id="hero-fallback" src="{{ asset('assets/img/hero-fallback.webp') }}" alt="" aria-hidden="true" decoding="async"
+      class="absolute inset-0 z-0 w-full h-full object-contain object-center px-6 pb-6 pt-24 sm:px-10 sm:pb-10 sm:pt-28 pointer-events-none" />
     <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none hero-video-mask">
+      {{-- referrerpolicy: YouTube answers "Error 153" when the browser sends no referrer (privacy modes
+           and extensions strip it); this sends just the site's address, which is what YouTube asks for. --}}
       <iframe id="hero-yt-player"
         class="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.78vh] -translate-x-1/2 -translate-y-1/2"
         src="https://www.youtube.com/embed/FUfGcZ092b0?autoplay=1&mute=1&loop=1&playlist=FUfGcZ092b0&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&cc_load_policy=0&disablekb=1&playsinline=1&enablejsapi=1"
         title="Background video" frameborder="0"
+        referrerpolicy="strict-origin-when-cross-origin"
         allow="autoplay; encrypted-media; picture-in-picture"
         allowfullscreen></iframe>
     </div>
@@ -489,6 +496,7 @@ In a thin, foldable design.</p>
     let heroPlayer = null;
     let revealTimer = null;
     let seeking = false;
+    let failed = false; // YouTube reported an error: keep the still image, never show YouTube's error card
 
     function hide() {
       clearTimeout(revealTimer);
@@ -496,13 +504,14 @@ In a thin, foldable design.</p>
     }
 
     function reveal(delay) {
+      if (failed) return;
       clearTimeout(revealTimer);
       mask.classList.remove('is-visible');
       revealTimer = setTimeout(() => mask.classList.add('is-visible'), delay);
     }
 
     function pollLoop() {
-      if (!heroPlayer || typeof heroPlayer.getDuration !== 'function' || seeking) return;
+      if (failed || !heroPlayer || typeof heroPlayer.getDuration !== 'function' || seeking) return;
       let t, d;
       try {
         t = heroPlayer.getCurrentTime();
@@ -546,7 +555,8 @@ In a thin, foldable design.</p>
             setInterval(pollLoop, 250);
             setInterval(killCaptions, 1000);
           },
-          onApiChange: killCaptions
+          onApiChange: killCaptions,
+          onError: () => { failed = true; hide(); }
         }
       });
     };
