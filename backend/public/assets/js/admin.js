@@ -55,6 +55,14 @@ function statusBadge(p) {
   return `<span class="badge-in text-[10px] font-semibold px-2 py-0.5 rounded-full">In Stock</span>`;
 }
 
+// The brand name (escaped), plus a small tag when the product's brand is switched OFF (hidden from the shop).
+function brandCellHtml(p) {
+  const tag = p.brandActive === false
+    ? ' <span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-neutral-600 dark:text-white whitespace-nowrap">Brand off</span>'
+    : '';
+  return escapeHtml(p.brand) + tag;
+}
+
 /* ── Init ── */
 function init() {
   apiFetch('/admin/products')
@@ -164,7 +172,7 @@ function renderProductsTable() {
           </div>
         </div>
       </td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${p.brand}</td>
+      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${brandCellHtml(p)}</td>
       <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden md:table-cell">${p.category}</td>
       <td class="px-3 py-3.5 text-sm font-semibold text-gray-900 dark:text-white">$${p.price}</td>
       <td class="px-3 py-3.5">
@@ -212,7 +220,7 @@ function renderInventoryTable() {
           <p class="text-sm font-medium text-gray-800 dark:text-white">${p.name}</p>
         </div>
       </td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${p.brand}</td>
+      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${brandCellHtml(p)}</td>
       <td class="px-3 py-3.5 text-sm font-bold text-gray-900 dark:text-white">${p.qty}</td>
       <td class="px-3 py-3.5">${statusBadge(p)}</td>
       <td class="px-3 py-3.5 w-36 hidden md:table-cell">
@@ -299,10 +307,18 @@ function loadBrands() {
 // Rebuild both brand selects from `brands`, keeping whatever is currently selected.
 // Only the Add Product form's select ends with "+ Add new brand…".
 function renderBrandSelects() {
-  const options = brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  // A product can only join a brand that is ON. The edit window also keeps the product's own brand
+  // when that brand is OFF (labelled "(off)"), because saving sends the brand back and must keep working.
+  const onOptions = brands.filter(b => b.isActive).map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
   [['f-brand', true], ['m-brand', false]].forEach(([id, withNew]) => {
     const select = document.getElementById(id);
     if (!select) return;
+    let options = onOptions;
+    if (id === 'm-brand' && editingId !== null) {
+      const own = products.find(x => x.id === editingId);
+      const ownBrand = own && brands.find(b => b.id === own.brandId);
+      if (ownBrand && !ownBrand.isActive) options += `<option value="${ownBrand.id}">${escapeHtml(ownBrand.name)} (off)</option>`;
+    }
     const current = select.value;
     select.innerHTML = `<option value="">Select brand…</option>${options}`
       + (withNew ? '<option value="__new__">+ Add new brand…</option>' : '');
@@ -690,6 +706,7 @@ function openEdit(id) {
   document.getElementById('m-qty').value = p.qty;
   document.getElementById('m-desc').value = p.desc || '';
   document.getElementById('m-trending').checked = p.trending;
+  renderBrandSelects(); // adds this product's own brand to the list if it is OFF
   setSelectValue('m-brand', p.brandId);
   setSelectValue('m-category', p.category); // a legacy category that is not in the list leaves the placeholder
   document.getElementById('edit-modal').classList.remove('hidden');
