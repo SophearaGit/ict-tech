@@ -91,6 +91,60 @@ class AdminBrandsTest extends TestCase
         $this->assertSame('Sony', $sony->fresh()->name);
     }
 
+    public function test_a_brand_can_be_switched_off_and_on(): void
+    {
+        $apple = $this->makeBrand('Apple');
+
+        $this->actingAsAdmin()->putJson(route('admin-brands.update', $apple), ['is_active' => false])
+            ->assertOk()->assertJsonPath('isActive', false);
+        $this->assertFalse($apple->fresh()->is_active);
+
+        $this->actingAsAdmin()->putJson(route('admin-brands.update', $apple), ['is_active' => true])
+            ->assertOk()->assertJsonPath('isActive', true);
+        $this->assertTrue($apple->fresh()->is_active);
+    }
+
+    public function test_brand_json_carries_is_active_and_logo_url(): void
+    {
+        $this->makeBrand('Apple');
+
+        $listed = $this->actingAsAdmin()->getJson(route('admin-brands.index'))->assertOk()->json('0');
+        $this->assertTrue($listed['isActive']);
+        $this->assertNull($listed['logoUrl']);
+
+        $created = $this->actingAsAdmin()->postJson(route('admin-brands.store'), ['name' => 'Sony'])
+            ->assertCreated()->json();
+        $this->assertTrue($created['isActive']);
+        $this->assertNull($created['logoUrl']);
+    }
+
+    public function test_update_needs_a_name_or_a_switch(): void
+    {
+        $apple = $this->makeBrand('Apple');
+
+        $this->actingAsAdmin()->putJson(route('admin-brands.update', $apple), [])
+            ->assertUnprocessable()->assertJsonValidationErrors(['name']);
+    }
+
+    public function test_the_switch_must_be_a_boolean(): void
+    {
+        $apple = $this->makeBrand('Apple');
+
+        $this->actingAsAdmin()->putJson(route('admin-brands.update', $apple), ['is_active' => 'maybe'])
+            ->assertUnprocessable()->assertJsonValidationErrors(['is_active']);
+        $this->assertTrue($apple->fresh()->is_active);
+    }
+
+    public function test_renaming_does_not_change_the_switch(): void
+    {
+        $apple = $this->makeBrand('apple');
+        $apple->forceFill(['is_active' => false])->save();
+
+        $this->actingAsAdmin()->putJson(route('admin-brands.update', $apple), ['name' => 'Apple'])
+            ->assertOk()->assertJsonPath('name', 'Apple')->assertJsonPath('isActive', false);
+        $this->assertFalse($apple->fresh()->is_active);
+    }
+
     public function test_a_legacy_brand_with_disallowed_characters_can_be_renamed_to_a_valid_name(): void
     {
         $legacy = Brand::create(['name' => 'Black & Decker']);

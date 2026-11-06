@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class BrandController extends Controller
 {
@@ -25,16 +26,34 @@ class BrandController extends Controller
     {
         $validated = $request->validate(['name' => $this->nameRules()]);
 
-        $brand = Brand::create($validated);
+        // refresh(): a new row gets its column defaults (is_active = true) from the database, not from this object.
+        $brand = Brand::create($validated)->refresh();
 
         return response()->json($this->transform($brand->loadCount('products')), 201);
     }
 
+    /**
+     * Rename and/or switch ON/OFF. Each field is validated only when it is sent, so the switch
+     * never has to re-send the name (and a rename never touches the switch).
+     */
     public function update(Request $request, Brand $brand): JsonResponse
     {
-        $validated = $request->validate(['name' => $this->nameRules($brand)]);
+        $validated = $request->validate([
+            'name' => ['sometimes', ...$this->nameRules($brand)],
+            'is_active' => ['sometimes', 'boolean'],
+        ]);
 
-        $brand->update($validated);
+        if (! array_key_exists('name', $validated) && ! array_key_exists('is_active', $validated)) {
+            throw ValidationException::withMessages(['name' => 'Send a name or an on/off setting.']);
+        }
+
+        if (array_key_exists('name', $validated)) {
+            $brand->name = $validated['name'];
+        }
+        if (array_key_exists('is_active', $validated)) {
+            $brand->is_active = $validated['is_active'];
+        }
+        $brand->save();
 
         return response()->json($this->transform($brand->loadCount('products')));
     }
@@ -87,6 +106,8 @@ class BrandController extends Controller
             'id' => $brand->id,
             'name' => $brand->name,
             'productCount' => $brand->products_count,
+            'isActive' => (bool) $brand->is_active,
+            'logoUrl' => $brand->logo_url,
         ];
     }
 }
