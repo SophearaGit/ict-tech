@@ -72,6 +72,37 @@ class CheckoutTest extends TestCase
         $this->assertSame(5, $a->fresh()->qty);
     }
 
+    public function test_a_product_of_an_off_brand_is_refused_and_nothing_is_saved(): void
+    {
+        $brand = $this->makeBrand('Nokia');
+        $product = $this->makeProduct(['brand_id' => $brand->id, 'qty' => 5]);
+        $brand->forceFill(['is_active' => false])->save();
+
+        $this->checkout($this->payload([['product_id' => $product->id, 'quantity' => 1]]))
+            ->assertStatus(422)
+            ->assertExactJson(['ok' => false, 'error' => 'Test Phone is no longer available.']);
+
+        $this->assertSame(0, Order::count());
+        $this->assertSame(5, $product->fresh()->qty);
+    }
+
+    public function test_one_off_brand_product_refuses_the_whole_order(): void
+    {
+        $good = $this->makeProduct(['qty' => 5]);
+        $brand = $this->makeBrand('Nokia');
+        $hidden = $this->makeProduct(['name' => 'Test 3310', 'brand_id' => $brand->id, 'qty' => 5]);
+        $brand->forceFill(['is_active' => false])->save();
+
+        $this->checkout($this->payload([
+            ['product_id' => $good->id, 'quantity' => 1],
+            ['product_id' => $hidden->id, 'quantity' => 1],
+        ]))->assertStatus(422)->assertExactJson(['ok' => false, 'error' => 'Test 3310 is no longer available.']);
+
+        $this->assertSame(0, Order::count());
+        $this->assertSame(5, $good->fresh()->qty);
+        $this->assertSame(5, $hidden->fresh()->qty);
+    }
+
     public function test_out_of_stock_product_is_refused(): void
     {
         $product = $this->makeProduct(['qty' => 0]);

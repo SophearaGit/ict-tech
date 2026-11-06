@@ -38,6 +38,11 @@ class PlaceOrder
                 if (! $products->has($id)) {
                     throw new OrderRejected('One of the items in your cart is no longer available.');
                 }
+
+                // A product of a switched-off brand is hidden from the shop; a cart filled earlier must not buy it.
+                if (! $products[$id]->brand->is_active) {
+                    throw new OrderRejected("{$products[$id]->name} is no longer available.");
+                }
             }
 
             foreach ($wanted as $id => $quantity) {
