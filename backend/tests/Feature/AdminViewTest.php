@@ -42,6 +42,29 @@ class AdminViewTest extends TestCase
     }
 
     /**
+     * The dark palette lives in its own stylesheet. It must reach the admin dashboard, only for
+     * screens (a printed report stays plain black on white), and never the customer pages. How it
+     * looks is checked in a real browser (screenshots plus a contrast scan), not here.
+     */
+    public function test_admin_view_loads_the_dark_theme_for_screens_only(): void
+    {
+        $html = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '#<link[^>]*href="[^"]*assets/css/admin-dark\.css"[^>]*media="screen"#',
+            $html,
+            'The dashboard must load admin-dark.css with media="screen" so printing is unaffected.'
+        );
+        $this->assertFileExists(public_path('assets/css/admin-dark.css'));
+    }
+
+    public function test_customer_pages_do_not_load_the_admin_dark_theme(): void
+    {
+        $this->get(route('home'))->assertOk()->assertDontSee('admin-dark.css', false);
+        $this->get(route('shop'))->assertOk()->assertDontSee('admin-dark.css', false);
+    }
+
+    /**
      * Found in review and confirmed by printing the page in Chrome: in dark mode the page behind the
      * report printed dark grey under near-black text, and the flex/overflow layout is a known way for
      * some browsers to cut a long printout after page one. These rules cannot be proven by a feature

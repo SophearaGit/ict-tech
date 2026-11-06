@@ -1,0 +1,145 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Admin dashboard — dark theme
+   Loaded ONLY by admin-view.blade.php, with media="screen" (so a printed report is untouched).
+   Every rule starts with `html.dark`, so light mode is never affected.
+
+   The palette is the block of --adm-* variables right below. To re-tint the dashboard, change
+   the hex codes there; nothing else in this file needs to move. Contrast (WCAG AA = 4.5:1 for
+   normal text) of each text colour on the surfaces it sits on:
+     --adm-text-strong #f8fafc  14.0:1 on card      --adm-text-muted #94a3b8  5.7:1 on card
+     --adm-text        #e2e8f0  11.9:1 on card      --adm-accent-text #a5b4fc 7.3:1 on card
+     white on --adm-btn #5558c9  5.8:1              badge text on its tint    5.7 to 7.2:1
+
+   Why the selectors look the way they do: the dashboard (and the JavaScript that draws its tables)
+   was written with Tailwind's flat `dark:bg-neutral-*` / `dark:text-white` utilities. Instead of
+   editing hundreds of class names, the first block re-points exactly those utilities at the
+   palette (same class names, higher specificity). The second block gives the light-only classes
+   that never had a dark twin a dark look, using :where() so it has no weight and any explicit
+   `dark:` class on an element still wins.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+html.dark {
+  color-scheme: dark; /* dark scrollbars, date and month pickers, select lists */
+
+  /* Surfaces: blue-tinted slate, so the navy ICT logo sits natively on them */
+  --adm-sidebar: #0b1220;
+  --adm-page: #0f172a;
+  --adm-card: #1e293b;
+  --adm-raised: #273449;      /* icon tiles, hovered rows and buttons */
+  --adm-raised-hi: #334155;   /* pressed / hovered raised things, small buttons */
+  --adm-input: #162032;
+  --adm-line: #334155;
+  --adm-line-soft: rgba(51, 65, 85, 0.65);
+
+  /* Text, in three layers instead of white everywhere */
+  --adm-text-strong: #f8fafc; /* headings, big numbers */
+  --adm-text: #e2e8f0;        /* table text, values */
+  --adm-text-muted: #94a3b8;  /* labels, captions, icons */
+  --adm-nav: #cbd5e1;         /* idle sidebar items */
+
+  /* Accent: indigo, softened */
+  --adm-accent-text: #a5b4fc;
+  --adm-accent-line: #818cf8;
+  --adm-accent-tint: rgba(129, 140, 248, 0.16);
+  --adm-btn: #5558c9;
+  --adm-btn-hover: #4f52c0;
+
+  /* Status colours: tinted background + light text */
+  --adm-ok: #6ee7b7;     --adm-ok-tint: rgba(52, 211, 153, 0.16);
+  --adm-warn: #fcd34d;   --adm-warn-tint: rgba(251, 191, 36, 0.16);
+  --adm-bad: #fda4af;    --adm-bad-tint: rgba(251, 113, 133, 0.16);
+}
+
+/* ── 1. Re-point the old flat-grey dark utilities at the palette ─────────────────────────── */
+
+html.dark .dark\:bg-neutral-800 { background-color: var(--adm-page); }
+html.dark .dark\:bg-neutral-700 { background-color: var(--adm-card); }
+html.dark .dark\:bg-neutral-600 { background-color: var(--adm-raised); }
+html.dark .dark\:hover\:bg-neutral-600:hover,
+html.dark .dark\:focus\:bg-neutral-600:focus { background-color: var(--adm-raised); }
+html.dark .dark\:hover\:bg-neutral-500:hover { background-color: var(--adm-raised-hi); }
+html.dark .dark\:active\:bg-neutral-900:active { background-color: var(--adm-sidebar); }
+
+/* The sidebar is one step deeper than the page, like most dashboards. */
+html.dark #sidebar { background-color: var(--adm-sidebar); }
+
+/* Borders: the old dark mode removed them all (`dark:border-none`). Bring back thin, soft ones. */
+html.dark .dark\:border-none { border-style: solid; border-color: var(--adm-line-soft); }
+html.dark .dark\:border-neutral-600 { border-color: var(--adm-line-soft); }
+html.dark .dark\:divide-neutral-600 > :not([hidden]) ~ :not([hidden]) { border-color: var(--adm-line-soft); }
+
+/* Text layers */
+html.dark .dark\:text-white { color: var(--adm-text); }
+html.dark :is(h1, h2, h3, h4, .font-display).dark\:text-white { color: var(--adm-text-strong); }
+html.dark .dark\:text-gray-300 { color: var(--adm-text-muted); }
+
+/* ── 2. Light-only classes that never had a dark twin (zero weight: explicit dark: classes win) ── */
+
+html.dark :where(.bg-white) { background-color: var(--adm-card); }
+html.dark :where(.bg-gray-50) { background-color: var(--adm-raised); }
+html.dark :where(.bg-gray-100, .bg-gray-200) { background-color: var(--adm-raised-hi); }
+html.dark :where([class*="border-gray-"]) { border-color: var(--adm-line-soft); }
+html.dark :where(.divide-gray-100 > :not([hidden]) ~ :not([hidden])) { border-color: var(--adm-line-soft); }
+
+html.dark :where(.text-gray-400, .text-gray-500, .text-gray-600) { color: var(--adm-text-muted); }
+html.dark :where(.text-gray-700, .text-gray-800, .text-gray-900) { color: var(--adm-text); }
+
+/* Pale pastel tiles and pills become tinted glass; their coloured text becomes a light shade */
+html.dark :where(.bg-indigo-50, .bg-indigo-100) { background-color: var(--adm-accent-tint); }
+html.dark :where(.text-indigo-500, .text-indigo-600) { color: var(--adm-accent-text); }
+html.dark :where(.bg-green-50, .bg-green-100) { background-color: var(--adm-ok-tint); }
+html.dark :where(.text-green-500, .text-green-600) { color: var(--adm-ok); }
+html.dark :where(.bg-amber-50) { background-color: var(--adm-warn-tint); }
+html.dark :where(.text-amber-500) { color: var(--adm-warn); }
+html.dark :where(.bg-red-50, .bg-red-100) { background-color: var(--adm-bad-tint); }
+html.dark :where(.text-red-500, .text-red-600) { color: var(--adm-bad); }
+html.dark :where(.border-red-100) { border-color: rgba(251, 113, 133, 0.3); }
+/* The sidebar's low-stock count: amber pill with white text was 1.7:1; use the tint + light amber */
+html.dark .bg-amber-400 { background-color: var(--adm-warn-tint); color: var(--adm-warn); }
+
+/* Soft buttons hovering */
+html.dark .hover\:bg-indigo-50:hover,
+html.dark .hover\:bg-indigo-100:hover { background-color: rgba(129, 140, 248, 0.26); }
+html.dark .hover\:bg-red-50:hover,
+html.dark .hover\:bg-red-100:hover { background-color: rgba(251, 113, 133, 0.26); }
+html.dark .hover\:text-indigo-600:hover { color: var(--adm-accent-text); }
+
+/* ── 3. Buttons ─────────────────────────────────────────────────────────────────────────── */
+
+html.dark button.bg-indigo-500,
+html.dark a.bg-indigo-500,
+html.dark button.bg-gray-900 { background-color: var(--adm-btn); color: #fff; }
+html.dark .hover\:bg-indigo-600:hover { background-color: var(--adm-btn-hover); }
+
+/* Small grey buttons (the + and − stock steppers) sit on a lighter slate, so their text is the body shade */
+html.dark button.bg-gray-100,
+html.dark button.bg-gray-200 { color: var(--adm-text); }
+
+/* ── 4. Status badges (stock and order status) ──────────────────────────────────────────── */
+
+html.dark .badge-in   { background: var(--adm-ok-tint);     color: var(--adm-ok); }
+html.dark .badge-low  { background: var(--adm-warn-tint);   color: var(--adm-warn); }
+html.dark .badge-out  { background: var(--adm-bad-tint);    color: var(--adm-bad); }
+html.dark .badge-paid { background: var(--adm-accent-tint); color: var(--adm-accent-text); }
+
+/* ── 5. Controls ────────────────────────────────────────────────────────────────────────── */
+
+html.dark .form-inp { background-color: var(--adm-input); border-color: var(--adm-line); color: var(--adm-text); }
+html.dark .form-inp::placeholder { color: var(--adm-text-muted); }
+html.dark .form-inp:focus { border-color: var(--adm-accent-line); box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25); }
+
+html.dark .glass-icon-btn { background: var(--adm-card); border-color: var(--adm-line); backdrop-filter: none; -webkit-backdrop-filter: none; }
+html.dark .glass-icon-btn:hover { background: var(--adm-raised); border-color: var(--adm-raised-hi); }
+
+html.dark .trow:hover { background: var(--adm-raised); }
+html.dark .tab-btn.active-tab { border-bottom-color: var(--adm-accent-line); color: var(--adm-accent-text); }
+html.dark .modal-backdrop { background: rgba(2, 6, 23, 0.62); }
+
+/* Sidebar: idle items are a calm blue-grey; the open page is an indigo tint with a thin accent edge */
+html.dark .nav-item { color: var(--adm-nav); }
+html.dark .nav-item:hover { color: var(--adm-text-strong); }
+html.dark .nav-item.active {
+  background-color: var(--adm-accent-tint);
+  color: #e0e7ff;
+  box-shadow: inset 3px 0 0 var(--adm-accent-line);
+}

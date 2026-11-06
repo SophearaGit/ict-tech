@@ -5,6 +5,8 @@
 @section('body-class', 'flex bg-gray-50 dark:bg-neutral-800')
 
 @section('extra-styles')
+{{-- The dark palette (screen only, admin only). Dark-mode colours live in this file, not below. --}}
+<link rel="stylesheet" href="{{ asset('assets/css/admin-dark.css') }}" media="screen">
 <style>
   /* Sidebar */
   .sidebar{transition:transform 0.3s ease;}
@@ -12,7 +14,6 @@
   /* Table row hover */
   .trow{transition:background 0.15s;}
   .trow:hover{background:#f5f6ff;}
-  .dark .trow:hover{background:#525252;}
 
   /* Status badge */
   .badge-in   {background:#dcfce7;color:#16a34a;}
@@ -27,8 +28,6 @@
 
   /* Input focus */
   .form-inp:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.12);}
-  .dark .form-inp{background:#525252;border-color:#525252;color:#fff;}
-  .dark .form-inp::placeholder{color:#a3a3a3;}
 
   /* Toast */
   .toast-enter{animation:toastIn 0.3s ease both;}
@@ -41,7 +40,6 @@
 
   /* Sidebar nav active state */
   .nav-item.active{background:#1f2937;color:#fff;}
-  .dark .nav-item.active{background:#525252;}
 
   /* Printing (Sales Report): only the report, on plain white, whatever the theme */
   @media print {
@@ -154,10 +152,10 @@
     </div>
     <!-- Right -->
     <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
-      <div id="topbar-search" class="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 gap-2">
-        <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <div id="topbar-search" class="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 gap-2 dark:bg-slate-800/80 dark:border-slate-700 dark:focus-within:border-indigo-400/70 dark:focus-within:ring-2 dark:focus-within:ring-indigo-400/25">
+        <svg class="w-3.5 h-3.5 text-gray-400 dark:text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         <input id="table-search" type="text" placeholder="Search products…" oninput="filterTable(this.value)"
-          class="bg-transparent text-xs text-gray-700 placeholder-gray-400 outline-none w-28 md:w-40"/>
+          class="bg-transparent text-xs text-gray-700 placeholder-gray-400 dark:text-slate-200 dark:placeholder-slate-400 outline-none w-28 md:w-40"/>
       </div>
       <button onclick="showView('add')"
         class="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold px-2.5 sm:px-4 py-2 rounded-xl transition-colors whitespace-nowrap">

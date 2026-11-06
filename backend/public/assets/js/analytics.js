@@ -42,8 +42,9 @@ function renderAnalyticsChart({ labels, orders, revenue }) {
   if (!canvas || typeof Chart === 'undefined') return;
 
   const isDark = document.documentElement.classList.contains('dark');
-  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
-  const tickColor = isDark ? '#d1d5db' : '#6b7280';
+  // Dark: the slate palette of admin-dark.css (muted labels, faint slate grid lines).
+  const gridColor = isDark ? 'rgba(51,65,85,0.55)' : 'rgba(0,0,0,0.05)';
+  const tickColor = isDark ? '#94a3b8' : '#6b7280';
 
   if (analyticsChart) analyticsChart.destroy();
   analyticsChart = new Chart(canvas, {
