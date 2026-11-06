@@ -67,9 +67,20 @@ async function loadSalesReport() {
   } catch (e) {
     if (requestId !== reportRequestId) return;
     clearSalesReport();
-    errorBox.textContent = e.message || 'Could not load the sales report.';
-    errorBox.classList.remove('hidden');
+    showReportError(e);
   }
+}
+
+// An expired session gets a plain sentence and a link back to the login page. Only fixed markup
+// is ever put into innerHTML here; any other error text from the server goes in as plain text.
+function showReportError(e) {
+  const box = document.getElementById('report-error');
+  if (e && e.sessionExpired) {
+    box.innerHTML = 'Your session has expired. <a href="/admin/login" class="underline font-semibold">Log in again</a> to see the report.';
+  } else {
+    box.textContent = (e && e.message) || 'Could not load the sales report.';
+  }
+  box.classList.remove('hidden');
 }
 
 // "2026-11-04" → text, using the browser's calendar only (no timezone maths: the server already

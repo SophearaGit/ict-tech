@@ -10,11 +10,21 @@ function apiFetch(url, options = {}) {
       ...(options.headers || {}),
     },
   }).then(async res => {
+    // A logged-out admin never gets data: the server sends the login page (the browser follows the
+    // redirect to it) or 401 / 419 "page expired". Say so plainly instead of failing to read HTML as JSON.
+    if (res.status === 401 || res.status === 419 || (res.redirected && new URL(res.url).pathname === '/admin/login')) {
+      const expired = new Error('Your session has expired. Please log in again.');
+      expired.sessionExpired = true;
+      throw expired;
+    }
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || err.message || `Request failed (${res.status})`);
     }
-    return res.status === 204 ? null : res.json();
+    if (res.status === 204) return null;
+    return res.json().catch(() => {
+      throw new Error('The server sent an unexpected reply. Please refresh the page and try again.');
+    });
   });
 }
 
