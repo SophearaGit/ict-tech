@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Admin;
+use App\Models\Brand;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\MakesShopData;
@@ -220,6 +221,63 @@ class AdminProductsTest extends TestCase
             ->assertOk();
 
         $this->assertSame(7, $first->fresh()->qty);
+    }
+
+    private function switchedOffBrand(string $name = 'Nokia'): Brand
+    {
+        $brand = $this->makeBrand($name);
+        $brand->forceFill(['is_active' => false])->save();
+
+        return $brand;
+    }
+
+    public function test_store_refuses_a_brand_that_is_switched_off(): void
+    {
+        $nokia = $this->switchedOffBrand();
+
+        $this->actingAsAdmin()->postJson(route('admin-products.store'), $this->newProduct(['brand_id' => $nokia->id]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['brand_id'])
+            ->assertJsonPath('errors.brand_id.0', 'That brand is switched off.');
+
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_a_product_whose_brand_is_off_can_still_have_its_stock_and_price_changed(): void
+    {
+        // The edit window always sends the brand and name back with the new numbers.
+        $nokia = $this->switchedOffBrand();
+        $product = $this->makeProduct(['name' => '3310', 'brand_id' => $nokia->id, 'qty' => 3, 'price' => '50.00']);
+
+        $this->actingAsAdmin()->putJson(route('admin-products.update', $product), [
+            'name' => '3310', 'brand_id' => $nokia->id, 'qty' => 40, 'price' => 55,
+        ])->assertOk()->assertJsonPath('brandActive', false);
+
+        $this->assertSame(40, $product->fresh()->qty);
+        $this->assertSame('55.00', $product->fresh()->price);
+    }
+
+    public function test_update_refuses_moving_a_product_to_a_brand_that_is_off(): void
+    {
+        $product = $this->makeProduct();
+        $original = $product->brand_id;
+        $nokia = $this->switchedOffBrand();
+
+        $this->actingAsAdmin()->putJson(route('admin-products.update', $product), ['brand_id' => $nokia->id])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.brand_id.0', 'That brand is switched off.');
+
+        $this->assertSame($original, $product->fresh()->brand_id);
+    }
+
+    public function test_product_json_carries_brand_active(): void
+    {
+        $this->makeProduct(['name' => 'First']);
+        $this->makeProduct(['name' => 'Second', 'brand_id' => $this->switchedOffBrand()->id]);
+
+        $response = $this->actingAsAdmin()->getJson(route('admin-products.index'))->assertOk();
+
+        $this->assertSame([true, false], array_column($response->json(), 'brandActive'));
     }
 
     public function test_guests_are_redirected_to_admin_login(): void

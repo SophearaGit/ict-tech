@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use App\Models\Product;
 use Closure;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => ['bail', 'required', 'string', 'max:255', $this->nameIsNew()],
-            'brand_id' => ['bail', 'required', 'integer', 'exists:brands,id'],
+            'brand_id' => ['bail', 'required', 'integer', 'exists:brands,id', $this->brandIsOn()],
             'category' => ['required', Rule::in($this->categorySlugs())],
             'price' => ['required', 'numeric', 'min:0'],
             'qty' => ['required', 'integer', 'min:0'],
@@ -46,7 +47,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => ['bail', 'sometimes', 'string', 'max:255', $this->nameIsNew($product)],
-            'brand_id' => ['bail', 'sometimes', 'integer', 'exists:brands,id'],
+            'brand_id' => ['bail', 'sometimes', 'integer', 'exists:brands,id', $this->brandIsOn($product)],
             'category' => ['sometimes', Rule::in($this->categorySlugs())],
             'price' => ['sometimes', 'numeric', 'min:0'],
             'qty' => ['sometimes', 'integer', 'min:0'],
@@ -93,6 +94,24 @@ class ProductController extends Controller
         };
     }
 
+    /**
+     * A product can only join a brand that is switched ON. When editing, keeping the brand it
+     * already has is always fine, even if that brand is OFF: the edit window sends the brand back
+     * with every save, and the owner must still be able to fix the stock or price of such a product.
+     */
+    protected function brandIsOn(?Product $editing = null): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($editing) {
+            if ($editing && (int) $value === (int) $editing->brand_id) {
+                return;
+            }
+
+            if (Brand::whereKey($value)->where('is_active', false)->exists()) {
+                $fail('That brand is switched off.');
+            }
+        };
+    }
+
     /** The real category slugs (config/shop.php is the single source of truth). */
     protected function categorySlugs(): array
     {
@@ -113,6 +132,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'brand' => $product->brand->name,
             'brandId' => (int) $product->brand_id,
+            'brandActive' => (bool) $product->brand->is_active,
             'type' => $product->type,
             'category' => $product->category,
             'price' => (float) $product->price,
