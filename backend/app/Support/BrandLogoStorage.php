@@ -2,9 +2,12 @@
 
 namespace App\Support;
 
+use App\Exceptions\LogoNotSaved;
+use ErrorException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 /**
  * Saves and removes brand logo files. The folder is `config('shop.brand_logos.dir')`, read on every
@@ -27,10 +30,15 @@ class BrandLogoStorage
             ?? throw new InvalidArgumentException('Unsupported logo type: '.$file->getMimeType());
 
         $dir = config('shop.brand_logos.dir');
-        File::ensureDirectoryExists($dir);
-
         $name = bin2hex(random_bytes(16)).'.'.$extension;
-        $file->move($dir, $name);
+
+        try {
+            File::ensureDirectoryExists($dir);
+            $file->move($dir, $name);
+        } catch (ErrorException|FileException $e) {
+            // Typically: the folder does not exist yet and public/ is not writable by the web server's user.
+            throw new LogoNotSaved("Could not save the logo into {$dir}: ".$e->getMessage(), 0, $e);
+        }
 
         return $name;
     }

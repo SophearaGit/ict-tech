@@ -159,6 +159,40 @@ class AdminBrandLogoTest extends TestCase
         }
     }
 
+    /** A logo folder that can never be created: its parent is a regular file (works the same on Windows and Linux). */
+    private function useAnUnwritableLogoFolder(): void
+    {
+        $file = tempnam(sys_get_temp_dir(), 'not-a-folder');
+        $this->beforeApplicationDestroyed(fn () => @unlink($file));
+        config(['shop.brand_logos.dir' => $file.DIRECTORY_SEPARATOR.'brands']);
+    }
+
+    public function test_a_logo_folder_the_server_cannot_write_gives_a_clear_message_when_adding(): void
+    {
+        $this->useAnUnwritableLogoFolder();
+
+        $this->addBrand('Huawei', $this->fakeLogo())
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.logo.0', 'The logo could not be saved. The folder public/uploads/brands is not writable on the server.');
+
+        $this->assertSame(0, Brand::count(), 'no brand is left behind without its logo');
+    }
+
+    public function test_a_logo_folder_the_server_cannot_write_keeps_the_old_logo_when_replacing(): void
+    {
+        $brand = $this->brandWithLogo();
+        $old = $brand->logo;
+        $goodDir = $this->logoDir;
+
+        $this->useAnUnwritableLogoFolder();
+        $this->putLogo($brand, $this->fakeLogo('new.png', 80, 80))
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.logo.0', 'The logo could not be saved. The folder public/uploads/brands is not writable on the server.');
+
+        $this->assertSame($old, $brand->fresh()->logo);
+        $this->assertSame([$old], $this->logoFilesIn($goodDir), 'the old file is still there');
+    }
+
     public function test_a_brand_can_be_added_with_a_logo(): void
     {
         $response = $this->addBrand('Huawei', $this->fakeLogo())->assertCreated();

@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\LogoNotSaved;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Support\BrandLogoStorage;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -43,7 +45,7 @@ class BrandController extends Controller
                 $brand = Brand::create(['name' => $validated['name']]);
 
                 if ($request->hasFile('logo')) {
-                    $stored = $logos->store($request->file('logo'));
+                    $stored = $this->saveLogo($logos, $request->file('logo'));
                     $brand->forceFill(['logo' => $stored])->save();
                 }
 
@@ -110,7 +112,7 @@ class BrandController extends Controller
         $request->validate(['logo' => $this->logoRules(required: true)], $this->logoMessages());
 
         $old = $brand->logo;
-        $new = $logos->store($request->file('logo'));
+        $new = $this->saveLogo($logos, $request->file('logo'));
 
         try {
             $brand->forceFill(['logo' => $new])->save();
@@ -167,6 +169,24 @@ class BrandController extends Controller
     private function logoRules(bool $required = false): array
     {
         return [$required ? 'required' : 'nullable', 'bail', 'file', 'mimes:png,jpg,jpeg,webp', 'max:800', 'dimensions:min_width=32,min_height=32,max_width=4000,max_height=4000'];
+    }
+
+    /**
+     * Save an uploaded logo. When the server cannot write it (the usual first-day problem on a live
+     * server: public/uploads is missing and public/ is not writable by the web user), answer with a
+     * plain 422 on `logo` that says what to fix, instead of a bare "Server Error".
+     */
+    private function saveLogo(BrandLogoStorage $logos, UploadedFile $file): string
+    {
+        try {
+            return $logos->store($file);
+        } catch (LogoNotSaved $e) {
+            report($e);
+
+            throw ValidationException::withMessages([
+                'logo' => 'The logo could not be saved. The folder public/uploads/brands is not writable on the server.',
+            ]);
+        }
     }
 
     private function logoMessages(): array
