@@ -10,6 +10,13 @@ return [
     // stay on UTC. Day boundaries in the dashboard chart and the sales report use this.
     'timezone' => 'Asia/Phnom_Penh',
 
+    // Brand logos are saved straight into public/ (not Laravel's storage/ folder), so no
+    // `storage:link` is needed on the server. `path` is the public URL path of `dir`.
+    'brand_logos' => [
+        'dir' => public_path('uploads/brands'),
+        'path' => 'uploads/brands',
+    ],
+
     'categories' => [
         'phones' => [
             'label' => 'Phones',
