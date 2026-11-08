@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Admin;
 use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Concerns\MakesShopData;
 use Tests\TestCase;
 
@@ -278,6 +280,95 @@ class AdminProductsTest extends TestCase
         $response = $this->actingAsAdmin()->getJson(route('admin-products.index'))->assertOk();
 
         $this->assertSame([true, false], array_column($response->json(), 'brandActive'));
+    }
+
+    private function switchCategory(string $slug, bool $on): void
+    {
+        Category::where('slug', $slug)->firstOrFail()->forceFill(['is_active' => $on])->save();
+    }
+
+    public function test_store_refuses_a_category_that_is_switched_off(): void
+    {
+        $this->switchCategory('laptops', false);
+
+        $this->actingAsAdmin()->postJson(route('admin-products.store'), $this->newProduct(['category' => 'laptops']))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['category'])
+            ->assertJsonPath('errors.category.0', 'That category is switched off.');
+
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_store_accepts_a_category_added_in_the_admin(): void
+    {
+        Category::create(['slug' => 'gaming-mice', 'name' => 'Gaming Mice', 'icon' => '🖱️']);
+
+        $this->actingAsAdmin()->postJson(route('admin-products.store'), $this->newProduct(['category' => 'gaming-mice']))
+            ->assertCreated()->assertJsonPath('category', 'gaming-mice')->assertJsonPath('categoryName', 'Gaming Mice');
+    }
+
+    public function test_store_refuses_a_category_code_with_the_wrong_letter_case(): void
+    {
+        // MySQL compares text ignoring case; the code stored on the product must be the table's exact code.
+        $this->actingAsAdmin()->postJson(route('admin-products.store'), $this->newProduct(['category' => 'Phones']))
+            ->assertUnprocessable()->assertJsonValidationErrors(['category']);
+        $this->actingAsAdmin()->postJson(route('admin-products.store'), $this->newProduct(['category' => ['phones']]))
+            ->assertUnprocessable()->assertJsonValidationErrors(['category']);
+
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_a_product_whose_category_is_off_can_still_have_its_stock_and_price_changed(): void
+    {
+        // The edit window always sends the category and name back with the new numbers.
+        $product = $this->makeProduct(['name' => 'Dell XPS', 'category' => 'laptops', 'qty' => 3, 'price' => '50.00']);
+        $this->switchCategory('laptops', false);
+
+        $this->actingAsAdmin()->putJson(route('admin-products.update', $product), [
+            'name' => 'Dell XPS', 'category' => 'laptops', 'qty' => 40, 'price' => 55,
+        ])->assertOk()->assertJsonPath('categoryActive', false);
+
+        $this->assertSame(40, $product->fresh()->qty);
+        $this->assertSame('55.00', $product->fresh()->price);
+    }
+
+    public function test_update_refuses_moving_a_product_to_a_category_that_is_off(): void
+    {
+        $product = $this->makeProduct(['category' => 'phones']);
+        $this->switchCategory('laptops', false);
+
+        $this->actingAsAdmin()->putJson(route('admin-products.update', $product), ['category' => 'laptops'])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.category.0', 'That category is switched off.');
+
+        $this->assertSame('phones', $product->fresh()->category);
+    }
+
+    public function test_product_json_carries_category_name_and_active(): void
+    {
+        $this->makeProduct(['name' => 'On', 'category' => 'phones']);
+        $this->makeProduct(['name' => 'Off', 'category' => 'laptops']);
+        $this->makeProduct(['name' => 'Odd', 'category' => 'Apple']); // an old code that is not in the table
+        $this->switchCategory('laptops', false);
+
+        $response = $this->actingAsAdmin()->getJson(route('admin-products.index'))->assertOk();
+
+        $this->assertSame(['Phones', 'Laptops', null], array_column($response->json(), 'categoryName'));
+        $this->assertSame([true, false, true], array_column($response->json(), 'categoryActive'));
+    }
+
+    public function test_the_product_list_looks_the_categories_up_once_not_per_product(): void
+    {
+        foreach (['phones', 'laptops', 'earphones', 'Apple'] as $i => $category) {
+            $this->makeProduct(['name' => "Product {$i}", 'category' => $category]);
+        }
+        $this->actingAsAdmin(); // create the admin before counting
+        DB::enableQueryLog();
+
+        $this->getJson(route('admin-products.index'))->assertOk();
+
+        $categoryQueries = collect(DB::getQueryLog())->filter(fn ($q) => str_contains($q['query'], 'from "categories"'));
+        $this->assertCount(1, $categoryQueries);
     }
 
     public function test_guests_are_redirected_to_admin_login(): void
