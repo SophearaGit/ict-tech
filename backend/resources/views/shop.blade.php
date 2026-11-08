@@ -99,26 +99,15 @@
   @unless ($category)
   <section aria-label="Browse by category" class="max-w-7xl mx-auto px-5 pt-8 pb-2">
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <button onclick="setCategory('phones')" aria-label="Shop Phones" class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none ">
-        <span class="text-3xl mb-2 block" aria-hidden="true">📱</span>
-        <p class="font-bold text-sm text-gray-900 dark:text-white">Phones</p>
-        <p class="text-sm text-gray-400 mt-0.5 dark:text-gray-700 dark:text-white">Apple · Samsung · Xiaomi</p>
-      </button>
-      <button onclick="setCategory('earphones')" aria-label="Shop Earphones and Headphones" class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none">
-        <span class="text-3xl mb-2 block" aria-hidden="true">🎧</span>
-        <p class="font-bold text-sm text-gray-900 dark:text-white">Earphones</p>
-        <p class="text-sm text-gray-400 mt-0.5 dark:text-gray-700 dark:text-white">Apple · Samsung · Sony · Anker</p>
-      </button>
-      <button onclick="setCategory('powerbanks')" aria-label="Shop Power Banks" class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none">
-        <span class="text-3xl mb-2 block" aria-hidden="true">🔋</span>
-        <p class="font-bold text-sm text-gray-900 dark:text-white">Power Banks</p>
-        <p class="text-sm text-gray-400 mt-0.5 dark:text-gray-700 dark:text-white">Anker · Xiaomi · Jtrust</p>
-      </button>
-      <button onclick="setCategory('laptops')" aria-label="Shop Laptops" class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none">
-        <span class="text-3xl mb-2 block" aria-hidden="true">💻</span>
-        <p class="font-bold text-sm text-gray-900 dark:text-white">Laptops</p>
-        <p class="text-sm text-gray-400 mt-0.5 dark:text-gray-700 dark:text-white">Apple · Asus · Dell</p>
-      </button>
+      @foreach ($categories as $cat)
+        <button onclick="setCategory('{{ $cat['slug'] }}')" aria-label="Shop {{ $cat['label'] }}" class="cat-card glass-panel bg-white/70 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-200 dark:bg-neutral-800 dark:border-none">
+          <span class="text-3xl mb-2 block" aria-hidden="true">{{ $cat['icon'] }}</span>
+          <p class="font-bold text-sm text-gray-900 dark:text-white">{{ $cat['label'] }}</p>
+          @if ($cat['desc'] !== '')
+            <p class="text-sm text-gray-400 mt-0.5 dark:text-gray-700 dark:text-white">{{ $cat['desc'] }}</p>
+          @endif
+        </button>
+      @endforeach
     </div>
   </section>
   @endunless
@@ -192,8 +181,8 @@
 <script>
   const PRODUCTS = @json($products);
   const CATEGORIES = [
-    @foreach (config('shop.categories') as $slug => $cat)
-    { slug: @json($slug), label: @json($cat['label']), icon: @json($cat['icon']), desc: @json($cat['desc']) },
+    @foreach ($categories as $cat)
+    { slug: @json($cat['slug']), label: @json($cat['label']), icon: @json($cat['icon']), desc: @json($cat['desc']) },
     @endforeach
   ];
   // Set on /shop/{category}: shop.js adds an "All brands" pill to the brand row.

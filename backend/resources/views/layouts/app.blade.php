@@ -117,7 +117,6 @@
             class="nav-hover-pill absolute rounded-full opacity-0 pointer-events-none"
             style="transition: left 0.35s cubic-bezier(0.34,1.56,0.64,1), top 0.35s cubic-bezier(0.34,1.56,0.64,1), width 0.35s cubic-bezier(0.34,1.56,0.64,1), height 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;"></span>
           @php
-            $shopCategories = config('shop.categories');
             $activeCategory = request()->route('category');
             $navLinks = [
               ['label' => 'Home', 'href' => route('home'), 'active' => request()->routeIs('home')],
@@ -154,9 +153,9 @@
                             group-data-[open=true]:visible group-data-[open=true]:opacity-100 group-data-[open=true]:translate-y-0
                             transition duration-150 ease-out">
                   <div class="nav-dropdown rounded-2xl p-2" role="menu" aria-label="Shop by category">
-                    @foreach ($shopCategories as $slug => $cat)
-                      <a href="{{ route('shop.category', $slug) }}" role="menuitem"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none dark:hover:bg-white/10 dark:focus:bg-white/10 {{ $activeCategory === $slug ? 'bg-indigo-50/80 dark:bg-white/10' : '' }}">
+                    @foreach ($shopCategories as $cat)
+                      <a href="{{ route('shop.category', $cat['slug']) }}" role="menuitem"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none dark:hover:bg-white/10 dark:focus:bg-white/10 {{ $activeCategory === $cat['slug'] ? 'bg-indigo-50/80 dark:bg-white/10' : '' }}">
                         <span class="text-2xl leading-none" aria-hidden="true">{{ $cat['icon'] }}</span>
                         <span class="flex flex-col min-w-0">
                           <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $cat['label'] }}</span>
@@ -229,9 +228,9 @@
         @endif
         @if (! empty($link['dropdown']))
           <div class="flex flex-col gap-1 pl-4 -mt-1 border-l border-gray-200 dark:border-white/10">
-            @foreach ($shopCategories as $slug => $cat)
-              <a href="{{ route('shop.category', $slug) }}"
-                class="text-sm py-1 transition-colors {{ $activeCategory === $slug
+            @foreach ($shopCategories as $cat)
+              <a href="{{ route('shop.category', $cat['slug']) }}"
+                class="text-sm py-1 transition-colors {{ $activeCategory === $cat['slug']
                   ? 'text-indigo-500 font-medium'
                   : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white' }}">
                 <span aria-hidden="true">{{ $cat['icon'] }}</span> {{ $cat['label'] }}

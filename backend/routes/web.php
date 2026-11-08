@@ -24,10 +24,9 @@ Route::get('/', function () {
 
 // Shop page
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
-// One category per page (phones, earphones, powerbanks, laptops — see config/shop.php)
-Route::get('/shop/{category}', [ShopController::class, 'category'])
-    ->whereIn('category', array_keys(config('shop.categories')))
-    ->name('shop.category');
+// One category per page (/shop/phones, ...). The code is looked up in the categories table by the
+// controller, which answers 404 for an unknown or switched-off code.
+Route::get('/shop/{category}', [ShopController::class, 'category'])->name('shop.category');
 
 // Contact page
 Route::get('/contact', function () {
