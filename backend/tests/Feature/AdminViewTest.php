@@ -19,9 +19,31 @@ class AdminViewTest extends TestCase
             ->assertSee('id="view-brands"', false)
             ->assertSee('id="m-brand"', false)
             ->assertSee('id="m-category"', false)
-            ->assertSee('<option value="phones">Phones</option>', false)
-            ->assertSee('<option value="powerbanks">Power Banks</option>', false)
+            ->assertSee('id="f-category"', false)
+            // The category options are filled by categories.js from /admin/categories, not written by the server.
+            ->assertDontSee('<option value="phones">Phones</option>', false)
+            ->assertDontSee('<option value="powerbanks">Power Banks</option>', false)
             ->assertDontSee('<option value="Apple">', false);
+    }
+
+    public function test_admin_view_renders_the_categories_page(): void
+    {
+        $response = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('id="nav-categories"', false)
+            ->assertSee("showView('categories')", false)
+            ->assertSee('id="view-categories"', false)
+            ->assertSee('id="category-add-name"', false)
+            ->assertSee('id="category-add-icon"', false)
+            ->assertSee('id="categories-tbody"', false)
+            ->assertSee('id="categories-empty"', false)
+            ->assertSee('id="new-category-box"', false)
+            ->assertSee('id="new-category-name"', false)
+            ->assertSee('value="__new__">+ Add new category…</option>', false)
+            ->assertSee('assets/js/categories.js', false)
+            ->assertSeeInOrder([
+                'id="view-categories"', '>Icon</th>', '>Category</th>', '>Code</th>', '>Products</th>', '>Status</th>', '>Actions</th>',
+            ], false);
     }
 
     public function test_admin_view_renders_the_brand_switch_and_logo_controls(): void

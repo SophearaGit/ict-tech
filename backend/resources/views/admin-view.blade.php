@@ -104,6 +104,10 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
       Brands
     </button>
+    <button onclick="showView('categories')" id="nav-categories" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+      Categories
+    </button>
     <button onclick="showView('messages')" id="nav-messages" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       Message
@@ -400,12 +404,16 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1.5">Category *</label>
-            <select id="f-category" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all cursor-pointer">
+            {{-- The options are filled by categories.js from /admin/categories (only categories that are ON). --}}
+            <select id="f-category" onchange="onCategoryChange(this)" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all cursor-pointer">
               <option value="">Select category…</option>
-              @foreach (config('shop.categories') as $slug => $category)
-                <option value="{{ $slug }}">{{ $category['label'] }}</option>
-              @endforeach
+              <option value="__new__">+ Add new category…</option>
             </select>
+            <div id="new-category-box" class="hidden mt-2 flex gap-2">
+              <input id="new-category-name" type="text" maxlength="50" placeholder="New category name" onkeydown="if (event.key === 'Enter') saveNewCategory()" class="form-inp flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm"/>
+              <button type="button" onclick="saveNewCategory()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition-colors">Save</button>
+              <button type="button" onclick="cancelNewCategory()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-colors">Cancel</button>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1.5">Price *</label>
@@ -486,6 +494,36 @@
           <div class="text-4xl mb-3">🏷️</div>
           <p class="text-gray-500 dark:text-white font-medium">No brands yet</p>
           <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Add a brand above, then pick it when you add a product.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──── CATEGORIES VIEW ──── -->
+    <div id="view-categories" class="hidden">
+      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="p-5 border-b border-gray-100 dark:border-neutral-600 flex flex-col sm:flex-row sm:items-center gap-3">
+          <input id="category-add-name" type="text" maxlength="50" placeholder="New category name, e.g. Gaming Mice" onkeydown="if (event.key === 'Enter') addCategory()" class="form-inp flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+          {{-- The icon is an emoji typed or pasted here (Windows: Win + . opens the emoji picker). Empty means 📦. --}}
+          <input id="category-add-icon" type="text" maxlength="32" placeholder="📦" aria-label="Icon (an emoji, optional)" title="Icon: type or paste one emoji (optional)" onkeydown="if (event.key === 'Enter') addCategory()" class="form-inp w-full sm:w-24 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-lg text-center transition-all"/>
+          <button onclick="addCategory()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Add Category</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Icon</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Category</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Code</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
+            </tr></thead>
+            <tbody id="categories-tbody"></tbody>
+          </table>
+        </div>
+        <div id="categories-empty" class="hidden text-center py-16">
+          <div class="text-4xl mb-3">🗂️</div>
+          <p class="text-gray-500 dark:text-white font-medium">No categories yet</p>
+          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Add a category above, then pick it when you add a product.</p>
         </div>
       </div>
     </div>
@@ -647,9 +685,6 @@
           <label class="block text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1">Category</label>
           <select id="m-category" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm cursor-pointer">
             <option value="">Select category…</option>
-            @foreach (config('shop.categories') as $slug => $category)
-              <option value="{{ $slug }}">{{ $category['label'] }}</option>
-            @endforeach
           </select>
         </div>
       </div>
@@ -742,4 +777,5 @@
 <script src="{{ asset('assets/js/admin.js') }}"></script>
 <script src="{{ asset('assets/js/analytics.js') }}"></script>
 <script src="{{ asset('assets/js/sales-report.js') }}"></script>
+<script src="{{ asset('assets/js/categories.js') }}"></script>
 @endsection

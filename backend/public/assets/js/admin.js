@@ -63,6 +63,15 @@ function brandCellHtml(p) {
   return escapeHtml(p.brand) + tag;
 }
 
+// The category's name (escaped; the raw code for an old product whose code is not in the list), plus a small
+// tag when the product's category is switched OFF (hidden from the shop).
+function categoryCellHtml(p) {
+  const tag = p.categoryActive === false
+    ? ' <span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-neutral-600 dark:text-white whitespace-nowrap">Category off</span>'
+    : '';
+  return escapeHtml(p.categoryName || p.category) + tag;
+}
+
 /* ── Init ── */
 function init() {
   apiFetch('/admin/products')
@@ -148,7 +157,8 @@ function renderProductsTable() {
   if (tableFilter !== 'all') list = list.filter(p => statusOf(p) === tableFilter);
   if (searchQ) {
     const q = searchQ.toLowerCase();
-    list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+    list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)
+      || p.category.toLowerCase().includes(q) || (p.categoryName || '').toLowerCase().includes(q));
   }
 
   const empty = document.getElementById('products-empty');
@@ -173,7 +183,7 @@ function renderProductsTable() {
         </div>
       </td>
       <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${brandCellHtml(p)}</td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden md:table-cell">${p.category}</td>
+      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden md:table-cell">${categoryCellHtml(p)}</td>
       <td class="px-3 py-3.5 text-sm font-semibold text-gray-900 dark:text-white">$${p.price}</td>
       <td class="px-3 py-3.5">
         <div class="flex items-center gap-2">
@@ -707,6 +717,7 @@ function openEdit(id) {
   document.getElementById('m-desc').value = p.desc || '';
   document.getElementById('m-trending').checked = p.trending;
   renderBrandSelects(); // adds this product's own brand to the list if it is OFF
+  renderCategorySelects(); // likewise for this product's own category (categories.js)
   setSelectValue('m-brand', p.brandId);
   setSelectValue('m-category', p.category); // a legacy category that is not in the list leaves the placeholder
   document.getElementById('edit-modal').classList.remove('hidden');
@@ -822,13 +833,13 @@ function confirmDelete() {
 
 /* ── Add product form ── */
 function showView(view) {
-  ['dashboard','products','inventory','add','history','messages','brands','report'].forEach(v => {
+  ['dashboard','products','inventory','add','history','messages','brands','categories','report'].forEach(v => {
     document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
     const nav = document.getElementById(`nav-${v}`);
     if (nav) nav.classList.toggle('active', v === view);
   });
   currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands',report:'Sales Report'};
+  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands',categories:'Categories',report:'Sales Report'};
   document.getElementById('page-title').textContent = titles[view] || '';
   document.getElementById('topbar-search').classList.toggle('hidden', !['products','inventory','history'].includes(view));
 
@@ -836,6 +847,7 @@ function showView(view) {
   if (view === 'messages' && !messagesLoaded) { messagesLoaded = true; loadMessages(); }
   if (view === 'history') loadOrders(); // reload on every open so new orders appear
   if (view === 'brands') { renamingBrandId = null; renderBrandsTable(); loadBrands(); } // reload so product counts are current
+  if (view === 'categories' && typeof initCategories === 'function') initCategories(); // categories.js loads after this file
   if (view === 'report' && typeof initSalesReport === 'function') initSalesReport(); // sales-report.js loads after this file
 
   // Auto-close the mobile sidebar after navigating so its overlay doesn't
@@ -849,6 +861,7 @@ function resetAddForm() {
   document.getElementById('f-brand').value = '';
   cancelNewBrand();
   document.getElementById('f-category').value = '';
+  cancelNewCategory(); // categories.js: hides the "+ Add new category…" box
   document.getElementById('f-price').value = '';
   document.getElementById('f-qty').value = '';
   document.getElementById('f-desc').value = '';
@@ -874,7 +887,7 @@ function submitProductForm() {
   const trending = document.getElementById('f-trending').checked;
   const errEl    = document.getElementById('form-error');
 
-  if (!name || isNaN(brandId) || !category || isNaN(price) || isNaN(qty)) {
+  if (!name || isNaN(brandId) || !category || category === '__new__' || isNaN(price) || isNaN(qty)) {
     errEl.textContent = 'Please fill in all required fields (name, brand, category, price, qty).';
     errEl.classList.remove('hidden');
     return;
