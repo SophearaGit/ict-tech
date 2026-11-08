@@ -178,9 +178,22 @@ menu, tabs, cards and a new category's icon on product cards and in the cart dra
 ## 7. Deployment notes (for the owner's by-hand update)
 
 1. Back up the database first. Never touch production credentials.
-2. `git pull --ff-only origin backend`, then `php artisan migrate --force`, then `php artisan optimize:clear`
-   (the settings file lost its category list, so a stale config cache must be cleared).
-3. No new folder, package, `.env` setting or build step. This part needs no write permission.
+2. Two read-only checks on the live database first (phpMyAdmin is enough):
+   - `SELECT category, COUNT(*) FROM products GROUP BY category;` expects only `phones`, `earphones`,
+     `powerbanks`, `laptops`, all lower-case. Any other value (an old `Apple`-style code) still works: it stays
+     visible in the shop and is shown by its raw code in the admin.
+   - `SHOW FULL COLUMNS FROM products WHERE Field = 'category';` expects the collation `utf8mb4_unicode_ci`,
+     the same as the new `categories.slug`.
+3. Every customer page (the home page too) now reads the `categories` table for its menu, so the site must
+   never run the new code without the migration. Put it in maintenance mode around the update:
+   `php artisan down`, then `git pull --ff-only origin backend`, then `php artisan migrate --force`, then
+   `php artisan optimize:clear` (the settings file lost its category list, so a stale config cache must be
+   cleared), then `php artisan up`.
+4. Going back (if `migrate` fails or something looks wrong): `php artisan down`, `git checkout <the commit you
+   were on before the pull>`, `php artisan optimize:clear`, `php artisan up`. Leave the `categories` table in
+   place; the old code simply ignores it. `php artisan migrate:rollback --step=1` also works, but it deletes
+   every category the admin added.
+5. No new folder, package, `.env` setting or build step. This part needs no write permission.
 
 ## 8. Known limits
 

@@ -52,6 +52,27 @@ class ShopCategoriesTest extends TestCase
         $this->assertSame('Acme', $shop->viewData('categories')->firstWhere('slug', 'gaming-mice')['desc']);
     }
 
+    public function test_the_shop_heading_lists_the_categories_that_are_on_under_their_current_names(): void
+    {
+        Category::where('slug', 'phones')->update(['name' => 'Mobiles']);
+        $this->setActive('laptops', false);
+        Category::create(['slug' => 'gaming-mice', 'name' => 'Gaming Mice', 'icon' => '🖱️']);
+
+        $this->get(route('shop'))->assertOk()
+            ->assertSee('Mobiles · Earphones · Power Banks · Gaming Mice the best brands, curated.')
+            ->assertDontSee('Phones · Earphones')
+            ->assertDontSee('· Laptops');
+    }
+
+    public function test_the_shop_heading_still_reads_well_when_no_category_is_on(): void
+    {
+        Category::query()->update(['is_active' => false]);
+
+        $this->get(route('shop'))->assertOk()
+            ->assertSee('The best brands, curated.')
+            ->assertDontSee('Phones');
+    }
+
     public function test_a_renamed_category_keeps_its_address_and_shows_the_new_name(): void
     {
         $this->makeProduct(['name' => 'iPhone', 'category' => 'phones']);
@@ -106,6 +127,49 @@ class ShopCategoriesTest extends TestCase
         $this->makeProduct(['name' => 'Old Thing', 'category' => 'Apple']);
 
         $this->assertSame(['Old Thing'], $this->productNames($this->get(route('shop'))->assertOk()));
+    }
+
+    /** A valid checkout body for $lines (each ['product_id' => id, 'quantity' => n]). */
+    private function checkoutBody(array $lines): array
+    {
+        return [
+            'phone' => '012 345 678',
+            'address' => 'Street 1, Phnom Penh',
+            'payment_method' => 'cod',
+            'lat' => 11.5564,
+            'lng' => 104.9282,
+            'items' => $lines,
+        ];
+    }
+
+    public function test_a_product_with_an_unknown_old_category_can_still_be_favorited_and_bought(): void
+    {
+        $customer = $this->makeCustomer();
+        $old = $this->makeProduct(['name' => 'Old Thing', 'category' => 'Apple', 'qty' => 5]);
+
+        $this->actingAs($customer)->postJson(route('favorites.toggle'), ['product_id' => $old->id])
+            ->assertOk()->assertJsonPath('favorited', true);
+        $this->actingAs($customer)->postJson(route('checkout'), $this->checkoutBody([['product_id' => $old->id, 'quantity' => 2]]))
+            ->assertOk();
+
+        $this->assertSame(1, Order::count());
+        $this->assertSame(3, $old->fresh()->qty);
+    }
+
+    public function test_one_product_of_an_off_category_refuses_the_whole_order(): void
+    {
+        $fine = $this->makeProduct(['name' => 'iPhone', 'category' => 'phones', 'qty' => 5]);
+        $hidden = $this->makeProduct(['name' => 'Dell XPS', 'category' => 'laptops', 'qty' => 5]);
+        $this->setActive('laptops', false);
+
+        $this->actingAs($this->makeCustomer())->postJson(route('checkout'), $this->checkoutBody([
+            ['product_id' => $fine->id, 'quantity' => 1],
+            ['product_id' => $hidden->id, 'quantity' => 1],
+        ]))->assertStatus(422)->assertExactJson(['ok' => false, 'error' => 'Dell XPS is no longer available.']);
+
+        $this->assertSame(0, Order::count());
+        $this->assertSame(5, $fine->fresh()->qty);
+        $this->assertSame(5, $hidden->fresh()->qty);
     }
 
     public function test_a_category_description_never_names_a_switched_off_brand(): void
