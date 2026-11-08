@@ -21,9 +21,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // The shop menu in the page layout lists the categories that are switched ON.
+        // The page layout needs the categories that are switched ON (the shop menu) and the icon of EVERY
+        // category (window.CATEGORY_ICONS, read by the shop and cart scripts).
         View::composer('layouts.app', function ($view) {
-            $view->with('shopCategories', app(ShopCategories::class)->active());
+            $categories = app(ShopCategories::class);
+
+            $view->with('shopCategories', $categories->active())
+                ->with('shopCategoryIcons', $categories->icons());
         });
     }
 }

@@ -135,6 +135,39 @@ class ShopCategoriesTest extends TestCase
         $this->assertSame(['Gizmo', 'Qux'], $this->brandLabels($this->get(route('shop'))->assertOk()));
     }
 
+    /** The `window.CATEGORY_ICONS = {...};` map a page carries, decoded. */
+    private function iconMapOn(string $address): array
+    {
+        $html = $this->get($address)->assertOk()->getContent();
+        $this->assertSame(1, preg_match('/window\.CATEGORY_ICONS = (\{.*?\});/s', $html, $found), "no icon map on {$address}");
+
+        return json_decode($found[1], true, flags: JSON_THROW_ON_ERROR);
+    }
+
+    public function test_every_page_carries_the_category_icon_map(): void
+    {
+        Category::create(['slug' => 'gaming-mice', 'name' => 'Gaming Mice', 'icon' => '🖱️']);
+        $this->setActive('laptops', false);
+
+        foreach (['/', '/shop', '/shop/phones', '/contact'] as $address) {
+            $icons = $this->iconMapOn($address);
+
+            $this->assertSame('📱', $icons['phones'], $address);
+            $this->assertSame('🖱️', $icons['gaming-mice'], $address);
+            $this->assertSame('💻', $icons['laptops'], "{$address}: an OFF category keeps its icon for old carts");
+        }
+    }
+
+    public function test_an_icon_with_markup_can_never_break_out_of_the_icon_map(): void
+    {
+        // The admin API refuses such an icon; this is the second line of defence for a row written some other way.
+        Category::create(['slug' => 'evil', 'name' => 'Evil', 'icon' => '<script>alert(1)</script>']);
+
+        $this->get('/shop')->assertOk()->assertDontSee('<script>alert(1)</script>', false);
+
+        $this->assertSame('<script>alert(1)</script>', $this->iconMapOn('/shop')['evil']);
+    }
+
     public function test_a_product_of_an_off_category_cannot_be_favorited_or_bought(): void
     {
         $customer = $this->makeCustomer();

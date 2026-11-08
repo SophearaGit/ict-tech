@@ -57,7 +57,7 @@ function productCardHTML(p, index) {
         />
         <!-- Fallback if image fails -->
         <div class="absolute inset-0 hidden items-center justify-center text-6xl bg-gray-50" aria-hidden="true">
-          ${p.category === "phones" ? "📱" : p.category === "earphones" ? "🎧" : p.category === "powerbanks" ? "🔋" : "💻"}
+          ${categoryIconFor(p.category)}
         </div>
       </div>
 
@@ -417,7 +417,7 @@ function buildFilterUI() {
         aria-pressed="false"
         class="cat-tab glass-chip relative z-10 text-sm font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 whitespace-nowrap flex items-center gap-1.5"
       >
-        <span aria-hidden="true">${c.icon}</span>${c.label}
+        <span aria-hidden="true">${escapeHtml(c.icon)}</span>${escapeHtml(c.label)}
       </button>`).join("");
 
     catContainer.innerHTML = hoverPillSpanHTML("cat-hover-pill") + allTab + catTabs;

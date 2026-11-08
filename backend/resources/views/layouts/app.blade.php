@@ -248,6 +248,8 @@
   <!-- Scripts -->
   <script>
     window.__CURRENT_USER__ = @json(auth()->check() ? ['name' => auth()->user()->name, 'email' => auth()->user()->email] : null);
+    // Category code => icon, for EVERY category (ON or OFF, so an old cart still shows the right icon).
+    window.CATEGORY_ICONS = @json($shopCategoryIcons);
   </script>
   @yield('pre-scripts')
   <script src="{{ asset('assets/js/script.js') }}"></script>
