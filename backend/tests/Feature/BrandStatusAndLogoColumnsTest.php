@@ -64,7 +64,10 @@ class BrandStatusAndLogoColumnsTest extends TestCase
     {
         // Through the real rollback command, which records it: DatabaseMigrations rolls everything back
         // again when the test ends, and a hand-called down() would make that second rollback fail.
-        $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+        // Newer migrations sit on top of this one, so roll back one step at a time until the columns are gone.
+        for ($i = 0; $i < 20 && Schema::hasColumn('brands', 'is_active'); $i++) {
+            $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+        }
 
         $this->assertFalse(Schema::hasColumn('brands', 'is_active'));
         $this->assertFalse(Schema::hasColumn('brands', 'logo'));

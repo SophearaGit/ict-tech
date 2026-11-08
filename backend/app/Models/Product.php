@@ -16,12 +16,16 @@ class Product extends Model
     }
 
     /**
-     * Products a customer may see or buy: those whose brand is switched ON. The one rule behind the
-     * shop pages, the favorites list and checkout (the admin always sees every product).
+     * Products a customer may see or buy: those whose brand is switched ON and whose category is not
+     * switched OFF. A category code that is not in the table at all (an old odd value such as `Apple`)
+     * does not hide the product. The one rule behind the shop pages, the favorites list and checkout
+     * (the admin always sees every product).
      */
     public function scopeVisible(Builder $query): Builder
     {
-        return $query->whereHas('brand', fn (Builder $brand) => $brand->where('is_active', true));
+        return $query
+            ->whereHas('brand', fn (Builder $brand) => $brand->where('is_active', true))
+            ->whereNotIn('category', Category::where('is_active', false)->select('slug'));
     }
 
     protected function casts(): array
