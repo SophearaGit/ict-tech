@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SalesReportController;
@@ -82,6 +83,11 @@ Route::middleware('admin')->group(function () {
     Route::delete('/admin/brands/{brand}', [BrandController::class, 'destroy'])->name('admin-brands.destroy');
     Route::post('/admin/brands/{brand}/logo', [BrandController::class, 'storeLogo'])->name('admin-brands.logo.store');
     Route::delete('/admin/brands/{brand}/logo', [BrandController::class, 'destroyLogo'])->name('admin-brands.logo.destroy');
+
+    Route::get('/admin/categories', [CategoryController::class, 'index'])->name('admin-categories.index');
+    Route::post('/admin/categories', [CategoryController::class, 'store'])->name('admin-categories.store');
+    Route::put('/admin/categories/{category}', [CategoryController::class, 'update'])->name('admin-categories.update');
+    Route::delete('/admin/categories/{category}', [CategoryController::class, 'destroy'])->name('admin-categories.destroy');
 
     Route::get('/admin/orders', [OrderController::class, 'index'])->name('admin-orders.index');
     Route::put('/admin/orders/{order}', [OrderController::class, 'update'])->name('admin-orders.update');

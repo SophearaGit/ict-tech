@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Exceptions\LogoNotSaved;
+use App\Http\Controllers\Admin\Concerns\ValidatesUniqueNames;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Support\BrandLogoStorage;
-use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -17,6 +17,8 @@ use Throwable;
 
 class BrandController extends Controller
 {
+    use ValidatesUniqueNames;
+
     public function index(): JsonResponse
     {
         $brands = Brand::withCount('products')->get()
@@ -135,30 +137,10 @@ class BrandController extends Controller
         return response()->json($this->transform($brand->loadCount('products')));
     }
 
-    /**
-     * Rules for a new or renamed brand name. Uniqueness ignores case (and the brand being
-     * renamed) and is checked here with lower(name) so it behaves the same on MySQL and on
-     * the SQLite test database. Rename rules apply to the NEW name only: a legacy name the
-     * migration copied unchanged is never re-validated.
-     */
+    /** Rules for a new or renamed brand name (the shared rule, see ValidatesUniqueNames). */
     private function nameRules(?Brand $ignoring = null): array
     {
-        return [
-            'bail',
-            'required',
-            'string',
-            'max:50',
-            'regex:/^[\p{L}\p{N} .\-]+$/u',
-            function (string $attribute, mixed $value, Closure $fail) use ($ignoring) {
-                $taken = Brand::whereRaw('lower(name) = ?', [mb_strtolower((string) $value)])
-                    ->when($ignoring, fn ($query) => $query->whereKeyNot($ignoring->id))
-                    ->exists();
-
-                if ($taken) {
-                    $fail('That brand already exists.');
-                }
-            },
-        ];
+        return $this->uniqueNameRules(Brand::class, $ignoring, 'That brand already exists.');
     }
 
     /**
