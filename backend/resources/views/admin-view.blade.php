@@ -565,6 +565,10 @@
         </div>
         <input id="report-date" type="date" min="2000-01-01" max="2100-12-31" onchange="loadSalesReport()" aria-label="Report date" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all"/>
         <input id="report-month" type="month" min="2000-01" max="2100-12" onchange="loadSalesReport()" aria-label="Report month" class="hidden form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all"/>
+        {{-- Filled by sales-report.js from the report answer: every brand now and every brand ever sold. --}}
+        <select id="report-brand" onchange="setReportBrand(this.value)" aria-label="Report brand" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all cursor-pointer max-w-full sm:max-w-[14rem]">
+          <option value="">All brands</option>
+        </select>
         <div class="flex gap-2 lg:ml-auto">
           <button onclick="downloadSalesReportCsv()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">Download CSV</button>
           <button onclick="printSalesReport()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">Print</button>
@@ -598,7 +602,7 @@
 
       <div id="report-empty" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-16 dark:bg-neutral-700 dark:border-none">
         <div class="text-4xl mb-3">🧾</div>
-        <p class="text-gray-500 dark:text-white font-medium">No sales in this period</p>
+        <p id="report-empty-title" class="text-gray-500 dark:text-white font-medium">No sales in this period</p>
         <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Pick another day, week or month.</p>
       </div>
 

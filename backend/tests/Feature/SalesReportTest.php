@@ -24,9 +24,11 @@ class SalesReportTest extends TestCase
         return $this->actingAs($this->admin, 'admin');
     }
 
-    private function report(string $period, ?string $date = null): array
+    private function report(string $period, ?string $date = null, ?string $brand = null): array
     {
-        $query = ['period' => $period] + ($date === null ? [] : ['date' => $date]);
+        $query = ['period' => $period]
+            + ($date === null ? [] : ['date' => $date])
+            + ($brand === null ? [] : ['brand' => $brand]);
 
         return $this->actingAsAdmin()->getJson(route('admin-reports.sales', $query))->assertOk()->json();
     }
@@ -217,9 +219,131 @@ class SalesReportTest extends TestCase
         $this->assertSame(1, $data['totals']['orders']);
     }
 
+    /** One line of a sale: ['name', 'brand', 'price', 'qty'] as makeSale() wants it. */
+    private function line(string $brand, string $price, int $qty = 1, string $name = 'Item'): array
+    {
+        return ['name' => $name, 'brand' => $brand, 'price' => $price, 'qty' => $qty];
+    }
+
+    public function test_brand_filter_counts_only_that_brands_lines_in_every_figure(): void
+    {
+        $this->makeSale('2026-11-04 03:00:00', [                                   // Wed 4 Nov: Apple + Sony in one order
+            $this->line('Apple', '100.00', 1, 'iPhone'),
+            $this->line('Sony', '10.00', 2, 'Case'),
+        ]);
+        $this->makeSale('2026-11-06 03:00:00', [$this->line('Apple', '5.00', 3, 'Cable')], Order::STATUS_PAID); // Fri 6 Nov
+        $this->makeSale('2026-11-06 04:00:00', [$this->line('Sony', '50.00')]);                                 // Sony only
+        $this->makeSale('2026-11-07 03:00:00', [$this->line('Apple', '900.00')], Order::STATUS_CANCELLED);      // cancelled
+
+        $data = $this->report('week', '2026-11-04', 'Apple');
+
+        $this->assertSame('Apple', $data['brand']);
+        $this->assertSame(2, $data['totals']['orders']);
+        $this->assertSame(4, $data['totals']['items']);            // 1 iPhone + 3 Cables, not the Sony case
+        $this->assertEquals(115, $data['totals']['revenue']);      // 100 + 15, not the order's 120
+        $this->assertEquals(57.5, $data['totals']['averageOrder']);
+        $this->assertSame([0, 0, 1, 0, 1, 0, 0], array_column($data['days'], 'orders'));
+        $this->assertSame([0, 0, 1, 0, 3, 0, 0], array_column($data['days'], 'items'));
+        $this->assertEquals([0, 0, 100, 0, 15, 0, 0], array_column($data['days'], 'revenue'));
+        $this->assertSame(['iPhone', 'Cable'], array_column($data['products'], 'name'));
+        $this->assertSame(['Apple', 'Apple'], array_column($data['products'], 'brand'));
+    }
+
+    public function test_brand_filter_on_a_day_shows_each_orders_part_of_that_brand(): void
+    {
+        $mixed = $this->makeSale('2026-11-05 03:15:00', [
+            $this->line('Apple', '100.00', 1, 'iPhone'),
+            $this->line('Sony', '10.00', 2, 'Case'),
+        ], Order::STATUS_PAID);
+        $this->makeSale('2026-11-05 04:00:00', [$this->line('Sony', '50.00')]);
+
+        $all = $this->report('day', '2026-11-05');
+        $this->assertCount(2, $all['orders']);
+        $this->assertSame(3, $all['orders'][0]['items']);
+        $this->assertEquals(120, $all['orders'][0]['total']);
+        $this->assertNull($all['brand']);
+
+        $apple = $this->report('day', '2026-11-05', 'Apple');
+        $this->assertCount(1, $apple['orders']);
+        $this->assertSame($mixed->number, $apple['orders'][0]['number']);
+        $this->assertSame('paid', $apple['orders'][0]['status']);
+        $this->assertSame(1, $apple['orders'][0]['items']);
+        $this->assertEquals(100, $apple['orders'][0]['total']);
+        $this->assertSame(1, $apple['totals']['orders']);
+        $this->assertSame(1, $apple['totals']['items']);
+        $this->assertEquals(100, $apple['totals']['revenue']);
+    }
+
+    public function test_brand_filter_ignores_capital_letters(): void
+    {
+        $this->makeSale('2026-11-05 03:00:00', [$this->line('Apple', '10.00')]);
+        $this->makeSale('2026-11-05 04:00:00', [$this->line('APPLE', '20.00')]);
+        $this->makeSale('2026-11-05 05:00:00', [$this->line('Sony', '40.00')]);
+
+        foreach (['apple', 'APPLE', 'Apple'] as $typed) {
+            $data = $this->report('day', '2026-11-05', $typed);
+
+            $this->assertSame(2, $data['totals']['orders'], $typed);
+            $this->assertEquals(30, $data['totals']['revenue'], $typed);
+        }
+    }
+
+    public function test_a_brand_with_no_sales_in_the_period_gives_an_empty_report_not_an_error(): void
+    {
+        $this->makeBrand('Nokia');
+        $this->makeSale('2026-11-05 03:00:00', [$this->line('Apple', '10.00')]);
+        $this->makeSale('2026-10-05 03:00:00', [$this->line('Nokia', '10.00')]); // sold, but in another month
+
+        foreach (['Nokia', 'No Such Brand'] as $brand) {
+            $data = $this->report('week', '2026-11-04', $brand);
+
+            $this->assertSame($brand, $data['brand']);
+            $this->assertSame(0, $data['totals']['orders'], $brand);
+            $this->assertSame(0, $data['totals']['items'], $brand);
+            $this->assertEquals(0, $data['totals']['revenue'], $brand);
+            $this->assertEquals(0, $data['totals']['averageOrder'], $brand);
+            $this->assertCount(7, $data['days']);
+            $this->assertSame([], $data['orders']);
+            $this->assertSame([], $data['products']);
+        }
+    }
+
+    public function test_no_brand_or_an_empty_brand_is_the_whole_shop_exactly_as_before(): void
+    {
+        $this->makeSale('2026-11-04 03:00:00', [$this->line('Apple', '100.00'), $this->line('Sony', '10.00', 2)]);
+        $this->makeSale('2026-11-05 03:00:00', [$this->line('Sony', '50.00')]);
+
+        $whole = $this->report('week', '2026-11-04');
+        $empty = $this->actingAsAdmin()
+            ->getJson(route('admin-reports.sales', ['period' => 'week', 'date' => '2026-11-04', 'brand' => '']))
+            ->assertOk()->json();
+
+        $this->assertNull($whole['brand']);
+        $this->assertSame(2, $whole['totals']['orders']);
+        $this->assertEquals(170, $whole['totals']['revenue']);
+        $this->assertSame($whole, $empty);
+    }
+
+    public function test_the_brand_list_has_every_current_brand_and_every_brand_ever_sold_once(): void
+    {
+        $this->makeBrand('Zed');
+        $this->makeBrand('Acme');
+        $this->makeSale('2026-01-05 03:00:00', [                                      // months before the report period
+            $this->line('Apple', '1.00'), $this->line('apple', '1.00'), $this->line('ACME', '1.00'),
+        ]);
+        $this->makeSale('2026-01-06 03:00:00', [$this->line('Gone', '1.00')], Order::STATUS_CANCELLED);
+
+        $everyone = ['Acme', 'Apple', 'Gone', 'Zed'];
+
+        $this->assertSame($everyone, $this->report('week', '2026-11-04')['brands']);
+        $this->assertSame($everyone, $this->report('day', '2026-11-04', 'Apple')['brands']);
+    }
+
     public static function badRequests(): array
     {
         return [
+            'array brand' => [['period' => 'day', 'brand' => ['x']]],
+            'brand too long' => [['period' => 'day', 'brand' => str_repeat('a', 256)]],
             'missing period' => [[]],
             'unknown period' => [['period' => 'year']],
             'upper-case period' => [['period' => 'DAY']],

@@ -1,7 +1,9 @@
 /* ══════════════════════════════════════════════
    Sales Report — admin page (day / week / month)
-   Data: GET /admin/reports/sales?period=…&date=…           → JSON
-   CSV:  GET /admin/reports/sales/export?period=…&date=…    → file download
+   Data: GET /admin/reports/sales?period=…&date=…&brand=…           → JSON
+   CSV:  GET /admin/reports/sales/export?period=…&date=…&brand=…    → file download
+   The optional brand narrows every figure, table and the CSV to that brand's sales; it stays
+   chosen while the admin switches day / week / month.
    Reuses apiFetch, escapeHtml, ORDER_STATUS_BADGE and ORDER_PAYMENT_LABEL (admin.js) and
    formatAnalyticsMoney (analytics.js), so this file loads after both. Every value that comes
    from the server is escaped before it goes into innerHTML, and a failed request clears the
@@ -9,6 +11,7 @@
 ══════════════════════════════════════════════ */
 
 let reportPeriod = 'week';
+let reportBrand = ''; // '' = all brands
 let reportRequestId = 0; // a slow answer that was overtaken by a newer request is ignored
 
 const REPORT_BTN_ACTIVE = ['bg-white', 'text-gray-900', 'shadow-sm', 'dark:bg-neutral-800', 'dark:text-white'];
@@ -26,6 +29,20 @@ function setReportPeriod(period) {
   reportPeriod = period;
   renderReportPeriodButtons();
   loadSalesReport();
+}
+
+function setReportBrand(brand) {
+  reportBrand = brand;
+  loadSalesReport();
+}
+
+// The drop-down is rebuilt from every answer, so a new brand or a first sale shows up without a
+// page reload. Built with DOM calls (never innerHTML): a brand name is typed by an admin.
+function renderReportBrandOptions(brands) {
+  const select = document.getElementById('report-brand');
+  const names = brands.includes(reportBrand) || !reportBrand ? brands : [...brands, reportBrand];
+  select.replaceChildren(new Option('All brands', ''), ...names.map(name => new Option(name, name)));
+  select.value = reportBrand;
 }
 
 function renderReportPeriodButtons() {
@@ -52,6 +69,7 @@ function reportQuery() {
     date = document.getElementById('report-date').value;
   }
   if (date) params.set('date', date);
+  if (reportBrand) params.set('brand', reportBrand);
   return params.toString();
 }
 
@@ -90,20 +108,24 @@ function reportDateText(iso, options) {
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', options);
 }
 
+// The chosen brand is part of the title, so a printed report says whose sales it shows.
 function reportTitle(data) {
+  const brand = data.brand ? ` · ${data.brand}` : '';
   if (data.period === 'month') {
-    return 'Sales report — ' + reportDateText(data.from, { month: 'long', year: 'numeric' });
+    return 'Sales report — ' + reportDateText(data.from, { month: 'long', year: 'numeric' }) + brand;
   }
   if (data.period === 'day') {
-    return 'Sales report — ' + reportDateText(data.from, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    return 'Sales report — ' + reportDateText(data.from, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) + brand;
   }
   const sameYear = data.from.slice(0, 4) === data.to.slice(0, 4);
   const start = reportDateText(data.from, sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
-  return `Sales report — Week ${start} – ${reportDateText(data.to, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  return `Sales report — Week ${start} – ${reportDateText(data.to, { day: 'numeric', month: 'short', year: 'numeric' })}${brand}`;
 }
 
 function renderSalesReport(data) {
   document.getElementById('report-title').textContent = reportTitle(data);
+  renderReportBrandOptions(data.brands);
+  document.getElementById('report-empty-title').textContent = data.brand ? `No ${data.brand} sales in this period` : 'No sales in this period';
   document.getElementById('report-date').value = data.date;
   document.getElementById('report-month').value = data.date.slice(0, 7);
 

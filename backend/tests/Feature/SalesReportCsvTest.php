@@ -25,9 +25,11 @@ class SalesReportCsvTest extends TestCase
         return $this->actingAs($this->admin, 'admin');
     }
 
-    private function download(string $period, ?string $date = null): TestResponse
+    private function download(string $period, ?string $date = null, ?string $brand = null): TestResponse
     {
-        $query = ['period' => $period] + ($date === null ? [] : ['date' => $date]);
+        $query = ['period' => $period]
+            + ($date === null ? [] : ['date' => $date])
+            + ($brand === null ? [] : ['brand' => $brand]);
 
         return $this->actingAsAdmin()->get(route('admin-reports.sales.export', $query))->assertOk();
     }
@@ -173,9 +175,53 @@ class SalesReportCsvTest extends TestCase
         $this->assertSame(['Kept'], $this->productCells('2026-11-05'));
     }
 
+    public function test_brand_filter_exports_only_that_brands_rows_and_names_the_file_after_it(): void
+    {
+        $line = fn (string $name, string $brand, string $price = '10.00') => ['name' => $name, 'brand' => $brand, 'price' => $price, 'qty' => 1];
+        $mixed = $this->makeSale('2026-11-05 03:15:00', [$line('iPhone', 'Apple', '100.00'), $line('Case', 'Sony')]);
+        $this->makeSale('2026-11-05 04:00:00', [$line('Camera', 'Sony')]);
+        $this->makeSale('2026-11-05 05:00:00', [$line('Cable', 'APPLE', '5.00')], Order::STATUS_PAID);
+        $this->makeSale('2026-11-05 06:00:00', [$line('Cancelled Mac', 'Apple')], Order::STATUS_CANCELLED);
+
+        $response = $this->download('week', '2026-11-04', 'apple');
+        $rows = $this->rows($response);
+
+        $this->assertSame(SalesReport::CSV_HEADER, $rows[0]);
+        $this->assertSame(['iPhone', 'Cable'], array_column(array_slice($rows, 1), 5));
+        $this->assertSame(['Apple', 'APPLE'], array_column(array_slice($rows, 1), 6));
+        $this->assertSame(
+            ['2026-11-05', '10:15', $mixed->number, 'pending', 'cod', 'iPhone', 'Apple', '1', '100.00', '100.00'],
+            $rows[1],
+        );
+        $this->assertMatchesRegularExpression(
+            '/filename="?sales-week-2026-11-02-to-2026-11-08-apple\.csv"?$/',
+            $response->headers->get('Content-Disposition'),
+        );
+    }
+
+    public function test_brand_filter_with_a_brand_that_has_no_latin_letters_still_gets_a_usable_file_name(): void
+    {
+        $this->makeSale('2026-11-05 03:00:00', [['name' => 'Phone', 'brand' => 'ខ្មែរ', 'price' => '10.00', 'qty' => 1]]);
+
+        $response = $this->download('day', '2026-11-05', 'ខ្មែរ');
+
+        $this->assertSame(['Phone'], array_column(array_slice($this->rows($response), 1), 5));
+        $this->assertMatchesRegularExpression(
+            '/filename="?sales-day-2026-11-05-to-2026-11-05-brand\.csv"?$/',
+            $response->headers->get('Content-Disposition'),
+        );
+    }
+
+    public function test_a_brand_with_no_sales_exports_the_header_only(): void
+    {
+        $this->makeSale('2026-11-05 03:00:00', [['name' => 'Phone', 'brand' => 'Apple', 'price' => '10.00', 'qty' => 1]]);
+
+        $this->assertSame([SalesReport::CSV_HEADER], $this->rows($this->download('day', '2026-11-05', 'Nokia')));
+    }
+
     public function test_invalid_requests_get_422_json(): void
     {
-        foreach ([['period' => 'year'], ['period' => 'day', 'date' => '2026-02-30'], ['period' => 'day', 'date' => ['x']]] as $query) {
+        foreach ([['period' => 'year'], ['period' => 'day', 'date' => '2026-02-30'], ['period' => 'day', 'date' => ['x']], ['period' => 'day', 'brand' => ['x']]] as $query) {
             $this->actingAsAdmin()->get(route('admin-reports.sales.export', $query))
                 ->assertUnprocessable()->assertJsonStructure(['message', 'errors']);
         }
