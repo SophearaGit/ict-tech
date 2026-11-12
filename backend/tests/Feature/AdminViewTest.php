@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Admin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\MakesShopData;
 use Tests\TestCase;
@@ -128,5 +129,54 @@ class AdminViewTest extends TestCase
         ] as $rule) {
             $this->assertStringContainsString($rule, $print);
         }
+    }
+
+    public function test_an_owners_page_has_the_admins_page_and_shows_the_real_role(): void
+    {
+        $response = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('id="nav-admins"', false)
+            ->assertSee("showView('admins')", false)
+            ->assertSee('id="view-admins"', false)
+            ->assertSee('id="admin-add-name"', false)
+            ->assertSee('id="admin-add-email"', false)
+            ->assertSee('id="admin-add-password"', false)
+            ->assertSee('id="admin-add-password-toggle"', false)
+            ->assertSee('id="admins-tbody"', false)
+            ->assertSee('assets/js/admins.js', false)
+            ->assertSeeInOrder([
+                'id="view-admins"', '>Name</th>', '>Email</th>', '>Role</th>', '>Last sign-in</th>', '>Status</th>', '>Actions</th>',
+            ], false)
+            ->assertSee('id="admin-role">Owner</p>', false)
+            ->assertDontSee('Super Admin');
+    }
+
+    public function test_a_staff_members_page_has_no_admins_page_and_says_staff(): void
+    {
+        $response = $this->actingAs($this->makeStaff(), 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('id="admin-role">Staff</p>', false)
+            ->assertDontSee('Super Admin')
+            // Everything else is still there (staff can use every other page).
+            ->assertSee('id="nav-products"', false)
+            ->assertSee('id="nav-brands"', false)
+            ->assertSee('id="nav-categories"', false)
+            ->assertSee('id="nav-history"', false)
+            ->assertSee('id="nav-report"', false)
+            ->assertSee('id="view-brands"', false)
+            // The Admins item and page are not even sent to them.
+            ->assertDontSee('id="nav-admins"', false)
+            ->assertDontSee("showView('admins')", false)
+            ->assertDontSee('id="view-admins"', false)
+            ->assertDontSee('id="admin-add-email"', false);
+    }
+
+    public function test_an_admin_name_with_markup_is_shown_as_plain_text_in_the_sidebar(): void
+    {
+        $zed = Admin::create(['name' => '<i>Zed</i>', 'email' => 'zed@example.test', 'password' => 'S3cret-pass!'])->fresh();
+
+        $response = $this->actingAs($zed, 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('&lt;i&gt;Zed&lt;/i&gt;', false)->assertDontSee('<i>Zed</i>', false);
     }
 }

@@ -833,13 +833,18 @@ function confirmDelete() {
 
 /* ── Add product form ── */
 function showView(view) {
-  ['dashboard','products','inventory','add','history','messages','brands','categories','report'].forEach(v => {
-    document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
+  // The Admins page is only sent to owners; for anyone else asking for it changes nothing (no blank page).
+  if (!document.getElementById(`view-${view}`)) return;
+
+  ['dashboard','products','inventory','add','history','messages','brands','categories','admins','report'].forEach(v => {
+    const panel = document.getElementById(`view-${v}`);
+    if (!panel) return;
+    panel.classList.toggle('hidden', v !== view);
     const nav = document.getElementById(`nav-${v}`);
     if (nav) nav.classList.toggle('active', v === view);
   });
   currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands',categories:'Categories',report:'Sales Report'};
+  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands',categories:'Categories',admins:'Admins',report:'Sales Report'};
   document.getElementById('page-title').textContent = titles[view] || '';
   document.getElementById('topbar-search').classList.toggle('hidden', !['products','inventory','history'].includes(view));
 
@@ -848,6 +853,7 @@ function showView(view) {
   if (view === 'history') loadOrders(); // reload on every open so new orders appear
   if (view === 'brands') { renamingBrandId = null; renderBrandsTable(); loadBrands(); } // reload so product counts are current
   if (view === 'categories' && typeof initCategories === 'function') initCategories(); // categories.js loads after this file
+  if (view === 'admins' && typeof initAdmins === 'function') initAdmins(); // admins.js loads after this file
   if (view === 'report' && typeof initSalesReport === 'function') initSalesReport(); // sales-report.js loads after this file
 
   // Auto-close the mobile sidebar after navigating so its overlay doesn't

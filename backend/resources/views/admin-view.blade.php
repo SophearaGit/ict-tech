@@ -108,6 +108,13 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
       Categories
     </button>
+    {{-- Only owners are sent the Admins item and page. Staff also get 403 from the server if they type its address. --}}
+    @if (Auth::guard('admin')->user()->isOwner())
+    <button onclick="showView('admins')" id="nav-admins" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      Admins
+    </button>
+    @endif
     <button onclick="showView('messages')" id="nav-messages" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       Message
@@ -132,7 +139,7 @@
       <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-600">{{ substr(Auth::guard('admin')->user()->name, 0, 1) }}</div>
       <div>
         <p class="text-xs font-semibold text-gray-800 dark:text-white" id="admin-name">{{ Auth::guard('admin')->user()->name }}</p>
-        <p class="text-[10px] text-gray-400">Super Admin</p>
+        <p class="text-[10px] text-gray-600 dark:text-gray-300" id="admin-role">{{ ucfirst(Auth::guard('admin')->user()->role) }}</p>
       </div>
     </div>
     <form method="POST" action="{{ route('admin-logout') }}">
@@ -528,6 +535,39 @@
       </div>
     </div>
 
+    {{-- ──── ADMINS VIEW (owners only) ──── --}}
+    @if (Auth::guard('admin')->user()->isOwner())
+    <div id="view-admins" class="hidden">
+      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="p-5 border-b border-gray-100 dark:border-neutral-600">
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Add a staff admin. They sign in at the admin login with this email and password, and can use everything except this page. Tell them the password; they can change it with "My password".</p>
+          <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+            <input id="admin-add-name" type="text" maxlength="60" placeholder="Name, e.g. Dara" aria-label="Name" onkeydown="if (event.key === 'Enter') addAdmin()" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+            <input id="admin-add-email" type="email" maxlength="255" placeholder="Email, e.g. dara@example.com" aria-label="Email" autocomplete="off" onkeydown="if (event.key === 'Enter') addAdmin()" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+            <div class="flex min-w-0 flex-1 gap-2">
+              <input id="admin-add-password" type="password" maxlength="72" placeholder="Password (8 or more characters)" aria-label="Password" autocomplete="new-password" onkeydown="if (event.key === 'Enter') addAdmin()" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+              <button type="button" id="admin-add-password-toggle" onclick="toggleAddAdminPassword()" aria-pressed="false" class="shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition-colors">Show</button>
+            </div>
+            <button onclick="addAdmin()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Add Staff</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Name</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Email</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Role</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Last sign-in</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
+            </tr></thead>
+            <tbody id="admins-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    @endif
+
     <!-- ──── ORDERS VIEW (element ids keep their old "history" names) ──── -->
     <div id="view-history" class="hidden">
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
@@ -782,4 +822,5 @@
 <script src="{{ asset('assets/js/analytics.js') }}"></script>
 <script src="{{ asset('assets/js/sales-report.js') }}"></script>
 <script src="{{ asset('assets/js/categories.js') }}"></script>
+<script src="{{ asset('assets/js/admins.js') }}"></script>
 @endsection
