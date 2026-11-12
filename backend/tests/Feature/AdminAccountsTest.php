@@ -76,6 +76,18 @@ class AdminAccountsTest extends TestCase
         $this->assertTrue($other->fresh()->is_active);
     }
 
+    public function test_an_unknown_admin_id_does_not_reveal_which_ids_exist_to_guests_or_staff(): void
+    {
+        // A signed-out visitor and a staff member get the same answer as for a real id (redirect / 403),
+        // never a 404 that would tell them the id is free.
+        $this->putJson(route('admin-admins.update', 9999), ['is_active' => false])->assertRedirect(route('admin-login'));
+
+        $this->actingAs($this->makeStaff(), 'admin')
+            ->putJson(route('admin-admins.update', 9999), ['is_active' => false])
+            ->assertForbidden()
+            ->assertJsonPath('message', self::NOT_OWNER);
+    }
+
     public function test_index_lists_admins_oldest_first_with_the_exact_shape(): void
     {
         $owner = $this->makeAdmin();
@@ -282,6 +294,9 @@ class AdminAccountsTest extends TestCase
         $staff = $this->makeStaff();
 
         $this->actingAsOwner()->putJson(route('admin-admins.update', 9999), ['is_active' => false])->assertNotFound();
+        // Not a number at all: on MySQL "2abc" would otherwise be read as 2 (SQLite never does, so this guards production only).
+        $this->putJson('/admin/admins/'.$staff->id.'abc', ['is_active' => false])->assertNotFound();
+        $this->assertTrue($staff->fresh()->is_active);
         $this->deleteJson('/admin/admins/'.$staff->id)->assertStatus(405);
 
         $this->assertSame(2, Admin::count());

@@ -105,6 +105,7 @@ Route::middleware('admin')->group(function () {
     Route::middleware('owner')->group(function () {
         Route::get('/admin/admins', [AdminAccountController::class, 'index'])->name('admin-admins.index');
         Route::post('/admin/admins', [AdminAccountController::class, 'store'])->name('admin-admins.store');
-        Route::put('/admin/admins/{admin}', [AdminAccountController::class, 'update'])->name('admin-admins.update');
+        // whereNumber: MySQL reads "2abc" as 2, which would act on admin 2.
+        Route::put('/admin/admins/{admin}', [AdminAccountController::class, 'update'])->whereNumber('admin')->name('admin-admins.update');
     });
 });

@@ -55,8 +55,13 @@ class AdminAccountController extends Controller
      * Switch a staff admin ON/OFF and/or set a new password for them (at least one). Name, email and role are
      * never touched. An owner target is refused before the body is looked at.
      */
-    public function update(Request $request, Admin $admin): JsonResponse
+    public function update(Request $request, string $admin): JsonResponse
     {
+        // Looked up here, not by route-model binding: binding runs before the `admin` and `owner` middleware, so
+        // a signed-out visitor or a staff member would get a 404 for a free id and a redirect / 403 for a real one,
+        // telling them which admin ids exist. Now they are turned away first, whatever the id.
+        $admin = Admin::findOrFail($admin);
+
         if ($admin->isOwner()) {
             return response()->json(['message' => self::OWNER_TARGET], 403);
         }
