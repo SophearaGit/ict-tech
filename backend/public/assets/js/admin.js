@@ -36,6 +36,7 @@ let products = [];
 let currentView = 'dashboard';
 let tableFilter = 'all';
 let searchQ = '';
+let brandFilter = null; // the brand id chosen in the Brand drop-downs of the Products and Inventory pages (null = all brands)
 let editingId = null;
 let restockId = null;
 let deleteId = null;
@@ -152,20 +153,61 @@ function renderAlertsPanel() {
 }
 
 /* ── Products table ── */
-function renderProductsTable() {
-  let list = [...products];
-  if (tableFilter !== 'all') list = list.filter(p => statusOf(p) === tableFilter);
+// The Brand drop-down and the search box narrow the Products and the Inventory tables in the same way.
+// The brand is matched by id (a rename never breaks it); the search matches name, brand and category text.
+function narrowByBrandAndSearch(list) {
+  if (brandFilter !== null) list = list.filter(p => p.brandId === brandFilter);
   if (searchQ) {
     const q = searchQ.toLowerCase();
     list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)
       || p.category.toLowerCase().includes(q) || (p.categoryName || '').toLowerCase().includes(q));
   }
+  return list;
+}
+
+// Says why a table is empty: a brand with no products at all reads differently from "nothing matches your filter".
+function setEmptyProductsText(page) { // page: 'products' or 'inventory'
+  const brandHasNone = brandFilter !== null && !products.some(p => p.brandId === brandFilter);
+  document.getElementById(`${page}-empty-title`).textContent = brandHasNone ? 'No products for this brand' : 'No products found';
+  document.getElementById(`${page}-empty-hint`).textContent = brandHasNone
+    ? 'Add a product for this brand from Add Products.'
+    : (page === 'products' ? 'Try adjusting your filter or search.' : 'Try adjusting your brand or search.');
+}
+
+// One drop-down on each page, always showing the same choice. Every brand is offered, a switched-off one
+// labelled "(off)", because the admin must be able to see the products of any brand. Called whenever the brand list changes.
+function renderBrandFilters() {
+  let reset = false;
+  if (brandFilter !== null && !brands.some(b => b.id === brandFilter)) { brandFilter = null; reset = true; } // that brand was deleted
+  const options = '<option value="">All brands</option>'
+    + brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}${b.isActive ? '' : ' (off)'}</option>`).join('');
+  ['products-brand-filter', 'inventory-brand-filter'].forEach(id => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    select.innerHTML = options;
+    select.value = brandFilter === null ? '' : String(brandFilter);
+  });
+  if (reset) { renderProductsTable(); renderInventoryTable(); }
+}
+
+function setBrandFilter(value) {
+  brandFilter = value === '' ? null : Number(value);
+  renderBrandFilters(); // keeps the drop-down on the other page showing the same brand
+  renderProductsTable();
+  renderInventoryTable();
+}
+
+function renderProductsTable() {
+  let list = [...products];
+  if (tableFilter !== 'all') list = list.filter(p => statusOf(p) === tableFilter);
+  list = narrowByBrandAndSearch(list);
 
   const empty = document.getElementById('products-empty');
   const tbody = document.getElementById('products-tbody');
 
   if (list.length === 0) {
     tbody.innerHTML = '';
+    setEmptyProductsText('products');
     empty.classList.remove('hidden');
     return;
   }
@@ -219,8 +261,12 @@ function renderProductsTable() {
 /* ── Inventory table ── */
 function renderInventoryTable() {
   const tbody = document.getElementById('inventory-tbody');
-  const max = Math.max(...products.map(p => p.qty), 50);
-  tbody.innerHTML = [...products].sort((a,b) => a.qty - b.qty).map(p => {
+  const empty = document.getElementById('inventory-empty');
+  const max = Math.max(...products.map(p => p.qty), 50); // over every product, so the bars stay comparable while a brand is chosen
+  const list = narrowByBrandAndSearch([...products]).sort((a,b) => a.qty - b.qty);
+  empty.classList.toggle('hidden', list.length > 0);
+  if (list.length === 0) setEmptyProductsText('inventory');
+  tbody.innerHTML = list.map(p => {
     const pct = Math.round((p.qty / max) * 100);
     const barColor = statusOf(p) === 'out' ? 'bg-red-400' : statusOf(p) === 'low' ? 'bg-amber-400' : 'bg-green-400';
     return `
@@ -334,6 +380,7 @@ function renderBrandSelects() {
       + (withNew ? '<option value="__new__">+ Add new brand…</option>' : '');
     if ([...select.options].some(o => o.value === current)) select.value = current;
   });
+  renderBrandFilters(); // the Brand filters on the Products and Inventory pages follow the same brand list
 }
 
 function onBrandChange(select) {

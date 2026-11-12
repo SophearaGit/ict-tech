@@ -171,6 +171,21 @@ class AdminViewTest extends TestCase
             ->assertDontSee('id="admin-add-email"', false);
     }
 
+    public function test_the_products_and_inventory_pages_each_have_a_brand_filter(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+                // Each drop-down sits in its own page, above that page's table.
+                ->assertSeeInOrder([
+                    'id="view-products"', 'id="products-brand-filter"', 'id="products-tbody"', 'id="products-empty-title"',
+                    'id="view-inventory"', 'id="inventory-brand-filter"', 'id="inventory-tbody"', 'id="inventory-empty"', 'id="inventory-empty-title"',
+                ], false)
+                ->assertSee('onchange="setBrandFilter(this.value)"', false)
+                ->assertSee('aria-label="Filter products by brand"', false)
+                ->assertSee('aria-label="Filter inventory by brand"', false);
+        }
+    }
+
     public function test_every_admin_has_the_my_password_button_and_window(): void
     {
         foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {

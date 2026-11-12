@@ -334,11 +334,15 @@
     <!-- ──── PRODUCTS VIEW ──── -->
     <div id="view-products" class="hidden">
       <!-- Tabs -->
-      <div class="flex gap-0 border-b border-gray-200 mb-4">
+      <div class="flex flex-wrap items-end justify-between gap-x-3 border-b border-gray-200 mb-4">
+       <div class="flex gap-0">
         <button onclick="filterByStatus('all')" data-tab="all" class="tab-btn active-tab px-4 py-2.5 text-sm text-indigo-600">All</button>
         <button onclick="filterByStatus('in')" data-tab="in" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">In Stock</button>
         <button onclick="filterByStatus('low')" data-tab="low" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">Low Stock</button>
         <button onclick="filterByStatus('out')" data-tab="out" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">Out of Stock</button>
+       </div>
+        {{-- One brand choice shared with the Inventory page (see setBrandFilter in admin.js); options are filled by JavaScript from the brand list. --}}
+        <select id="products-brand-filter" onchange="setBrandFilter(this.value)" aria-label="Filter products by brand" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 mb-1.5 text-sm transition-all cursor-pointer max-w-full sm:max-w-[14rem]"><option value="">All brands</option></select>
       </div>
 
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
@@ -358,8 +362,8 @@
         </div>
         <div id="products-empty" class="hidden text-center py-16">
           <div class="text-4xl mb-3">📦</div>
-          <p class="text-gray-500 dark:text-white font-medium">No products found</p>
-          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your filter or search.</p>
+          <p id="products-empty-title" class="text-gray-500 dark:text-white font-medium">No products found</p>
+          <p id="products-empty-hint" class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your filter or search.</p>
         </div>
       </div>
     </div>
@@ -367,14 +371,18 @@
     <!-- ──── INVENTORY VIEW ──── -->
     <div id="view-inventory" class="hidden">
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-600 flex items-center justify-between">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-600 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="font-display font-bold text-gray-900 dark:text-white">Inventory Overview</h3>
             <p class="text-gray-400 dark:text-gray-300 text-xs mt-0.5">Click "Restock" on any item to update quantity</p>
           </div>
-          <button onclick="showBulkRestock()" class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">
-            Bulk Restock All
-          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="inventory-brand-filter" onchange="setBrandFilter(this.value)" aria-label="Filter inventory by brand" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm transition-all cursor-pointer max-w-full sm:max-w-[14rem]"><option value="">All brands</option></select>
+            {{-- Restocks every out-of-stock product of every brand, whatever brand is chosen above. --}}
+            <button onclick="showBulkRestock()" class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">
+              Bulk Restock All
+            </button>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full">
@@ -388,6 +396,11 @@
             </tr></thead>
             <tbody id="inventory-tbody"></tbody>
           </table>
+        </div>
+        <div id="inventory-empty" class="hidden text-center py-16">
+          <div class="text-4xl mb-3">📦</div>
+          <p id="inventory-empty-title" class="text-gray-500 dark:text-white font-medium">No products found</p>
+          <p id="inventory-empty-hint" class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your brand or search.</p>
         </div>
       </div>
     </div>
