@@ -13,12 +13,15 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        Admin::updateOrCreate(
+        $admin = Admin::updateOrCreate(
             ['email' => env('ADMIN_EMAIL', 'admin@example.com')],
             [
                 'name' => env('ADMIN_NAME', 'Admin'),
                 'password' => Hash::make(env('ADMIN_PASSWORD', 'password')),
             ]
         );
+
+        // `role` is not mass-assignable, so updateOrCreate would drop it: the account made here is the owner.
+        $admin->forceFill(['role' => Admin::ROLE_OWNER])->save();
     }
 }

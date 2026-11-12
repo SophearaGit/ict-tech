@@ -73,9 +73,13 @@ class CategoriesTableTest extends TestCase
     {
         // Through the real rollback command, which records it: DatabaseMigrations rolls everything back
         // again when the test ends, and a hand-called down() would make that second rollback fail.
+        // Newer migrations (the admin roles, and any later ones) sit on top of this one, so roll back one step
+        // at a time until the table is gone instead of assuming this migration is the newest.
         $this->assertTrue(Schema::hasTable('categories'));
 
-        $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+        for ($i = 0; $i < 20 && Schema::hasTable('categories'); $i++) {
+            $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+        }
 
         $this->assertFalse(Schema::hasTable('categories'));
     }
