@@ -171,6 +171,21 @@ class AdminViewTest extends TestCase
             ->assertDontSee('id="admin-add-email"', false);
     }
 
+    public function test_every_admin_has_the_my_password_button_and_window(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+                ->assertSee('id="mypw-btn"', false)
+                ->assertSee('id="mypw-modal"', false)
+                ->assertSee('id="mypw-current"', false)
+                ->assertSee('id="mypw-new"', false)
+                ->assertSee('id="mypw-repeat"', false)
+                ->assertSee('id="mypw-error"', false)
+                ->assertSee('openMyPassword()', false)
+                ->assertSee('assets/js/admins.js', false);
+        }
+    }
+
     public function test_an_admin_name_with_markup_is_shown_as_plain_text_in_the_sidebar(): void
     {
         $zed = Admin::create(['name' => '<i>Zed</i>', 'email' => 'zed@example.test', 'password' => 'S3cret-pass!'])->fresh();

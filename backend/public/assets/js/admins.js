@@ -161,3 +161,57 @@ function saveResetPassword(id) {
     })
     .catch(e => toastError(e, 'Failed to change the password.'));
 }
+
+/* ── My password (every admin, owner or staff) ──
+   The server checks the current password. A session that is already open on another device stays open;
+   to cut someone off, the owner switches them OFF. The three boxes are emptied whenever the window opens
+   or closes, so a typed password never lingers on the page. */
+
+let savingMyPassword = false;
+
+function showMyPasswordError(message) {
+  const el = document.getElementById('mypw-error');
+  el.textContent = message; // plain text, never markup
+  el.classList.toggle('hidden', !message);
+}
+
+function clearMyPasswordFields() {
+  ['mypw-current', 'mypw-new', 'mypw-repeat'].forEach(id => { document.getElementById(id).value = ''; });
+}
+
+function openMyPassword() {
+  clearMyPasswordFields();
+  showMyPasswordError('');
+  document.getElementById('mypw-modal').classList.remove('hidden');
+  // On a phone the sidebar overlay would sit over the window, so close it first.
+  if (window.innerWidth < 1024 && typeof closeSidebar === 'function') closeSidebar();
+  document.getElementById('mypw-current').focus();
+}
+
+function closeMyPassword() {
+  clearMyPasswordFields();
+  showMyPasswordError('');
+  document.getElementById('mypw-modal').classList.add('hidden');
+}
+
+function saveMyPassword() {
+  if (savingMyPassword) return;
+  const current = document.getElementById('mypw-current').value;
+  const next = document.getElementById('mypw-new').value;
+  const repeat = document.getElementById('mypw-repeat').value;
+  if (!current) { showMyPasswordError('Type your current password.'); return; }
+  if (!next) { showMyPasswordError('Type a new password.'); return; }
+  if (next !== repeat) { showMyPasswordError('The two new passwords do not match.'); return; }
+
+  savingMyPassword = true;
+  apiFetch('/admin/account/password', {
+    method: 'PUT',
+    body: JSON.stringify({ current_password: current, password: next, password_confirmation: repeat }),
+  })
+    .then(() => { closeMyPassword(); toast('Your password was changed.'); })
+    .catch(e => showMyPasswordError((e && e.message) || 'Could not change the password.'))
+    .finally(() => { savingMyPassword = false; });
+}
+
+// Escape closes the window from any of its boxes.
+document.getElementById('mypw-modal').addEventListener('keydown', e => { if (e.key === 'Escape') closeMyPassword(); });

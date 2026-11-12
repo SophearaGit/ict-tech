@@ -142,12 +142,18 @@
         <p class="text-[10px] text-gray-600 dark:text-gray-300" id="admin-role">{{ ucfirst(Auth::guard('admin')->user()->role) }}</p>
       </div>
     </div>
-    <form method="POST" action="{{ route('admin-logout') }}">
-      @csrf
-      <button type="submit" title="Logout" class="glass-icon-btn border border-transparent p-1.5 rounded-lg transition-colors text-gray-400 hover:text-red-500">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+    <div class="flex items-center gap-1">
+      {{-- Every admin, owner or staff, can change their own password. --}}
+      <button type="button" id="mypw-btn" onclick="openMyPassword()" title="My password" aria-label="My password" class="glass-icon-btn border border-transparent p-1.5 rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-indigo-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
       </button>
-    </form>
+      <form method="POST" action="{{ route('admin-logout') }}">
+        @csrf
+        <button type="submit" title="Logout" class="glass-icon-btn border border-transparent p-1.5 rounded-lg transition-colors text-gray-400 hover:text-red-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </form>
+    </div>
   </div>
 </aside>
 
@@ -786,6 +792,37 @@
       <button onclick="confirmRestock()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">Confirm Restock</button>
       <button onclick="closeRestockModal()" class="px-4 py-2.5 bg-gray-100 text-gray-700 dark:bg-neutral-600 dark:text-white font-semibold rounded-xl text-sm">Cancel</button>
     </div>
+  </div>
+</div>
+
+<!-- My password modal (every admin) -->
+<div id="mypw-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mypw-title">
+  <div class="modal-card glass-panel bg-white dark:bg-neutral-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-none">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="mypw-title" class="font-display font-bold text-gray-900 dark:text-white">My password</h3>
+      <button type="button" onclick="closeMyPassword()" aria-label="Close" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors">
+        <svg class="w-4 h-4 text-gray-500 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form onsubmit="saveMyPassword(); return false;" class="space-y-3" autocomplete="off">
+      <div>
+        <label for="mypw-current" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1">Current password</label>
+        <input id="mypw-current" type="password" maxlength="72" autocomplete="current-password" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+      </div>
+      <div>
+        <label for="mypw-new" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1">New password</label>
+        <input id="mypw-new" type="password" maxlength="72" placeholder="8 or more characters" autocomplete="new-password" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+      </div>
+      <div>
+        <label for="mypw-repeat" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1">Repeat new password</label>
+        <input id="mypw-repeat" type="password" maxlength="72" autocomplete="new-password" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+      </div>
+      <p id="mypw-error" role="alert" class="hidden text-sm font-medium text-red-900 dark:text-red-300"></p>
+      <div class="flex gap-3 pt-1">
+        <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">Save password</button>
+        <button type="button" onclick="closeMyPassword()" class="px-4 py-2.5 bg-gray-100 text-gray-700 dark:bg-neutral-600 dark:text-white font-semibold rounded-xl text-sm">Cancel</button>
+      </div>
+    </form>
   </div>
 </div>
 
