@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\MyPasswordController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SalesReportController;
@@ -96,6 +97,9 @@ Route::middleware('admin')->group(function () {
 
     Route::get('/admin/reports/sales', [SalesReportController::class, 'show'])->name('admin-reports.sales');
     Route::get('/admin/reports/sales/export', [SalesReportController::class, 'export'])->name('admin-reports.sales.export');
+
+    // Every admin (owner or staff) can change their own password.
+    Route::put('/admin/account/password', [MyPasswordController::class, 'update'])->name('admin-account.password');
 
     // Owner only: staff get 403 here even when they type the address. There is deliberately no delete route.
     Route::middleware('owner')->group(function () {
