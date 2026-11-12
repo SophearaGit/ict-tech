@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -95,4 +96,11 @@ Route::middleware('admin')->group(function () {
 
     Route::get('/admin/reports/sales', [SalesReportController::class, 'show'])->name('admin-reports.sales');
     Route::get('/admin/reports/sales/export', [SalesReportController::class, 'export'])->name('admin-reports.sales.export');
+
+    // Owner only: staff get 403 here even when they type the address. There is deliberately no delete route.
+    Route::middleware('owner')->group(function () {
+        Route::get('/admin/admins', [AdminAccountController::class, 'index'])->name('admin-admins.index');
+        Route::post('/admin/admins', [AdminAccountController::class, 'store'])->name('admin-admins.store');
+        Route::put('/admin/admins/{admin}', [AdminAccountController::class, 'update'])->name('admin-admins.update');
+    });
 });
