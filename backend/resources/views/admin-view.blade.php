@@ -820,15 +820,24 @@
     <form onsubmit="saveMyPassword(); return false;" class="space-y-3" autocomplete="off">
       <div>
         <label for="mypw-current" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1">Current password</label>
-        <input id="mypw-current" type="password" maxlength="72" autocomplete="current-password" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+        <div class="flex gap-2">
+          <input id="mypw-current" type="password" maxlength="72" autocomplete="current-password" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+          <button type="button" id="mypw-current-toggle" onclick="togglePasswordField('mypw-current', this)" aria-pressed="false" aria-controls="mypw-current" aria-label="Show current password" class="shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition-colors">Show</button>
+        </div>
       </div>
       <div>
         <label for="mypw-new" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1">New password</label>
-        <input id="mypw-new" type="password" maxlength="72" placeholder="8 or more characters" autocomplete="new-password" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+        <div class="flex gap-2">
+          <input id="mypw-new" type="password" maxlength="72" placeholder="8 or more characters" autocomplete="new-password" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+          <button type="button" id="mypw-new-toggle" onclick="togglePasswordField('mypw-new', this)" aria-pressed="false" aria-controls="mypw-new" aria-label="Show new password" class="shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition-colors">Show</button>
+        </div>
       </div>
       <div>
         <label for="mypw-repeat" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1">Repeat new password</label>
-        <input id="mypw-repeat" type="password" maxlength="72" autocomplete="new-password" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+        <div class="flex gap-2">
+          <input id="mypw-repeat" type="password" maxlength="72" autocomplete="new-password" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+          <button type="button" id="mypw-repeat-toggle" onclick="togglePasswordField('mypw-repeat', this)" aria-pressed="false" aria-controls="mypw-repeat" aria-label="Show repeat new password" class="shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition-colors">Show</button>
+        </div>
       </div>
       <p id="mypw-error" role="alert" class="hidden text-sm font-medium text-red-900 dark:text-red-300"></p>
       <div class="flex gap-3 pt-1">

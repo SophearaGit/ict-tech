@@ -175,8 +175,16 @@ function showMyPasswordError(message) {
   el.classList.toggle('hidden', !message);
 }
 
+// Empty the three boxes and hide them again, so the window never reopens with a password showing.
 function clearMyPasswordFields() {
-  ['mypw-current', 'mypw-new', 'mypw-repeat'].forEach(id => { document.getElementById(id).value = ''; });
+  ['mypw-current', 'mypw-new', 'mypw-repeat'].forEach(id => {
+    const input = document.getElementById(id);
+    input.value = '';
+    input.type = 'password';
+    const toggle = document.getElementById(id + '-toggle');
+    toggle.textContent = 'Show';
+    toggle.setAttribute('aria-pressed', 'false');
+  });
 }
 
 function openMyPassword() {

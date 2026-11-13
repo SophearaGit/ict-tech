@@ -201,6 +201,26 @@ class AdminViewTest extends TestCase
         }
     }
 
+    public function test_each_of_the_three_my_password_boxes_has_its_own_show_button(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $response = $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk();
+
+            // Each button sits right after its own box, so Show on one box never opens another.
+            $response->assertSeeInOrder([
+                'id="mypw-current"', 'id="mypw-current-toggle"',
+                'id="mypw-new"', 'id="mypw-new-toggle"',
+                'id="mypw-repeat"', 'id="mypw-repeat-toggle"',
+                'id="mypw-error"',
+            ], false);
+
+            foreach (['current', 'new', 'repeat'] as $box) {
+                $response->assertSee("onclick=\"togglePasswordField('mypw-{$box}', this)\"", false)
+                    ->assertSee("aria-controls=\"mypw-{$box}\"", false);
+            }
+        }
+    }
+
     public function test_an_admin_name_with_markup_is_shown_as_plain_text_in_the_sidebar(): void
     {
         $zed = Admin::create(['name' => '<i>Zed</i>', 'email' => 'zed@example.test', 'password' => 'S3cret-pass!'])->fresh();
