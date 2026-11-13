@@ -90,10 +90,6 @@
     <button onclick="showView('products')" id="nav-products" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
       Products
-    </button>
-    <button onclick="showView('inventory')" id="nav-inventory" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Inventory
       <span id="low-stock-badge" class="ml-auto bg-amber-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden"></span>
     </button>
     <button onclick="showView('add')" id="nav-add" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
@@ -341,8 +337,12 @@
         <button onclick="filterByStatus('low')" data-tab="low" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">Low Stock</button>
         <button onclick="filterByStatus('out')" data-tab="out" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">Out of Stock</button>
        </div>
-        {{-- One brand choice shared with the Inventory page (see setBrandFilter in admin.js); options are filled by JavaScript from the brand list. --}}
-        <select id="products-brand-filter" onchange="setBrandFilter(this.value)" aria-label="Filter products by brand" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 mb-1.5 text-sm transition-all cursor-pointer max-w-full sm:max-w-[14rem]"><option value="">All brands</option></select>
+        <div class="flex flex-wrap items-center gap-2 mb-1.5">
+          {{-- The options are filled by JavaScript from the brand list (see renderBrandFilters in admin.js). --}}
+          <select id="products-brand-filter" onchange="setBrandFilter(this.value)" aria-label="Filter products by brand" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm transition-all cursor-pointer max-w-full sm:max-w-[14rem]"><option value="">All brands</option></select>
+          {{-- Restocks every out-of-stock product of every brand, whatever brand is chosen on the left. --}}
+          <button type="button" onclick="showBulkRestock()" title="Sets every out-of-stock product, of every brand, to 20" class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-100 transition-colors">Bulk Restock All</button>
+        </div>
       </div>
 
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
@@ -364,43 +364,6 @@
           <div class="text-4xl mb-3">📦</div>
           <p id="products-empty-title" class="text-gray-500 dark:text-white font-medium">No products found</p>
           <p id="products-empty-hint" class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your filter or search.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ──── INVENTORY VIEW ──── -->
-    <div id="view-inventory" class="hidden">
-      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-600 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 class="font-display font-bold text-gray-900 dark:text-white">Inventory Overview</h3>
-            <p class="text-gray-400 dark:text-gray-300 text-xs mt-0.5">Click "Restock" on any item to update quantity</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <select id="inventory-brand-filter" onchange="setBrandFilter(this.value)" aria-label="Filter inventory by brand" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm transition-all cursor-pointer max-w-full sm:max-w-[14rem]"><option value="">All brands</option></select>
-            {{-- Restocks every out-of-stock product of every brand, whatever brand is chosen above. --}}
-            <button onclick="showBulkRestock()" class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">
-              Bulk Restock All
-            </button>
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead><tr class="text-left bg-gray-50/50 dark:bg-neutral-700 border-b border-gray-100 dark:border-neutral-600">
-              <th class="px-5 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Product</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide hidden sm:table-cell dark:text-white">Brand</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Current Qty</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Status</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Stock Bar</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Action</th>
-            </tr></thead>
-            <tbody id="inventory-tbody"></tbody>
-          </table>
-        </div>
-        <div id="inventory-empty" class="hidden text-center py-16">
-          <div class="text-4xl mb-3">📦</div>
-          <p id="inventory-empty-title" class="text-gray-500 dark:text-white font-medium">No products found</p>
-          <p id="inventory-empty-hint" class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your brand or search.</p>
         </div>
       </div>
     </div>

@@ -171,19 +171,37 @@ class AdminViewTest extends TestCase
             ->assertDontSee('id="admin-add-email"', false);
     }
 
-    public function test_the_products_and_inventory_pages_each_have_a_brand_filter(): void
+    public function test_the_products_page_has_the_brand_filter_and_bulk_restock_above_its_table(): void
     {
         foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
             $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
-                // Each drop-down sits in its own page, above that page's table.
                 ->assertSeeInOrder([
-                    'id="view-products"', 'id="products-brand-filter"', 'id="products-tbody"', 'id="products-empty-title"',
-                    'id="view-inventory"', 'id="inventory-brand-filter"', 'id="inventory-tbody"', 'id="inventory-empty"', 'id="inventory-empty-title"',
+                    'id="view-products"', 'id="products-brand-filter"', 'onclick="showBulkRestock()"', 'id="products-tbody"', 'id="products-empty-title"',
                 ], false)
                 ->assertSee('onchange="setBrandFilter(this.value)"', false)
                 ->assertSee('aria-label="Filter products by brand"', false)
-                ->assertSee('aria-label="Filter inventory by brand"', false);
+                // The button says in words that it ignores the brand chosen next to it.
+                ->assertSee('title="Sets every out-of-stock product, of every brand, to 20"', false);
         }
+    }
+
+    public function test_there_is_no_separate_inventory_page_any_more(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+                ->assertDontSee('id="nav-inventory"', false)
+                ->assertDontSee("showView('inventory')", false)
+                ->assertDontSee('id="view-inventory"', false)
+                ->assertDontSee('id="inventory-', false)
+                ->assertDontSee('Inventory Overview');
+        }
+    }
+
+    public function test_the_low_stock_count_sits_on_the_products_menu_item(): void
+    {
+        $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk()
+            // Nothing sits between the Products and Add Products buttons, so the badge is inside the Products one.
+            ->assertSeeInOrder(['id="nav-products"', 'id="low-stock-badge"', 'id="nav-add"'], false);
     }
 
     public function test_every_admin_has_the_my_password_button_and_window(): void

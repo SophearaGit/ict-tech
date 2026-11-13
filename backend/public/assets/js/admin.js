@@ -36,7 +36,7 @@ let products = [];
 let currentView = 'dashboard';
 let tableFilter = 'all';
 let searchQ = '';
-let brandFilter = null; // the brand id chosen in the Brand drop-downs of the Products and Inventory pages (null = all brands)
+let brandFilter = null; // the brand id chosen in the Brand drop-down of the Products page (null = all brands)
 let editingId = null;
 let restockId = null;
 let deleteId = null;
@@ -54,6 +54,16 @@ function statusBadge(p) {
   if (s === 'out') return `<span class="badge-out text-[10px] font-semibold px-2 py-0.5 rounded-full">Out of Stock</span>`;
   if (s === 'low') return `<span class="badge-low text-[10px] font-semibold px-2 py-0.5 rounded-full">Low Stock</span>`;
   return `<span class="badge-in text-[10px] font-semibold px-2 py-0.5 rounded-full">In Stock</span>`;
+}
+
+// A thin bar under the quantity: how full the stock is compared with the biggest stock (green, amber or red like the badge).
+// It is only a picture; the number and the status badge say the same in words, so screen readers skip it.
+function stockBarHtml(p, maxQty) {
+  const pct = Math.round((p.qty / maxQty) * 100);
+  const color = statusOf(p) === 'out' ? 'bg-red-400' : statusOf(p) === 'low' ? 'bg-amber-400' : 'bg-green-400';
+  return `<div class="stock-bar mt-1.5 w-full max-w-[7rem] bg-gray-100 dark:bg-neutral-600 rounded-full h-1.5 overflow-hidden" aria-hidden="true">
+          <div class="${color} h-1.5 rounded-full transition-all duration-500" style="width:${pct}%"></div>
+        </div>`;
 }
 
 // The brand name (escaped), plus a small tag when the product's brand is switched OFF (hidden from the shop).
@@ -89,7 +99,6 @@ function refreshAll() {
   renderRecentTable();
   renderAlertsPanel();
   renderProductsTable();
-  renderInventoryTable();
   updateLowBadge();
   if (currentView === 'brands') renderBrandsTable();
 }
@@ -153,7 +162,7 @@ function renderAlertsPanel() {
 }
 
 /* ── Products table ── */
-// The Brand drop-down and the search box narrow the Products and the Inventory tables in the same way.
+// The Brand drop-down and the search box narrow the Products table.
 // The brand is matched by id (a rename never breaks it); the search matches name, brand and category text.
 function narrowByBrandAndSearch(list) {
   if (brandFilter !== null) list = list.filter(p => p.brandId === brandFilter);
@@ -166,35 +175,32 @@ function narrowByBrandAndSearch(list) {
 }
 
 // Says why a table is empty: a brand with no products at all reads differently from "nothing matches your filter".
-function setEmptyProductsText(page) { // page: 'products' or 'inventory'
+function setEmptyProductsText() {
   const brandHasNone = brandFilter !== null && !products.some(p => p.brandId === brandFilter);
-  document.getElementById(`${page}-empty-title`).textContent = brandHasNone ? 'No products for this brand' : 'No products found';
-  document.getElementById(`${page}-empty-hint`).textContent = brandHasNone
+  document.getElementById('products-empty-title').textContent = brandHasNone ? 'No products for this brand' : 'No products found';
+  document.getElementById('products-empty-hint').textContent = brandHasNone
     ? 'Add a product for this brand from Add Products.'
-    : (page === 'products' ? 'Try adjusting your filter or search.' : 'Try adjusting your brand or search.');
+    : 'Try adjusting your filter or search.';
 }
 
-// One drop-down on each page, always showing the same choice. Every brand is offered, a switched-off one
-// labelled "(off)", because the admin must be able to see the products of any brand. Called whenever the brand list changes.
+// Fills the Brand drop-down. Every brand is offered, a switched-off one labelled "(off)", because the admin
+// must be able to see the products of any brand. Called whenever the brand list changes.
 function renderBrandFilters() {
   let reset = false;
   if (brandFilter !== null && !brands.some(b => b.id === brandFilter)) { brandFilter = null; reset = true; } // that brand was deleted
-  const options = '<option value="">All brands</option>'
-    + brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}${b.isActive ? '' : ' (off)'}</option>`).join('');
-  ['products-brand-filter', 'inventory-brand-filter'].forEach(id => {
-    const select = document.getElementById(id);
-    if (!select) return;
-    select.innerHTML = options;
+  const select = document.getElementById('products-brand-filter');
+  if (select) {
+    select.innerHTML = '<option value="">All brands</option>'
+      + brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}${b.isActive ? '' : ' (off)'}</option>`).join('');
     select.value = brandFilter === null ? '' : String(brandFilter);
-  });
-  if (reset) { renderProductsTable(); renderInventoryTable(); }
+  }
+  if (reset) renderProductsTable();
 }
 
 function setBrandFilter(value) {
   brandFilter = value === '' ? null : Number(value);
-  renderBrandFilters(); // keeps the drop-down on the other page showing the same brand
+  renderBrandFilters();
   renderProductsTable();
-  renderInventoryTable();
 }
 
 function renderProductsTable() {
@@ -207,11 +213,14 @@ function renderProductsTable() {
 
   if (list.length === 0) {
     tbody.innerHTML = '';
-    setEmptyProductsText('products');
+    setEmptyProductsText();
     empty.classList.remove('hidden');
     return;
   }
   empty.classList.add('hidden');
+
+  // The stock bar is measured against the biggest stock of ALL products, so bars stay comparable while a brand is chosen.
+  const maxQty = Math.max(...products.map(p => p.qty), 50);
 
   tbody.innerHTML = list.map(p => `
     <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0">
@@ -237,6 +246,7 @@ function renderProductsTable() {
               class="w-6 h-6 rounded-md bg-gray-100 hover:bg-green-100 hover:text-green-600 text-gray-600 flex items-center justify-center text-sm font-bold transition-colors">+</button>
           </div>
         </div>
+        ${stockBarHtml(p, maxQty)}
       </td>
       <td class="px-3 py-3.5">${statusBadge(p)}</td>
       <td class="px-3 py-3.5">
@@ -256,42 +266,6 @@ function renderProductsTable() {
         </div>
       </td>
     </tr>`).join('');
-}
-
-/* ── Inventory table ── */
-function renderInventoryTable() {
-  const tbody = document.getElementById('inventory-tbody');
-  const empty = document.getElementById('inventory-empty');
-  const max = Math.max(...products.map(p => p.qty), 50); // over every product, so the bars stay comparable while a brand is chosen
-  const list = narrowByBrandAndSearch([...products]).sort((a,b) => a.qty - b.qty);
-  empty.classList.toggle('hidden', list.length > 0);
-  if (list.length === 0) setEmptyProductsText('inventory');
-  tbody.innerHTML = list.map(p => {
-    const pct = Math.round((p.qty / max) * 100);
-    const barColor = statusOf(p) === 'out' ? 'bg-red-400' : statusOf(p) === 'low' ? 'bg-amber-400' : 'bg-green-400';
-    return `
-    <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0">
-      <td class="px-5 py-3.5">
-        <div class="flex items-center gap-2">
-          <p class="text-sm font-medium text-gray-800 dark:text-white">${p.name}</p>
-        </div>
-      </td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${brandCellHtml(p)}</td>
-      <td class="px-3 py-3.5 text-sm font-bold text-gray-900 dark:text-white">${p.qty}</td>
-      <td class="px-3 py-3.5">${statusBadge(p)}</td>
-      <td class="px-3 py-3.5 w-36 hidden md:table-cell">
-        <div class="bg-gray-100 dark:bg-neutral-600 rounded-full h-2 overflow-hidden">
-          <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width:${pct}%"></div>
-        </div>
-      </td>
-      <td class="px-3 py-3.5">
-        <button onclick="openRestock('${p.id}')"
-          class="text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
-          Restock
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
 }
 
 /* ── Contact messages ── */
@@ -380,7 +354,7 @@ function renderBrandSelects() {
       + (withNew ? '<option value="__new__">+ Add new brand…</option>' : '');
     if ([...select.options].some(o => o.value === current)) select.value = current;
   });
-  renderBrandFilters(); // the Brand filters on the Products and Inventory pages follow the same brand list
+  renderBrandFilters(); // the Brand filter on the Products page follows the same brand list
 }
 
 function onBrandChange(select) {
@@ -498,7 +472,7 @@ function saveRenameBrand(id) {
       if (b) Object.assign(b, updated);
       sortBrands();
       renamingBrandId = null;
-      // Products carry the brand name, so the product/inventory tables must show the new one too.
+      // Products carry the brand name, so the products table must show the new one too.
       products.forEach(p => { if (p.brandId === id) p.brand = updated.name; });
       renderBrandSelects();
       refreshAll();
@@ -713,7 +687,7 @@ function changeOrderStatus(id, status, btn) {
       if (i !== -1) orders[i] = res.order;
       renderHistoryTable();
       toast(`${escapeHtml(res.order.number)} marked ${status}`);
-      if (status === 'cancelled') init(); // stock went back up — refresh the product/inventory numbers
+      if (status === 'cancelled') init(); // stock went back up — refresh the product numbers
     })
     .catch(e => {
       if (btn) btn.disabled = false;
@@ -750,7 +724,6 @@ function filterByStatus(status) {
 function filterTable(q) {
   searchQ = q;
   renderProductsTable();
-  renderInventoryTable();
   renderHistoryTable();
 }
 
@@ -883,7 +856,7 @@ function showView(view) {
   // The Admins page is only sent to owners; for anyone else asking for it changes nothing (no blank page).
   if (!document.getElementById(`view-${view}`)) return;
 
-  ['dashboard','products','inventory','add','history','messages','brands','categories','admins','report'].forEach(v => {
+  ['dashboard','products','add','history','messages','brands','categories','admins','report'].forEach(v => {
     const panel = document.getElementById(`view-${v}`);
     if (!panel) return;
     panel.classList.toggle('hidden', v !== view);
@@ -891,9 +864,9 @@ function showView(view) {
     if (nav) nav.classList.toggle('active', v === view);
   });
   currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands',categories:'Categories',admins:'Admins',report:'Sales Report'};
+  const titles = {dashboard:'Dashboard',products:'Products',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands',categories:'Categories',admins:'Admins',report:'Sales Report'};
   document.getElementById('page-title').textContent = titles[view] || '';
-  document.getElementById('topbar-search').classList.toggle('hidden', !['products','inventory','history'].includes(view));
+  document.getElementById('topbar-search').classList.toggle('hidden', !['products','history'].includes(view));
 
   if (view === 'add' && !editingId) resetAddForm();
   if (view === 'messages' && !messagesLoaded) { messagesLoaded = true; loadMessages(); }
