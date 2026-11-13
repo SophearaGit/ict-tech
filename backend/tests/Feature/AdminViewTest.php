@@ -204,7 +204,7 @@ class AdminViewTest extends TestCase
             ->assertSeeInOrder(['id="nav-products"', 'id="low-stock-badge"', 'id="nav-add"'], false);
     }
 
-    public function test_the_dashboard_has_a_month_drop_down_money_cards_and_best_sellers(): void
+    public function test_the_dashboard_has_a_month_drop_down_three_cards_and_best_sellers(): void
     {
         foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
             $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
@@ -213,12 +213,16 @@ class AdminViewTest extends TestCase
                 ->assertSeeInOrder([
                     'id="view-dashboard"',
                     'id="sales-month"',
-                    '>Revenue</span>', 'id="kpi-revenue"', 'id="kpi-revenue-change"',
                     '>Orders</span>', 'id="kpi-orders"', 'id="kpi-orders-note"',
+                    '>Items sold</span>', 'id="kpi-items"', 'id="kpi-items-note"',
                     '>Average order</span>', 'id="kpi-average"', 'id="kpi-average-note"',
                     'id="best-sellers-title"', '>Product</th>', '>Sold</th>', '>Revenue</th>',
                     'id="best-sellers-tbody"', 'id="best-sellers-empty"', 'id="analytics-unavailable"',
                 ], false)
+                // The Revenue card and its "more / less than last month" line were replaced by Items sold.
+                ->assertDontSee('id="kpi-revenue"', false)
+                ->assertDontSee('id="kpi-revenue-change"', false)
+                ->assertDontSee('>Revenue</span>', false)
                 ->assertSee('aria-label="Sales month"', false)
                 ->assertSee('onchange="setDashboardMonth(this.value)"', false);
         }
