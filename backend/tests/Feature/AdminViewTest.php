@@ -204,6 +204,39 @@ class AdminViewTest extends TestCase
             ->assertSeeInOrder(['id="nav-products"', 'id="low-stock-badge"', 'id="nav-add"'], false);
     }
 
+    public function test_the_dashboard_has_a_month_drop_down_money_cards_and_best_sellers(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+                ->assertSee('>Sales Analytics</h3>', false)
+                ->assertDontSee('last 14 days')
+                ->assertSeeInOrder([
+                    'id="view-dashboard"',
+                    'id="sales-month"',
+                    '>Revenue</span>', 'id="kpi-revenue"', 'id="kpi-revenue-change"',
+                    '>Orders</span>', 'id="kpi-orders"', 'id="kpi-orders-note"',
+                    '>Average order</span>', 'id="kpi-average"', 'id="kpi-average-note"',
+                    'id="best-sellers-title"', '>Product</th>', '>Sold</th>', '>Revenue</th>',
+                    'id="best-sellers-tbody"', 'id="best-sellers-empty"', 'id="analytics-unavailable"',
+                ], false)
+                ->assertSee('aria-label="Sales month"', false)
+                ->assertSee('onchange="setDashboardMonth(this.value)"', false);
+        }
+    }
+
+    public function test_the_old_fourteen_day_chart_is_gone(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+            ->assertDontSee('analytics-chart', false)
+            ->assertDontSee('Orders vs Order Value')
+            ->assertDontSee('chart.js', false);
+
+        // Nothing sends the 14-day numbers any more.
+        $this->actingAs($admin, 'admin')->getJson('/admin/analytics/summary')->assertNotFound();
+    }
+
     public function test_every_admin_has_the_my_password_button_and_window(): void
     {
         foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {

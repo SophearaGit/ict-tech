@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAccountController;
-use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MyPasswordController;
@@ -92,8 +91,6 @@ Route::middleware('admin')->group(function () {
 
     Route::get('/admin/orders', [OrderController::class, 'index'])->name('admin-orders.index');
     Route::put('/admin/orders/{order}', [OrderController::class, 'update'])->name('admin-orders.update');
-
-    Route::get('/admin/analytics/summary', [AnalyticsController::class, 'summary'])->name('admin-analytics.summary');
 
     Route::get('/admin/reports/sales', [SalesReportController::class, 'show'])->name('admin-reports.sales');
     Route::get('/admin/reports/sales/export', [SalesReportController::class, 'export'])->name('admin-reports.sales.export');

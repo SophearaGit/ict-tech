@@ -198,7 +198,6 @@ class AdminAccountsTest extends TestCase
         $this->getJson(route('admin-brands.index'))->assertOk();
         $this->getJson(route('admin-categories.index'))->assertOk();
         $this->getJson(route('admin-messages'))->assertOk();
-        $this->getJson(route('admin-analytics.summary'))->assertOk();
         $this->getJson(route('admin-reports.sales', ['period' => 'week']))->assertOk();
 
         $this->getJson(route('admin-admins.index'))->assertForbidden();

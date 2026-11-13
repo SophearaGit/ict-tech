@@ -868,6 +868,7 @@ function showView(view) {
   document.getElementById('page-title').textContent = titles[view] || '';
   document.getElementById('topbar-search').classList.toggle('hidden', !['products','history'].includes(view));
 
+  if (view === 'dashboard' && typeof loadDashboardSales === 'function') loadDashboardSales(); // analytics.js loads after this file; reload so new orders show
   if (view === 'add' && !editingId) resetAddForm();
   if (view === 'messages' && !messagesLoaded) { messagesLoaded = true; loadMessages(); }
   if (view === 'history') loadOrders(); // reload on every open so new orders appear
@@ -997,7 +998,6 @@ if (window.innerWidth < 1024) {
     } else {
       localStorage.setItem('theme', 'light');
     }
-    if (typeof window.refreshAnalyticsTheme === 'function') window.refreshAnalyticsTheme();
   }
 
 /* ── Boot ── */
