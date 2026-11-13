@@ -45,7 +45,7 @@ function recentMonthKeys(currentKey, count = 12) {
 function revenueChange(current, previous, previousName) {
   const now = Math.round(current * 100);
   const before = Math.round(previous * 100);
-  if (before === 0) return { text: `No sales in ${previousName} to compare with`, tone: 'none' };
+  if (before === 0) return { text: 'Nothing to compare with', tone: 'none' };
   if (now === before) return { text: `Same as ${previousName}`, tone: 'none' };
   const pct = Math.round(Math.abs(now - before) / before * 100);
   if (pct === 0) return { text: `About the same as ${previousName}`, tone: 'none' };
@@ -53,15 +53,16 @@ function revenueChange(current, previous, previousName) {
   return { text: `${up ? '▲' : '▼'} ${pct.toLocaleString('en-US')}% ${up ? 'more' : 'less'} than ${previousName}`, tone: up ? 'up' : 'down' };
 }
 
-// A month that is still running is compared with the SAME DAYS of the month before ("October 1–13"), not with all
-// of it: otherwise the 13th of a month would always look like a big drop. A finished month is compared in full.
+// A month that is still running is compared with the SAME DAYS of the month before ("the first 13 days of October"),
+// not with all of it: otherwise the 13th of a month would always look like a big drop. A finished month is compared in full.
 function revenueComparison(shown, previousData, shownKey, throughDay) {
   const previousKey = monthKeyBefore(shownKey);
-  let name = monthLabel(previousKey, previousKey.slice(0, 4) !== shownKey.slice(0, 4));
+  const month = monthLabel(previousKey, previousKey.slice(0, 4) !== shownKey.slice(0, 4)); // the year only when it differs
+  let name = month;
   let previousRevenue = previousData.totals.revenue;
   if (throughDay !== null && throughDay < previousData.days.length) {
     previousRevenue = previousData.days.slice(0, throughDay).reduce((sum, d) => sum + Math.round(d.revenue * 100), 0) / 100;
-    name += ` 1–${throughDay}`;
+    name = throughDay === 1 ? `the first day of ${month}` : `the first ${throughDay} days of ${month}`;
   }
   return revenueChange(shown.totals.revenue, previousRevenue, name);
 }
