@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Tests\Concerns\MakesShopData;
 use Tests\TestCase;
 
-/** The owner-only Admins API: who may call it, adding staff, switching them ON/OFF and resetting their password. */
+/** The owner-only Admins API: who may call it, adding staff, switching them ON/OFF, resetting their password and deleting them. */
 class AdminAccountsTest extends TestCase
 {
     use MakesShopData, RefreshDatabase;
@@ -288,15 +288,72 @@ class AdminAccountsTest extends TestCase
         $this->assertTrue($this->credentialsWork('owner@example.test', 'S3cret-pass!'));
     }
 
-    public function test_an_unknown_admin_is_not_found_and_there_is_no_delete(): void
+    public function test_an_unknown_admin_is_not_found(): void
     {
         $staff = $this->makeStaff();
 
         $this->actingAsOwner()->putJson(route('admin-admins.update', 9999), ['is_active' => false])->assertNotFound();
+        $this->deleteJson(route('admin-admins.destroy', 9999))->assertNotFound();
         // Not a number at all: on MySQL "2abc" would otherwise be read as 2 (SQLite never does, so this guards production only).
         $this->putJson('/admin/admins/'.$staff->id.'abc', ['is_active' => false])->assertNotFound();
+        $this->deleteJson('/admin/admins/'.$staff->id.'abc')->assertNotFound();
         $this->assertTrue($staff->fresh()->is_active);
-        $this->deleteJson('/admin/admins/'.$staff->id)->assertStatus(405);
+
+        $this->assertSame(2, Admin::count());
+    }
+
+    public function test_the_owner_deletes_a_staff_admin_who_can_then_no_longer_sign_in(): void
+    {
+        $staff = $this->makeStaff();
+        $other = $this->makeStaff('other@example.test');
+
+        $this->actingAsOwner()->deleteJson(route('admin-admins.destroy', $staff))->assertOk()->assertJsonPath('ok', true);
+
+        $this->assertNull(Admin::find($staff->id));
+        $this->assertNotNull(Admin::find($other->id)); // only that one row
+        $this->assertFalse($this->credentialsWork('staff@example.test', 'S3cret-pass!'));
+
+        // The email is free again, so the same person can be added back as a new staff admin.
+        $this->postJson(route('admin-admins.store'), $this->newStaff(['email' => 'staff@example.test']))->assertCreated();
+    }
+
+    public function test_a_staff_member_who_is_deleted_while_signed_in_is_sent_to_the_login_page(): void
+    {
+        $staff = $this->makeStaff();
+        $this->actingAsOwner()->deleteJson(route('admin-admins.destroy', $staff))->assertOk();
+
+        // A leftover session for the deleted account finds no admin, so it counts as signed out.
+        $this->app['auth']->forgetGuards();
+        $this->get(route('admin-view'))->assertRedirect(route('admin-login'));
+    }
+
+    public function test_an_owner_cannot_be_deleted_not_even_by_themselves(): void
+    {
+        $second = $this->makeSecondOwner();
+
+        $this->actingAsOwner()->deleteJson(route('admin-admins.destroy', $second))
+            ->assertForbidden()->assertJsonPath('message', self::OWNER_TARGET);
+        $this->deleteJson(route('admin-admins.destroy', $this->owner))
+            ->assertForbidden()->assertJsonPath('message', self::OWNER_TARGET);
+
+        $this->assertNotNull(Admin::find($second->id));
+        $this->assertNotNull(Admin::find($this->owner->id));
+        $this->assertSame(2, Admin::count());
+    }
+
+    public function test_guests_and_staff_cannot_delete_anyone(): void
+    {
+        $staff = $this->makeStaff();
+        $other = $this->makeStaff('other@example.test');
+
+        $this->deleteJson(route('admin-admins.destroy', $staff))->assertRedirect(route('admin-login'));
+        $this->deleteJson(route('admin-admins.destroy', 9999))->assertRedirect(route('admin-login'));
+
+        // Staff get the same answer for a real id and a free one, so they cannot learn which ids exist.
+        $this->actingAs($staff, 'admin');
+        $this->deleteJson(route('admin-admins.destroy', $other))->assertForbidden()->assertJsonPath('message', self::NOT_OWNER);
+        $this->deleteJson(route('admin-admins.destroy', $staff))->assertForbidden()->assertJsonPath('message', self::NOT_OWNER);
+        $this->deleteJson(route('admin-admins.destroy', 9999))->assertForbidden()->assertJsonPath('message', self::NOT_OWNER);
 
         $this->assertSame(2, Admin::count());
     }

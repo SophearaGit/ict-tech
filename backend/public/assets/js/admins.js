@@ -1,10 +1,11 @@
-/* ── Admins (owner only): the Admins page — add staff, switch them ON/OFF, reset their password ──
+/* ── Admins (owner only): the Admins page — add staff, switch them ON/OFF, reset their password, delete them ──
    Loaded after admin.js. Uses from admin.js: apiFetch, escapeHtml, escapeAttr, toast, toastError.
    The page itself is only sent to owners, and the server refuses everybody else on these addresses too.
    Every name and email comes from the server and goes into the page as text, never as markup. */
 
 let admins = [];                 // [{id, name, email, role, isActive, lastLogin, isYou}] from /admin/admins, oldest first
 let resettingAdminId = null;     // the staff row that is showing the "new password" box
+let deletingAdminId = null;      // the staff row that is asking "Delete? Yes / Cancel"
 
 function loadAdmins() {
   return apiFetch('/admin/admins')
@@ -15,6 +16,7 @@ function loadAdmins() {
 // Called by showView('admins'): show what we have, then reload so last sign-in times are current.
 function initAdmins() {
   resettingAdminId = null;
+  deletingAdminId = null;
   renderAdminsTable();
   loadAdmins();
 }
@@ -60,10 +62,18 @@ function renderAdminsTable() {
       ? '<span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-500/30 dark:text-white">Owner</span>'
       : '<span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-neutral-600 dark:text-white">Staff</span>';
 
-    // An owner can never be switched off or reset here, so their row has no switch and no actions.
+    // An owner can never be switched off, reset or deleted here, so their row has no switch and no actions.
     const status = owner ? '<span class="text-xs text-gray-600 dark:text-gray-300">Always on</span>' : adminSwitchHtml(a);
+    const deleteBtn = `<button onclick="startDeleteAdmin(${a.id})" class="${btn} bg-red-50 hover:bg-red-100 text-red-700 dark:text-red-300">Delete</button>`;
     let actions = '';
-    if (!owner && resetting) {
+    if (!owner && a.id === deletingAdminId) {
+      // Deleting an account can't be undone, so ask once, in the row (Escape cancels).
+      actions = `<div class="flex flex-wrap items-center gap-2" onkeydown="if (event.key === 'Escape') cancelDeleteAdmin()">
+          <span class="text-xs font-semibold text-gray-700 dark:text-white">Delete ${escapeHtml(a.name)}?</span>
+          <button id="admin-delete-confirm" onclick="deleteAdmin(${a.id})" class="${btn} bg-red-600 hover:bg-red-700 text-white">Yes, delete</button>
+          <button onclick="cancelDeleteAdmin()" class="${soft}">Cancel</button>
+        </div>`;
+    } else if (!owner && resetting) {
       actions = `<div class="flex flex-wrap items-center gap-2">
           <input id="admin-reset-password" type="password" maxlength="72" placeholder="New password" aria-label="New password for ${escapeAttr(a.name)}" autocomplete="new-password"
             onkeydown="if (event.key === 'Enter') saveResetPassword(${a.id}); if (event.key === 'Escape') cancelResetPassword()"
@@ -73,7 +83,10 @@ function renderAdminsTable() {
           <button onclick="cancelResetPassword()" class="${soft}">Cancel</button>
         </div>`;
     } else if (!owner) {
-      actions = `<button onclick="startResetPassword(${a.id})" class="${soft}">Reset password</button>`;
+      actions = `<div class="flex flex-wrap gap-2">
+          <button onclick="startResetPassword(${a.id})" class="${soft}">Reset password</button>
+          ${deleteBtn}
+        </div>`;
     }
 
     // An OFF admin reads as muted text (not a faded row: fading would drop the contrast below AA).
@@ -92,6 +105,10 @@ function renderAdminsTable() {
   if (resettingAdminId !== null) {
     const input = document.getElementById('admin-reset-password');
     if (input) input.focus();
+  }
+  if (deletingAdminId !== null) {
+    const confirmBtn = document.getElementById('admin-delete-confirm');
+    if (confirmBtn) confirmBtn.focus();
   }
 }
 
@@ -137,14 +154,45 @@ function toggleAdmin(id) {
     .catch(e => toastError(e, 'Failed to change the admin.'));
 }
 
+// One row at a time shows a box: opening "Reset password" closes a "Delete?" question and the other way round.
 function startResetPassword(id) {
   resettingAdminId = id;
+  deletingAdminId = null;
   renderAdminsTable();
 }
 
 function cancelResetPassword() {
   resettingAdminId = null;
   renderAdminsTable();
+}
+
+function startDeleteAdmin(id) {
+  deletingAdminId = id;
+  resettingAdminId = null;
+  renderAdminsTable();
+}
+
+function cancelDeleteAdmin() {
+  deletingAdminId = null;
+  renderAdminsTable();
+}
+
+function deleteAdmin(id) {
+  const a = admins.find(x => x.id === id);
+  if (!a) return;
+
+  apiFetch(`/admin/admins/${id}`, { method: 'DELETE' })
+    .then(() => {
+      admins = admins.filter(x => x.id !== id);
+      deletingAdminId = null;
+      renderAdminsTable();
+      toast(`${escapeHtml(a.name)} was deleted.`);
+    })
+    .catch(e => {
+      deletingAdminId = null;
+      renderAdminsTable();
+      toastError(e, 'Failed to delete the admin.');
+    });
 }
 
 function saveResetPassword(id) {

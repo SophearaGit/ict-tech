@@ -98,11 +98,12 @@ Route::middleware('admin')->group(function () {
     // Every admin (owner or staff) can change their own password.
     Route::put('/admin/account/password', [MyPasswordController::class, 'update'])->name('admin-account.password');
 
-    // Owner only: staff get 403 here even when they type the address. There is deliberately no delete route.
+    // Owner only: staff get 403 here even when they type the address. Only staff can be changed or deleted; owners never.
     Route::middleware('owner')->group(function () {
         Route::get('/admin/admins', [AdminAccountController::class, 'index'])->name('admin-admins.index');
         Route::post('/admin/admins', [AdminAccountController::class, 'store'])->name('admin-admins.store');
         // whereNumber: MySQL reads "2abc" as 2, which would act on admin 2.
         Route::put('/admin/admins/{admin}', [AdminAccountController::class, 'update'])->whereNumber('admin')->name('admin-admins.update');
+        Route::delete('/admin/admins/{admin}', [AdminAccountController::class, 'destroy'])->whereNumber('admin')->name('admin-admins.destroy');
     });
 });

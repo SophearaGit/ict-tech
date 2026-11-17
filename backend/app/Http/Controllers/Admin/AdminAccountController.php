@@ -12,8 +12,8 @@ use Illuminate\Support\Str;
 
 /**
  * The owner-only API behind the Admins page: list the admins, add a staff admin, switch a staff admin
- * ON/OFF and set a new password for one. Only staff can be added or changed here; an owner can never be
- * edited on this page (so nobody can lock another owner out), and there is no delete (switch OFF instead).
+ * ON/OFF, set a new password for one and delete one. Only staff can be added, changed or deleted here; an
+ * owner can never be edited or deleted on this page (so nobody can lock another owner out).
  * Every route is behind the `owner` middleware.
  */
 class AdminAccountController extends Controller
@@ -80,6 +80,25 @@ class AdminAccountController extends Controller
         $admin->save();
 
         return response()->json($this->transform($admin, $request));
+    }
+
+    /**
+     * Delete a staff admin for good. An owner target is refused (so nobody can delete themselves or another
+     * owner, and the shop can never be left without an owner). Nothing else points at an admin, so no other
+     * data is touched; a session the deleted person still has open finds no admin and counts as signed out.
+     */
+    public function destroy(string $admin): JsonResponse
+    {
+        // Looked up here, not by route-model binding, for the same reason as in update().
+        $admin = Admin::findOrFail($admin);
+
+        if ($admin->isOwner()) {
+            return response()->json(['message' => self::OWNER_TARGET], 403);
+        }
+
+        $admin->delete();
+
+        return response()->json(['ok' => true]);
     }
 
     /** Taken ignoring letter case, checked with lower(email) so it behaves the same on MySQL and on the SQLite test database. */
