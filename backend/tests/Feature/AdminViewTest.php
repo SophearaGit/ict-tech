@@ -35,7 +35,7 @@ class AdminViewTest extends TestCase
             ->assertSee("showView('categories')", false)
             ->assertSee('id="view-categories"', false)
             ->assertSee('id="category-add-name"', false)
-            ->assertSee('id="category-add-icon"', false)
+            ->assertDontSee('id="category-add-icon"', false)
             ->assertSee('id="categories-tbody"', false)
             ->assertSee('id="categories-empty"', false)
             ->assertSee('id="new-category-box"', false)

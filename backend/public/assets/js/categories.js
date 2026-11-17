@@ -132,15 +132,14 @@ function renderCategoriesTable() {
 
 function addCategory() {
   const nameInput = document.getElementById('category-add-name');
-  const iconInput = document.getElementById('category-add-icon');
   const name = nameInput.value.trim();
   if (!name) { toast('Type a category name.'); return; }
 
-  apiFetch('/admin/categories', { method: 'POST', body: JSON.stringify({ name, icon: iconInput.value.trim() }) })
+  // No icon is sent: the server gives a new category the default 📦 (Edit changes it later).
+  apiFetch('/admin/categories', { method: 'POST', body: JSON.stringify({ name }) })
     .then(created => {
       categories.push(created);
       nameInput.value = '';
-      iconInput.value = '';
       renderCategoriesTable();
       renderCategorySelects();
       toast('Category added!');

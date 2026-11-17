@@ -509,8 +509,7 @@
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
         <div class="p-5 border-b border-gray-100 dark:border-neutral-600 flex flex-col sm:flex-row sm:items-center gap-3">
           <input id="category-add-name" type="text" maxlength="50" placeholder="New category name, e.g. Gaming Mice" onkeydown="if (event.key === 'Enter') addCategory()" class="form-inp flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
-          {{-- The icon is an emoji typed or pasted here (Windows: Win + . opens the emoji picker). Empty means 📦. --}}
-          <input id="category-add-icon" type="text" maxlength="32" placeholder="📦" aria-label="Icon (an emoji, optional)" title="Icon: type or paste one emoji (optional)" onkeydown="if (event.key === 'Enter') addCategory()" class="form-inp w-full sm:w-24 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-lg text-center transition-all"/>
+          {{-- No icon field when adding: a new category gets the default 📦, and the icon can be changed with Edit. --}}
           <button onclick="addCategory()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Add Category</button>
         </div>
         <div class="overflow-x-auto">
@@ -539,7 +538,6 @@
     <div id="view-admins" class="hidden">
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
         <div class="p-5 border-b border-gray-100 dark:border-neutral-600">
-          <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Add a staff admin. They sign in at the admin login with this email and password, and can use everything except this page. Tell them the password; they can change it with "My password".</p>
           <div class="flex flex-col lg:flex-row lg:items-center gap-3">
             <input id="admin-add-name" type="text" maxlength="60" placeholder="Name, e.g. Dara" aria-label="Name" onkeydown="if (event.key === 'Enter') addAdmin()" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
             <input id="admin-add-email" type="email" maxlength="255" placeholder="Email, e.g. dara@example.com" aria-label="Email" autocomplete="off" onkeydown="if (event.key === 'Enter') addAdmin()" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
