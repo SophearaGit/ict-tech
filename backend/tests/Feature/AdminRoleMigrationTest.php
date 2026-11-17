@@ -74,6 +74,7 @@ class AdminRoleMigrationTest extends TestCase
 
     public function test_the_seeder_creates_an_owner(): void
     {
+        config(['shop.owner' => ['name' => 'Admin', 'email' => 'admin@example.test', 'password' => 'Real-pass-1']]);
         $this->seed(AdminSeeder::class);
 
         $this->assertTrue(Admin::firstOrFail()->isOwner());

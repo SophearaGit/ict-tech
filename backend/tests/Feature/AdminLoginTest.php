@@ -131,6 +131,7 @@ class AdminLoginTest extends TestCase
 
     public function test_seeding_creates_the_admin_in_the_admins_table_not_in_users(): void
     {
+        config(['shop.owner' => ['name' => 'Admin', 'email' => 'admin@example.test', 'password' => 'Real-pass-1']]);
         $this->seed(AdminSeeder::class);
 
         $this->assertSame(1, Admin::count());
