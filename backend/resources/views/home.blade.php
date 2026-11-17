@@ -181,19 +181,6 @@
             </div>
           </a>
 
-          <!-- ICT Trade-In -->
-          <a href="{{ route('shop') }}" class="snap-start flex-none w-72 sm:w-80 bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-none p-6 text-left transition-all duration-200 hover:-translate-y-2 hover:shadow-lg">
-            <p class="text-sm text-gray-500 dark:text-gray-400">ICT Trade-In</p>
-            <h3 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white leading-snug">Save on a new device with a trade-in.</h3>
-            <p class="mt-3 text-gray-500 dark:text-gray-400 text-sm">Get credit toward your next upgrade when you trade in an eligible device.</p>
-            <div class="relative mt-6 h-40 flex items-center justify-center">
-              <img src="{{ asset('assets/img/ict-trade-in.png') }}" alt="ICT Trade-In" class="relative max-h-36 object-contain">
-              <span class="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-              </span>
-            </div>
-          </a>
-
           <!-- Ways to Buy -->
           <a href="{{ route('shop') }}" class="snap-start flex-none w-72 sm:w-80 bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-none p-6 text-left transition-all duration-200 hover:-translate-y-2 hover:shadow-lg">
             <p class="text-sm text-gray-500 dark:text-gray-400">Ways to Buy</p>
@@ -372,12 +359,12 @@ In a thin, foldable design.</p>
           </div>
         </div>
 
-        <!-- Carrier deals -->
+        <!-- iPhone Duo -->
         <div class="bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex flex-col items-center justify-center text-center pt-7 pb-6 px-6 min-h-[420px] transition-colors">
-          <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Incredible Carrier Deals</h3>
-          <p class="text-gray-500 dark:text-gray-400 mt-2 max-w-xs">Explore deals that accept eligible trade-in devices in any condition.</p>
-          <a href="{{ route('shop') }}" class="mt-5 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-semibold px-5 py-2 rounded-full transition-colors">Find your deal</a>
-          <img src="{{ asset('assets/img/ict-airpods.png') }}" alt="ICT AirPods" class="mt-6 max-h-52 object-contain drop-shadow-xl dark:drop-shadow-none">
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white">iPhone Duo</h3>
+          <p class="text-gray-500 dark:text-gray-400 mt-2 max-w-xs">Introducing the new iPhone Duo.</p>
+          <a href="{{ route('shop') }}" class="mt-5 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-semibold px-5 py-2 rounded-full transition-colors">Shop now</a>
+          <img src="{{ asset('assets/img/iphone-duo.png') }}" alt="iPhone Duo" class="mt-6 max-h-52 object-contain drop-shadow-xl dark:drop-shadow-none">
         </div>
 
       </div>
