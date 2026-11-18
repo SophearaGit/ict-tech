@@ -109,6 +109,28 @@ class DatabaseSeederTest extends TestCase
         $this->assertTrue(Hash::check('S3cret-pass!', $owner->fresh()->password));
     }
 
+    public function test_no_owner_is_added_when_the_server_already_has_any_admin_whatever_the_env_says(): void
+    {
+        // The live server's own admin, under a different email than the one in .env.
+        $existing = $this->makeAdmin(); // owner@example.test / S3cret-pass!
+        $hash = $existing->password;
+        $this->ownerSettings('boss@example.test', 'Real-pass-1');
+
+        $this->seed();
+
+        $this->assertSame(1, Admin::count());
+        $this->assertNull(Admin::where('email', 'boss@example.test')->first());
+        $this->assertSame($hash, $existing->fresh()->password);
+
+        // The same when the only admin is a staff member.
+        Admin::query()->delete();
+        $this->makeStaff();
+        $this->seed();
+
+        $this->assertSame(1, Admin::count());
+        $this->assertNull(Admin::where('email', 'boss@example.test')->first());
+    }
+
     public function test_the_owner_from_the_env_is_created_once_with_a_lower_case_email(): void
     {
         $this->ownerSettings('  Boss@Example.TEST ', 'Real-pass-1');
