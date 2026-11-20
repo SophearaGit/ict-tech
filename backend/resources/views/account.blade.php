@@ -147,7 +147,11 @@
     return safe ? `{{ route('google.redirect') }}?redirect=${encodeURIComponent(safe)}` : `{{ route('google.redirect') }}`;
   }
 
+  /* false until the server has its GOOGLE_* settings: then the button (and its "or" line) is not drawn at all */
+  const googleReady = @json(\App\Support\GoogleLogin::isSetUp());
+
   function googleButtonHTML() {
+    if (!googleReady) return '';
     return `
       <a href="${googleAuthHref()}"
         class="flex items-center justify-center gap-2.5 w-full border border-gray-200 dark:border-gray-700 rounded-xl py-3 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
