@@ -25,3 +25,6 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Brand logos uploaded from the admin: data, not code. A git pull must never overwrite or remove them.
+/public/uploads

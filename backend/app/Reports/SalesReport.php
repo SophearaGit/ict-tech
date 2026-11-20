@@ -2,10 +2,13 @@
 
 namespace App\Reports;
 
+use App\Models\Brand;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
@@ -14,6 +17,10 @@ use InvalidArgumentException;
  * A sale is an order that is not cancelled, counted on the day it was placed. The orders are
  * loaded once and summed in PHP in whole cents (as the dashboard chart does), so the JSON
  * summary and the CSV download are built from exactly the same data. No HTTP in here.
+ *
+ * With a brand, the report is that brand's sales only: it follows the brand written on each
+ * sold item (the name at the time of the sale, so history stays right after a rename), ignoring
+ * capital letters. An order that mixes brands counts once, with only that brand's lines and money.
  */
 class SalesReport
 {
@@ -31,13 +38,16 @@ class SalesReport
         private readonly CarbonImmutable $date,
         private readonly CarbonImmutable $from,
         private readonly CarbonImmutable $to,
+        private readonly ?string $brand = null,
     ) {
         $this->orders = $this->loadOrders();
     }
 
-    /** Inputs are already validated; a null date means today in shop time. */
-    public static function for(string $period, ?string $date): self
+    /** Inputs are already validated; a null date means today in shop time, a null or blank brand means every brand. */
+    public static function for(string $period, ?string $date, ?string $brand = null): self
     {
+        $brand = $brand === null || trim($brand) === '' ? null : trim($brand);
+
         $timezone = config('shop.timezone');
         $anchor = $date === null
             ? now($timezone)->toImmutable()->startOfDay()
@@ -52,7 +62,37 @@ class SalesReport
             default => throw new InvalidArgumentException("Unknown sales report period [{$period}]."),
         };
 
-        return new self($period, $anchor, $from, $to);
+        return new self($period, $anchor, $from, $to, $brand);
+    }
+
+    /**
+     * What the brand drop-down offers: every brand the shop has now plus every brand name that ever
+     * appears on a sold item (so old sales stay findable after a brand is renamed or removed), once
+     * each whatever the capital letters, A to Z. Independent of the period and of the chosen brand.
+     *
+     * @return list<string>
+     */
+    public static function brandOptions(): array
+    {
+        $names = Brand::query()->pluck('name')
+            ->merge(OrderItem::query()->distinct()->pluck('brand')->sort()->values());
+
+        $options = [];
+        foreach ($names as $name) {
+            $name = trim((string) $name);
+            if ($name !== '') {
+                $options[self::brandKey($name)] ??= $name;
+            }
+        }
+        ksort($options, SORT_STRING);
+
+        return array_values($options);
+    }
+
+    /** Two brand names are the same brand when they differ only by capital letters or edge spaces. */
+    private static function brandKey(string $brand): string
+    {
+        return mb_strtolower(trim($brand));
     }
 
     /** First day of the period, at the start of that day in shop time. */
@@ -84,7 +124,7 @@ class SalesReport
 
         foreach ($this->orders as $order) {
             $local = $order->created_at->copy()->setTimezone($timezone);
-            $orderCents = $this->cents($order->total);
+            $orderCents = $this->orderCents($order);
             $orderItems = (int) $order->items->sum('quantity');
 
             $days[$local->toDateString()]['orders']++;
@@ -124,6 +164,8 @@ class SalesReport
             'date' => $this->date->toDateString(),
             'from' => $this->from->toDateString(),
             'to' => $this->to->toDateString(),
+            'brand' => $this->brand,
+            'brands' => self::brandOptions(),
             'totals' => [
                 'orders' => $orderCount,
                 'items' => $totalItems,
@@ -146,10 +188,19 @@ class SalesReport
         ];
     }
 
-    /** e.g. sales-week-2026-11-02-to-2026-11-08.csv (for a day, both dates are the same). */
+    /**
+     * e.g. sales-week-2026-11-02-to-2026-11-08.csv (for a day, both dates are the same). A brand adds
+     * its name in plain letters at the end (-apple); a name with none, such as Khmer, adds -brand.
+     */
     public function filename(): string
     {
-        return sprintf('sales-%s-%s-to-%s.csv', $this->period, $this->from->toDateString(), $this->to->toDateString());
+        $brand = '';
+        if ($this->brand !== null) {
+            $slug = rtrim(substr(Str::slug($this->brand), 0, 40), '-');
+            $brand = '-'.($slug !== '' ? $slug : 'brand');
+        }
+
+        return sprintf('sales-%s-%s-to-%s%s.csv', $this->period, $this->from->toDateString(), $this->to->toDateString(), $brand);
     }
 
     /**
@@ -206,13 +257,39 @@ class SalesReport
     {
         $appTimezone = config('app.timezone');
 
-        return Order::with('items')
+        $orders = Order::with('items')
             ->where('status', '!=', Order::STATUS_CANCELLED)
             ->where('created_at', '>=', $this->from->setTimezone($appTimezone))
             ->where('created_at', '<', $this->to->addDay()->setTimezone($appTimezone))
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
+
+        if ($this->brand === null) {
+            return $orders;
+        }
+
+        // Under a brand, keep only that brand's lines of each order and drop the orders with none.
+        // This changes the loaded copies in memory only; nothing is saved.
+        $wanted = self::brandKey($this->brand);
+
+        return $orders
+            ->each(fn (Order $order) => $order->setRelation(
+                'items',
+                $order->items->filter(fn (OrderItem $item) => self::brandKey($item->brand) === $wanted)->values(),
+            ))
+            ->filter(fn (Order $order) => $order->items->isNotEmpty())
+            ->values();
+    }
+
+    /** An order's money in whole cents: its saved total, or under a brand only that brand's lines. */
+    private function orderCents(Order $order): int
+    {
+        if ($this->brand === null) {
+            return $this->cents($order->total);
+        }
+
+        return (int) $order->items->sum(fn (OrderItem $item) => $this->cents($item->unit_price) * $item->quantity);
     }
 
     private function cents(string|float|int $amount): int

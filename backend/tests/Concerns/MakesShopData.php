@@ -92,11 +92,25 @@ trait MakesShopData
         return $order;
     }
 
+    /** The shop owner (an admin with full access). */
     protected function makeAdmin(): Admin
     {
-        return Admin::create([
+        $admin = Admin::create([
             'name' => 'Test Admin',
             'email' => 'owner@example.test',
+            'password' => 'S3cret-pass!',
+        ]);
+        $admin->forceFill(['role' => Admin::ROLE_OWNER])->save();
+
+        return $admin->fresh();
+    }
+
+    /** A staff admin: the database default role, so it can do everything except manage admins. */
+    protected function makeStaff(string $email = 'staff@example.test'): Admin
+    {
+        return Admin::create([
+            'name' => 'Test Staff',
+            'email' => $email,
             'password' => 'S3cret-pass!',
         ])->fresh();
     }

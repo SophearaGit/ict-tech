@@ -34,9 +34,17 @@ class PlaceOrder
                 ->get()
                 ->keyBy('id');
 
+            // The same rule that hides a product in the shop (its brand or its category is switched off):
+            // a cart filled earlier must not buy it.
+            $visible = Product::visible()->whereIn('id', array_keys($wanted))->pluck('id');
+
             foreach ($wanted as $id => $quantity) {
                 if (! $products->has($id)) {
                     throw new OrderRejected('One of the items in your cart is no longer available.');
+                }
+
+                if (! $visible->contains($id)) {
+                    throw new OrderRejected("{$products[$id]->name} is no longer available.");
                 }
             }
 

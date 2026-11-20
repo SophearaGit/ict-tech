@@ -1,139 +1,142 @@
 /* ══════════════════════════════════════════════
-   Sales Analytics — dashboard module (real orders, last 14 days)
-   Data comes from GET /admin/analytics/summary, which returns
-     { labels: 'Y-m-d'[14], orders: number[14], revenue: number[14] }
-   Cancelled orders are already excluded by the server. When the request
-   fails the dashboard says so — it never shows made-up numbers.
+   Sales Analytics — the dashboard's month view
+   One month at a time: a drop-down with this month and the 11 before it. The numbers are the Sales
+   Report's own answer, GET /admin/reports/sales?period=month&date=YYYY-MM-01, so the dashboard and
+   the Sales Report page can never disagree (cancelled orders are already left out by the server).
+   Shows: orders, items sold, average order, and the 5 best sellers of the month.
+   A failed request is said plainly ("Analytics unavailable"); the page never shows made-up numbers.
+   Uses apiFetch and escapeHtml (admin.js), so this file loads after it. sales-report.js uses
+   formatAnalyticsMoney from here.
 ══════════════════════════════════════════════ */
 
-async function fetchAnalyticsData() {
-  const res = await fetch('/admin/analytics/summary', { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) throw new Error(`Analytics request failed (${res.status})`);
-  const data = await res.json();
-
-  const labels = data.labels.map(iso => {
-    const [y, m, d] = iso.split('-').map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  });
-  return { labels, orders: data.orders, revenue: data.revenue };
-}
-
-function computeAnalyticsSummary({ orders, revenue }) {
-  const totalOrders = orders.reduce((a, b) => a + b, 0);
-  // Add whole cents so the dollar total doesn't pick up float noise.
-  const totalRevenue = revenue.reduce((a, b) => a + Math.round(b * 100), 0) / 100;
-  const averageOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-  return { totalOrders, totalRevenue, averageOrder };
-}
+let dashMonth = '';        // 'YYYY-MM' the admin picked; '' = this month, whatever month the shop's clock says it is
+let dashCurrentKey = '';   // this month as 'YYYY-MM', learned from the server's first answer
+let dashRequestId = 0;     // a slow answer that was overtaken by a newer request is ignored
 
 function formatAnalyticsMoney(amount) {
   return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function renderAnalyticsKpis({ totalOrders, totalRevenue, averageOrder }) {
-  document.getElementById('kpi-orders').textContent = totalOrders.toLocaleString();
-  document.getElementById('kpi-revenue').textContent = formatAnalyticsMoney(totalRevenue);
-  document.getElementById('kpi-average').textContent = formatAnalyticsMoney(averageOrder);
+/* ── Months as 'YYYY-MM' text: plain number maths, so the browser's clock and timezone never shift a month ── */
+function monthKeyBefore(key) {
+  const [y, m] = key.split('-').map(Number);
+  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
 }
 
-let analyticsChart = null;
-function renderAnalyticsChart({ labels, orders, revenue }) {
-  const canvas = document.getElementById('analytics-chart');
-  if (!canvas || typeof Chart === 'undefined') return;
-
-  const isDark = document.documentElement.classList.contains('dark');
-  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
-  const tickColor = isDark ? '#d1d5db' : '#6b7280';
-
-  if (analyticsChart) analyticsChart.destroy();
-  analyticsChart = new Chart(canvas, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Orders',
-          data: orders,
-          yAxisID: 'y',
-          borderColor: '#6366f1',
-          backgroundColor: 'rgba(99,102,241,0.12)',
-          tension: 0.35,
-          fill: true,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          borderWidth: 2
-        },
-        {
-          label: 'Order value ($)',
-          data: revenue,
-          yAxisID: 'y1',
-          borderColor: '#22c55e',
-          backgroundColor: 'rgba(34,197,94,0.12)',
-          tension: 0.35,
-          fill: false,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          borderWidth: 2
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: { backgroundColor: '#111827', padding: 10, cornerRadius: 8, boxPadding: 4 }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 10 } } },
-        y: {
-          position: 'left',
-          beginAtZero: true,
-          grid: { color: gridColor },
-          ticks: { color: tickColor, font: { size: 10 }, precision: 0 }
-        },
-        y1: {
-          position: 'right',
-          beginAtZero: true,
-          grid: { drawOnChartArea: false },
-          ticks: { color: tickColor, font: { size: 10 }, callback: v => '$' + v }
-        }
-      }
-    }
-  });
+function monthLabel(key) {
+  const [y, m] = key.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
-function setAnalyticsUnavailable(unavailable) {
-  const canvas = document.getElementById('analytics-chart');
-  const message = document.getElementById('analytics-unavailable');
-  if (canvas) canvas.classList.toggle('hidden', unavailable);
-  if (message) message.classList.toggle('hidden', !unavailable);
+function recentMonthKeys(currentKey, count = 12) {
+  const keys = [currentKey];
+  while (keys.length < count) keys.push(monthKeyBefore(keys[keys.length - 1]));
+  return keys;
 }
 
-let lastAnalyticsData = null;
-async function initAnalyticsDashboard() {
-  let data;
+// The 5 products with the most units sold (then the most money, then A to Z).
+function bestSellers(products) {
+  return [...products]
+    .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue || a.name.localeCompare(b.name))
+    .slice(0, 5);
+}
+
+/* ── Loading ── */
+function fetchSalesMonth(key) {
+  const params = new URLSearchParams({ period: 'month' });
+  if (key) params.set('date', `${key}-01`); // no date = this month in shop time
+  return apiFetch(`/admin/reports/sales?${params}`);
+}
+
+// Also called by showView('dashboard'), so new orders show up whenever the admin comes back to the dashboard.
+async function loadDashboardSales() {
+  const requestId = ++dashRequestId;
+  const wantedKey = dashMonth;
   try {
-    data = await fetchAnalyticsData();
+    const current = await fetchSalesMonth(wantedKey);
+    if (requestId !== dashRequestId) return;
+    const shownKey = current.from.slice(0, 7);
+    if (!wantedKey) dashCurrentKey = shownKey;
+    // "This month" has not finished yet; the server's own date (today in shop time) says so.
+    renderDashboardSales(current, shownKey, !wantedKey);
   } catch (e) {
-    lastAnalyticsData = null;
-    if (analyticsChart) { analyticsChart.destroy(); analyticsChart = null; }
-    setAnalyticsUnavailable(true);
-    ['kpi-orders', 'kpi-revenue', 'kpi-average'].forEach(id => {
-      document.getElementById(id).textContent = '—';
-    });
+    if (requestId !== dashRequestId) return;
+    renderDashboardUnavailable();
+  }
+}
+
+function setDashboardMonth(value) {
+  dashMonth = value === dashCurrentKey ? '' : value;
+  renderDashboardLoading();
+  loadDashboardSales();
+}
+
+/* ── Drawing ── */
+function setDashText(id, text) {
+  document.getElementById(id).textContent = text;
+}
+
+function setBestSellersState(state) { // 'rows' | 'empty' | 'unavailable' | 'loading'
+  document.getElementById('best-sellers-empty').classList.toggle('hidden', state !== 'empty');
+  document.getElementById('analytics-unavailable').classList.toggle('hidden', state !== 'unavailable');
+  if (state !== 'rows') document.getElementById('best-sellers-tbody').innerHTML = '';
+}
+
+function renderMonthOptions(shownKey) {
+  const select = document.getElementById('sales-month');
+  const keys = recentMonthKeys(dashCurrentKey || shownKey);
+  select.replaceChildren(...keys.map((key, i) => new Option(monthLabel(key) + (i === 0 ? ' (this month)' : ''), key)));
+  select.value = shownKey;
+}
+
+function clearDashboardNotes() {
+  ['kpi-orders-note', 'kpi-items-note', 'kpi-average-note'].forEach(id => setDashText(id, ' ')); // a non-breaking space keeps the card's height steady
+}
+
+function renderDashboardLoading() {
+  ['kpi-orders', 'kpi-items', 'kpi-average'].forEach(id => setDashText(id, '…'));
+  clearDashboardNotes();
+  setBestSellersState('loading');
+}
+
+function renderDashboardUnavailable() {
+  ['kpi-orders', 'kpi-items', 'kpi-average'].forEach(id => setDashText(id, '—'));
+  clearDashboardNotes();
+  setDashText('best-sellers-title', 'Best sellers');
+  setBestSellersState('unavailable');
+}
+
+function renderDashboardSales(current, shownKey, running) {
+  const label = monthLabel(shownKey);
+  const when = `${running ? 'so far in' : 'in'} ${label}`;
+  const t = current.totals;
+
+  renderMonthOptions(shownKey);
+
+  setDashText('kpi-orders', t.orders.toLocaleString('en-US'));
+  setDashText('kpi-orders-note', when);
+  setDashText('kpi-items', t.items.toLocaleString('en-US'));
+  setDashText('kpi-items-note', when);
+  setDashText('kpi-average', formatAnalyticsMoney(t.averageOrder));
+  setDashText('kpi-average-note', t.orders > 0 ? `per order, ${label}` : `no orders in ${label}`);
+
+  setDashText('best-sellers-title', `Best sellers — ${label}`);
+  const top = bestSellers(current.products);
+  if (top.length === 0) {
+    setDashText('best-sellers-empty-title', running ? `No sales yet in ${label}` : `No sales in ${label}`);
+    setBestSellersState('empty');
     return;
   }
-
-  lastAnalyticsData = data;
-  setAnalyticsUnavailable(false);
-  renderAnalyticsKpis(computeAnalyticsSummary(data));
-  renderAnalyticsChart(data);
+  setBestSellersState('rows');
+  const cell = 'px-3 py-3 text-sm text-gray-700 dark:text-white';
+  document.getElementById('best-sellers-tbody').innerHTML = top.map((p, i) => `
+    <tr class="border-t border-gray-100 dark:border-neutral-600">
+      <td class="pl-4 sm:pl-5 pr-2 py-3 text-sm font-semibold text-gray-700 dark:text-white">${i + 1}</td>
+      <td class="px-3 py-3 text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(p.name)}</td>
+      <td class="${cell} hidden sm:table-cell">${escapeHtml(p.brand)}</td>
+      <td class="${cell} font-semibold">${p.quantity.toLocaleString('en-US')}</td>
+      <td class="${cell}">${escapeHtml(formatAnalyticsMoney(p.revenue))}</td>
+    </tr>`).join('');
 }
 
-window.refreshAnalyticsTheme = function () {
-  if (lastAnalyticsData) renderAnalyticsChart(lastAnalyticsData);
-};
-
-initAnalyticsDashboard();
+loadDashboardSales();

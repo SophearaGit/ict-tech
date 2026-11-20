@@ -42,7 +42,7 @@ class SalesReportController extends Controller
     }
 
     /**
-     * Validate ?period=…&date=… and build the report. A bad request gets Laravel's usual 422
+     * Validate ?period=…&date=…&brand=… and build the report. A bad request gets Laravel's usual 422
      * shape (message + errors) whatever the Accept header says, so a plain browser download
      * link fails the same way as the page's own requests.
      */
@@ -51,6 +51,8 @@ class SalesReportController extends Controller
         $validator = Validator::make($request->query(), [
             'period' => ['required', 'in:day,week,month'],
             'date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:2000-01-01', 'before_or_equal:2100-12-31'],
+            // Optional: one brand's sales only. Any name is accepted (an unknown one gives an empty report).
+            'brand' => ['nullable', 'string', 'max:255'],
         ]);
 
         if ($validator->fails()) {
@@ -60,6 +62,6 @@ class SalesReportController extends Controller
             ], 422);
         }
 
-        return SalesReport::for($request->query('period'), $request->query('date'));
+        return SalesReport::for($request->query('period'), $request->query('date'), $request->query('brand'));
     }
 }

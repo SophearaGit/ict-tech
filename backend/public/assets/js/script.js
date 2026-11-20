@@ -236,6 +236,12 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// The icon of a category code, ready to put into HTML: the admin's choice for that category
+// (window.CATEGORY_ICONS, written by the layout), or 📦 for an unknown code. Used by the shop cards and the cart.
+function categoryIconFor(category) {
+  return escapeHtml((window.CATEGORY_ICONS || {})[category] || '📦');
+}
+
 function injectNav(activePage) {
   _ndActivePage = activePage;
   const pages = [
@@ -883,11 +889,7 @@ function renderCartDrawer() {
 
   itemsEl.innerHTML = items.map((item, index) => {
     // B8 — use item.image (URL) not item.emoji (undefined on tech products)
-    const categoryIcon =
-      item.category === 'phones' ? '📱' :
-        item.category === 'earphones' ? '🎧' :
-          item.category === 'powerbanks' ? '🔋' :
-            item.category === 'laptops' ? '💻' : '📦';
+    const categoryIcon = categoryIconFor(item.category);
 
     const thumb = item.image
       ? `<img src="${item.image}" alt="${item.imageAlt || item.name}"

@@ -24,10 +24,16 @@ class BrandsMigrationTest extends TestCase
 
     private const BACKFILL_MIGRATION = '2026_11_04_100100_backfill_product_brands.php';
 
-    /** Back to the legacy shape: products.brand is a text column and there is no brands table. */
+    /**
+     * Back to the legacy shape: products.brand is a text column and there is no brands table.
+     * Newer migrations (the on/off + logo columns, and any later ones) sit on top of the three brand
+     * migrations, so roll back one step at a time until the brands table is gone.
+     */
     private function rollBackBrandMigrations(): void
     {
-        $this->artisan('migrate:rollback', ['--step' => 3])->assertExitCode(0);
+        for ($i = 0; $i < 20 && Schema::hasTable('brands'); $i++) {
+            $this->artisan('migrate:rollback', ['--step' => 1])->assertExitCode(0);
+        }
 
         $this->assertTrue(Schema::hasColumn('products', 'brand'));
         $this->assertFalse(Schema::hasTable('brands'));

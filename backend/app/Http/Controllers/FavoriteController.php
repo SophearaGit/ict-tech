@@ -18,7 +18,9 @@ class FavoriteController extends Controller
             return redirect()->route('account', ['redirect' => '/favorites']);
         }
 
+        // visible(): favorites of a switched-off brand stay saved but are hidden until the brand is ON again.
         $products = $request->user()->favoriteProducts()
+            ->visible()
             ->with('brand')
             ->orderByDesc('favorites.created_at')
             ->get()
@@ -46,6 +48,11 @@ class FavoriteController extends Controller
         }
 
         $productId = $validator->validated()['product_id'];
+
+        if (! Product::visible()->whereKey($productId)->exists()) {
+            return response()->json(['ok' => false, 'error' => 'This product is no longer available.'], 422);
+        }
+
         $favorites = $request->user()->favoriteProducts();
 
         if ($favorites->where('product_id', $productId)->exists()) {

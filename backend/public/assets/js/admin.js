@@ -6,7 +6,8 @@ function apiFetch(url, options = {}) {
     headers: {
       'Accept': 'application/json',
       'X-CSRF-TOKEN': token,
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      // A FormData body (a logo upload) must NOT get a JSON Content-Type: the browser has to add its own multipart boundary.
+      ...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
       ...(options.headers || {}),
     },
   }).then(async res => {
@@ -17,6 +18,8 @@ function apiFetch(url, options = {}) {
       expired.sessionExpired = true;
       throw expired;
     }
+    // nginx answers a body over its limit with an HTML 413 page, never JSON; say what happened in plain words.
+    if (res.status === 413) throw new Error('That file is too big. Logos must be under 800 KB.');
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || err.message || `Request failed (${res.status})`);
@@ -33,6 +36,7 @@ let products = [];
 let currentView = 'dashboard';
 let tableFilter = 'all';
 let searchQ = '';
+let brandFilter = null; // the brand id chosen in the Brand drop-down of the Products page (null = all brands)
 let editingId = null;
 let restockId = null;
 let deleteId = null;
@@ -52,6 +56,33 @@ function statusBadge(p) {
   return `<span class="badge-in text-[10px] font-semibold px-2 py-0.5 rounded-full">In Stock</span>`;
 }
 
+// A thin bar under the quantity: how full the stock is compared with the biggest stock (green, amber or red like the badge).
+// It is only a picture; the number and the status badge say the same in words, so screen readers skip it.
+function stockBarHtml(p, maxQty) {
+  const pct = Math.round((p.qty / maxQty) * 100);
+  const color = statusOf(p) === 'out' ? 'bg-red-400' : statusOf(p) === 'low' ? 'bg-amber-400' : 'bg-green-400';
+  return `<div class="stock-bar mt-1.5 w-full max-w-[7rem] bg-gray-100 dark:bg-neutral-600 rounded-full h-1.5 overflow-hidden" aria-hidden="true">
+          <div class="${color} h-1.5 rounded-full transition-all duration-500" style="width:${pct}%"></div>
+        </div>`;
+}
+
+// The brand name (escaped), plus a small tag when the product's brand is switched OFF (hidden from the shop).
+function brandCellHtml(p) {
+  const tag = p.brandActive === false
+    ? ' <span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-neutral-600 dark:text-white whitespace-nowrap">Brand off</span>'
+    : '';
+  return escapeHtml(p.brand) + tag;
+}
+
+// The category's name (escaped; the raw code for an old product whose code is not in the list), plus a small
+// tag when the product's category is switched OFF (hidden from the shop).
+function categoryCellHtml(p) {
+  const tag = p.categoryActive === false
+    ? ' <span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-neutral-600 dark:text-white whitespace-nowrap">Category off</span>'
+    : '';
+  return escapeHtml(p.categoryName || p.category) + tag;
+}
+
 /* ── Init ── */
 function init() {
   apiFetch('/admin/products')
@@ -68,7 +99,6 @@ function refreshAll() {
   renderRecentTable();
   renderAlertsPanel();
   renderProductsTable();
-  renderInventoryTable();
   updateLowBadge();
   if (currentView === 'brands') renderBrandsTable();
 }
@@ -132,23 +162,65 @@ function renderAlertsPanel() {
 }
 
 /* ── Products table ── */
+// The Brand drop-down and the search box narrow the Products table.
+// The brand is matched by id (a rename never breaks it); the search matches name, brand and category text.
+function narrowByBrandAndSearch(list) {
+  if (brandFilter !== null) list = list.filter(p => p.brandId === brandFilter);
+  if (searchQ) {
+    const q = searchQ.toLowerCase();
+    list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)
+      || p.category.toLowerCase().includes(q) || (p.categoryName || '').toLowerCase().includes(q));
+  }
+  return list;
+}
+
+// Says why a table is empty: a brand with no products at all reads differently from "nothing matches your filter".
+function setEmptyProductsText() {
+  const brandHasNone = brandFilter !== null && !products.some(p => p.brandId === brandFilter);
+  document.getElementById('products-empty-title').textContent = brandHasNone ? 'No products for this brand' : 'No products found';
+  document.getElementById('products-empty-hint').textContent = brandHasNone
+    ? 'Add a product for this brand from Add Products.'
+    : 'Try adjusting your filter or search.';
+}
+
+// Fills the Brand drop-down. Every brand is offered, a switched-off one labelled "(off)", because the admin
+// must be able to see the products of any brand. Called whenever the brand list changes.
+function renderBrandFilters() {
+  let reset = false;
+  if (brandFilter !== null && !brands.some(b => b.id === brandFilter)) { brandFilter = null; reset = true; } // that brand was deleted
+  const select = document.getElementById('products-brand-filter');
+  if (select) {
+    select.innerHTML = '<option value="">All brands</option>'
+      + brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}${b.isActive ? '' : ' (off)'}</option>`).join('');
+    select.value = brandFilter === null ? '' : String(brandFilter);
+  }
+  if (reset) renderProductsTable();
+}
+
+function setBrandFilter(value) {
+  brandFilter = value === '' ? null : Number(value);
+  renderBrandFilters();
+  renderProductsTable();
+}
+
 function renderProductsTable() {
   let list = [...products];
   if (tableFilter !== 'all') list = list.filter(p => statusOf(p) === tableFilter);
-  if (searchQ) {
-    const q = searchQ.toLowerCase();
-    list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
-  }
+  list = narrowByBrandAndSearch(list);
 
   const empty = document.getElementById('products-empty');
   const tbody = document.getElementById('products-tbody');
 
   if (list.length === 0) {
     tbody.innerHTML = '';
+    setEmptyProductsText();
     empty.classList.remove('hidden');
     return;
   }
   empty.classList.add('hidden');
+
+  // The stock bar is measured against the biggest stock of ALL products, so bars stay comparable while a brand is chosen.
+  const maxQty = Math.max(...products.map(p => p.qty), 50);
 
   tbody.innerHTML = list.map(p => `
     <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0">
@@ -161,8 +233,8 @@ function renderProductsTable() {
           </div>
         </div>
       </td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${p.brand}</td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden md:table-cell">${p.category}</td>
+      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${brandCellHtml(p)}</td>
+      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden md:table-cell">${categoryCellHtml(p)}</td>
       <td class="px-3 py-3.5 text-sm font-semibold text-gray-900 dark:text-white">$${p.price}</td>
       <td class="px-3 py-3.5">
         <div class="flex items-center gap-2">
@@ -174,6 +246,7 @@ function renderProductsTable() {
               class="w-6 h-6 rounded-md bg-gray-100 hover:bg-green-100 hover:text-green-600 text-gray-600 flex items-center justify-center text-sm font-bold transition-colors">+</button>
           </div>
         </div>
+        ${stockBarHtml(p, maxQty)}
       </td>
       <td class="px-3 py-3.5">${statusBadge(p)}</td>
       <td class="px-3 py-3.5">
@@ -193,38 +266,6 @@ function renderProductsTable() {
         </div>
       </td>
     </tr>`).join('');
-}
-
-/* ── Inventory table ── */
-function renderInventoryTable() {
-  const tbody = document.getElementById('inventory-tbody');
-  const max = Math.max(...products.map(p => p.qty), 50);
-  tbody.innerHTML = [...products].sort((a,b) => a.qty - b.qty).map(p => {
-    const pct = Math.round((p.qty / max) * 100);
-    const barColor = statusOf(p) === 'out' ? 'bg-red-400' : statusOf(p) === 'low' ? 'bg-amber-400' : 'bg-green-400';
-    return `
-    <tr class="trow border-b border-gray-50 dark:border-neutral-600 last:border-0">
-      <td class="px-5 py-3.5">
-        <div class="flex items-center gap-2">
-          <p class="text-sm font-medium text-gray-800 dark:text-white">${p.name}</p>
-        </div>
-      </td>
-      <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white hidden sm:table-cell">${p.brand}</td>
-      <td class="px-3 py-3.5 text-sm font-bold text-gray-900 dark:text-white">${p.qty}</td>
-      <td class="px-3 py-3.5">${statusBadge(p)}</td>
-      <td class="px-3 py-3.5 w-36 hidden md:table-cell">
-        <div class="bg-gray-100 dark:bg-neutral-600 rounded-full h-2 overflow-hidden">
-          <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width:${pct}%"></div>
-        </div>
-      </td>
-      <td class="px-3 py-3.5">
-        <button onclick="openRestock('${p.id}')"
-          class="text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
-          Restock
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
 }
 
 /* ── Contact messages ── */
@@ -296,15 +337,24 @@ function loadBrands() {
 // Rebuild both brand selects from `brands`, keeping whatever is currently selected.
 // Only the Add Product form's select ends with "+ Add new brand…".
 function renderBrandSelects() {
-  const options = brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  // A product can only join a brand that is ON. The edit window also keeps the product's own brand
+  // when that brand is OFF (labelled "(off)"), because saving sends the brand back and must keep working.
+  const onOptions = brands.filter(b => b.isActive).map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
   [['f-brand', true], ['m-brand', false]].forEach(([id, withNew]) => {
     const select = document.getElementById(id);
     if (!select) return;
+    let options = onOptions;
+    if (id === 'm-brand' && editingId !== null) {
+      const own = products.find(x => x.id === editingId);
+      const ownBrand = own && brands.find(b => b.id === own.brandId);
+      if (ownBrand && !ownBrand.isActive) options += `<option value="${ownBrand.id}">${escapeHtml(ownBrand.name)} (off)</option>`;
+    }
     const current = select.value;
     select.innerHTML = `<option value="">Select brand…</option>${options}`
       + (withNew ? '<option value="__new__">+ Add new brand…</option>' : '');
     if ([...select.options].some(o => o.value === current)) select.value = current;
   });
+  renderBrandFilters(); // the Brand filter on the Products page follows the same brand list
 }
 
 function onBrandChange(select) {
@@ -345,6 +395,7 @@ function renderBrandsTable() {
 
   empty.classList.toggle('hidden', brands.length > 0);
   const btn = 'px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors';
+  const soft = `${btn} bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white`;
   tbody.innerHTML = brands.map(b => {
     const renaming = b.id === renamingBrandId;
     const nameCell = renaming
@@ -354,14 +405,20 @@ function renderBrandsTable() {
       : escapeHtml(b.name);
     const actions = renaming
       ? `<button onclick="saveRenameBrand(${b.id})" class="${btn} bg-indigo-500 hover:bg-indigo-600 text-white">Save</button>
-         <button onclick="cancelRenameBrand()" class="${btn} bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white">Cancel</button>`
-      : `<button onclick="startRenameBrand(${b.id})" class="${btn} bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white">Rename</button>
-         <button onclick="deleteBrand(${b.id})" class="${btn} bg-red-50 hover:bg-red-100 text-red-600">Delete</button>`;
+         <button onclick="cancelRenameBrand()" class="${soft}">Cancel</button>`
+      : `<button onclick="startRenameBrand(${b.id})" class="${soft}">Rename</button>
+         <button onclick="pickBrandLogo(${b.id})" class="${soft}">${b.logoUrl ? 'Change logo' : 'Add logo'}</button>
+         ${b.logoUrl ? `<button onclick="removeBrandLogo(${b.id})" class="${soft}">Remove logo</button>` : ''}
+         <button onclick="deleteBrand(${b.id})" class="${btn} bg-red-50 hover:bg-red-100 text-red-700 dark:text-red-300">Delete</button>`;
+    // An OFF brand reads as muted text (not a faded row: fading would drop the contrast below AA).
+    const nameClass = b.isActive ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-300';
     return `
       <tr class="border-t border-gray-100 dark:border-neutral-600">
-        <td class="px-5 py-3.5 text-sm font-medium text-gray-900 dark:text-white">${nameCell}</td>
+        <td class="px-5 py-3">${brandLogoHtml(b)}</td>
+        <td class="px-3 py-3.5 text-sm font-medium ${nameClass}">${nameCell}${b.isActive ? '' : ' <span class="ml-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-neutral-600 dark:text-white">Off</span>'}</td>
         <td class="px-3 py-3.5 text-sm text-gray-500 dark:text-white">${b.productCount}</td>
-        <td class="px-3 py-3.5"><div class="flex gap-2">${actions}</div></td>
+        <td class="px-3 py-3.5">${brandSwitchHtml(b)}</td>
+        <td class="px-3 py-3.5"><div class="flex flex-wrap gap-2">${actions}</div></td>
       </tr>`;
   }).join('');
 
@@ -376,11 +433,18 @@ function addBrand() {
   const name = input.value.trim();
   if (!name) { toast('Type a brand name.'); return; }
 
-  apiFetch('/admin/brands', { method: 'POST', body: JSON.stringify({ name }) })
+  // Multipart (not JSON) so the optional logo travels in the same request as the name.
+  const form = new FormData();
+  form.append('name', name);
+  const logo = document.getElementById('brand-add-logo').files[0];
+  if (logo) form.append('logo', logo);
+
+  apiFetch('/admin/brands', { method: 'POST', body: form })
     .then(created => {
       brands.push(created);
       sortBrands();
       input.value = '';
+      clearNewBrandLogo();
       renderBrandsTable();
       renderBrandSelects();
       toast('Brand added!');
@@ -408,7 +472,7 @@ function saveRenameBrand(id) {
       if (b) Object.assign(b, updated);
       sortBrands();
       renamingBrandId = null;
-      // Products carry the brand name, so the product/inventory tables must show the new one too.
+      // Products carry the brand name, so the products table must show the new one too.
       products.forEach(p => { if (p.brandId === id) p.brand = updated.name; });
       renderBrandSelects();
       refreshAll();
@@ -427,6 +491,122 @@ function deleteBrand(id) {
       toast('Brand deleted.');
     })
     .catch(e => toastError(e, 'Failed to delete brand.'));
+}
+
+/* ── Brand ON/OFF switch and logos ── */
+const BRAND_LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const BRAND_LOGO_MAX_BYTES = 800 * 1024; // the live nginx refuses request bodies over 1 MB by default
+const BRAND_LOGO_PROBLEM = 'The logo must be a PNG, JPG or WebP image under 800 KB.';
+let brandLogoTargetId = null;   // the row whose "Change logo" opened the shared file picker
+let newBrandLogoUrl = null;     // object URL of the preview in the Add Brand form (revoked when replaced)
+
+// Quick feedback before uploading; the server stays the authority (it checks the real content).
+function brandLogoProblem(file) {
+  return !BRAND_LOGO_TYPES.includes(file.type) || file.size > BRAND_LOGO_MAX_BYTES ? BRAND_LOGO_PROBLEM : null;
+}
+
+// Round thumbnail, or the brand's first letter on a tinted circle. An OFF brand's picture is dimmed.
+function brandLogoHtml(b) {
+  const size = 'w-9 h-9 rounded-full shrink-0';
+  if (b.logoUrl) {
+    return `<img src="${escapeAttr(b.logoUrl)}" alt="" loading="lazy"
+      class="${size} object-cover border border-gray-200 dark:border-neutral-600 ${b.isActive ? '' : 'opacity-50 grayscale'}">`;
+  }
+  return `<span class="${size} bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold ${b.isActive ? '' : 'opacity-50'}"
+    aria-hidden="true">${escapeHtml(b.name.charAt(0).toUpperCase())}</span>`;
+}
+
+// The switch carries the words On/Off as well as its position, so it never relies on colour alone.
+function brandSwitchHtml(b) {
+  const on = b.isActive;
+  return `<button type="button" role="switch" aria-checked="${on}" aria-label="${escapeAttr(b.name)} is shown in the shop" onclick="toggleBrand(${b.id})"
+      class="brand-switch ${on ? 'is-on' : 'is-off'} inline-flex items-center gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+      <span class="brand-switch-track"><span class="brand-switch-knob"></span></span>
+      <span class="text-xs font-semibold text-gray-700 dark:text-white">${on ? 'On' : 'Off'}</span>
+    </button>`;
+}
+
+function toggleBrand(id) {
+  const b = brands.find(x => x.id === id);
+  if (!b) return;
+
+  apiFetch(`/admin/brands/${id}`, { method: 'PUT', body: JSON.stringify({ is_active: !b.isActive }) })
+    .then(updated => {
+      Object.assign(b, updated);
+      products.forEach(p => { if (p.brandId === id) p.brandActive = updated.isActive; });
+      renderBrandsTable();
+      renderBrandSelects();
+      refreshAll();
+      const n = updated.productCount;
+      toast(updated.isActive
+        ? `${escapeHtml(updated.name)} is ON again.`
+        : `${escapeHtml(updated.name)} is OFF. Its ${n} ${n === 1 ? 'product is' : 'products are'} hidden from the shop.`);
+    })
+    .catch(e => toastError(e, 'Failed to change the brand.'));
+}
+
+function pickBrandLogo(id) {
+  brandLogoTargetId = id;
+  document.getElementById('brand-logo-input').click();
+}
+
+function brandLogoPicked(input) {
+  const file = input.files[0];
+  input.value = ''; // so picking the same file again still fires onchange
+  if (!file || brandLogoTargetId === null) return;
+
+  const problem = brandLogoProblem(file);
+  if (problem) { toast(problem); return; }
+  uploadBrandLogo(brandLogoTargetId, file);
+}
+
+function uploadBrandLogo(id, file) {
+  const form = new FormData();
+  form.append('logo', file);
+
+  apiFetch(`/admin/brands/${id}/logo`, { method: 'POST', body: form })
+    .then(updated => {
+      const b = brands.find(x => x.id === id);
+      if (b) Object.assign(b, updated);
+      renderBrandsTable();
+      toast('Logo updated.');
+    })
+    .catch(e => toastError(e, 'Failed to upload the logo.'));
+}
+
+function removeBrandLogo(id) {
+  apiFetch(`/admin/brands/${id}/logo`, { method: 'DELETE' })
+    .then(updated => {
+      const b = brands.find(x => x.id === id);
+      if (b) Object.assign(b, updated);
+      renderBrandsTable();
+      toast('Logo removed.');
+    })
+    .catch(e => toastError(e, 'Failed to remove the logo.'));
+}
+
+// Add Brand form: show the chosen picture in the round preview, or refuse a bad file straight away.
+function previewNewBrandLogo(input) {
+  const file = input.files[0];
+  if (!file) { clearNewBrandLogo(); return; }
+
+  const problem = brandLogoProblem(file);
+  if (problem) { toast(problem); clearNewBrandLogo(); return; }
+
+  if (newBrandLogoUrl) URL.revokeObjectURL(newBrandLogoUrl);
+  newBrandLogoUrl = URL.createObjectURL(file);
+  const preview = document.getElementById('brand-add-preview');
+  preview.dataset.empty ??= preview.innerHTML; // remember the placeholder icon once
+  preview.innerHTML = `<img src="${escapeAttr(newBrandLogoUrl)}" alt="" class="w-8 h-8 rounded-full object-cover">`;
+  document.getElementById('brand-add-logo-label').textContent = file.name; // textContent: the file name is not ours
+}
+
+function clearNewBrandLogo() {
+  document.getElementById('brand-add-logo').value = '';
+  if (newBrandLogoUrl) { URL.revokeObjectURL(newBrandLogoUrl); newBrandLogoUrl = null; }
+  const preview = document.getElementById('brand-add-preview');
+  if (preview.dataset.empty) preview.innerHTML = preview.dataset.empty;
+  document.getElementById('brand-add-logo-label').textContent = 'Choose logo (optional)';
 }
 
 /* ── Orders (real orders placed in the store — this view was the "History" placeholder) ── */
@@ -507,7 +687,7 @@ function changeOrderStatus(id, status, btn) {
       if (i !== -1) orders[i] = res.order;
       renderHistoryTable();
       toast(`${escapeHtml(res.order.number)} marked ${status}`);
-      if (status === 'cancelled') init(); // stock went back up — refresh the product/inventory numbers
+      if (status === 'cancelled') init(); // stock went back up — refresh the product numbers
     })
     .catch(e => {
       if (btn) btn.disabled = false;
@@ -544,7 +724,6 @@ function filterByStatus(status) {
 function filterTable(q) {
   searchQ = q;
   renderProductsTable();
-  renderInventoryTable();
   renderHistoryTable();
 }
 
@@ -557,6 +736,8 @@ function openEdit(id) {
   document.getElementById('m-qty').value = p.qty;
   document.getElementById('m-desc').value = p.desc || '';
   document.getElementById('m-trending').checked = p.trending;
+  renderBrandSelects(); // adds this product's own brand to the list if it is OFF
+  renderCategorySelects(); // likewise for this product's own category (categories.js)
   setSelectValue('m-brand', p.brandId);
   setSelectValue('m-category', p.category); // a legacy category that is not in the list leaves the placeholder
   document.getElementById('edit-modal').classList.remove('hidden');
@@ -672,20 +853,28 @@ function confirmDelete() {
 
 /* ── Add product form ── */
 function showView(view) {
-  ['dashboard','products','inventory','add','history','messages','brands','report'].forEach(v => {
-    document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
+  // The Admins page is only sent to owners; for anyone else asking for it changes nothing (no blank page).
+  if (!document.getElementById(`view-${view}`)) return;
+
+  ['dashboard','products','add','history','messages','brands','categories','admins','report'].forEach(v => {
+    const panel = document.getElementById(`view-${v}`);
+    if (!panel) return;
+    panel.classList.toggle('hidden', v !== view);
     const nav = document.getElementById(`nav-${v}`);
     if (nav) nav.classList.toggle('active', v === view);
   });
   currentView = view;
-  const titles = {dashboard:'Dashboard',products:'Products',inventory:'Inventory',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands',report:'Sales Report'};
+  const titles = {dashboard:'Dashboard',products:'Products',add:'Add Product',history:'Orders',messages:'Messages',brands:'Brands',categories:'Categories',admins:'Admins',report:'Sales Report'};
   document.getElementById('page-title').textContent = titles[view] || '';
-  document.getElementById('topbar-search').classList.toggle('hidden', !['products','inventory','history'].includes(view));
+  document.getElementById('topbar-search').classList.toggle('hidden', !['products','history'].includes(view));
 
+  if (view === 'dashboard' && typeof loadDashboardSales === 'function') loadDashboardSales(); // analytics.js loads after this file; reload so new orders show
   if (view === 'add' && !editingId) resetAddForm();
   if (view === 'messages' && !messagesLoaded) { messagesLoaded = true; loadMessages(); }
   if (view === 'history') loadOrders(); // reload on every open so new orders appear
   if (view === 'brands') { renamingBrandId = null; renderBrandsTable(); loadBrands(); } // reload so product counts are current
+  if (view === 'categories' && typeof initCategories === 'function') initCategories(); // categories.js loads after this file
+  if (view === 'admins' && typeof initAdmins === 'function') initAdmins(); // admins.js loads after this file
   if (view === 'report' && typeof initSalesReport === 'function') initSalesReport(); // sales-report.js loads after this file
 
   // Auto-close the mobile sidebar after navigating so its overlay doesn't
@@ -699,6 +888,7 @@ function resetAddForm() {
   document.getElementById('f-brand').value = '';
   cancelNewBrand();
   document.getElementById('f-category').value = '';
+  cancelNewCategory(); // categories.js: hides the "+ Add new category…" box
   document.getElementById('f-price').value = '';
   document.getElementById('f-qty').value = '';
   document.getElementById('f-desc').value = '';
@@ -724,7 +914,7 @@ function submitProductForm() {
   const trending = document.getElementById('f-trending').checked;
   const errEl    = document.getElementById('form-error');
 
-  if (!name || isNaN(brandId) || !category || isNaN(price) || isNaN(qty)) {
+  if (!name || isNaN(brandId) || !category || category === '__new__' || isNaN(price) || isNaN(qty)) {
     errEl.textContent = 'Please fill in all required fields (name, brand, category, price, qty).';
     errEl.classList.remove('hidden');
     return;
@@ -771,10 +961,13 @@ function toggleSidebar() {
   o.classList.toggle('hidden');
 }
 /* ── Toast ── */
+let toastTimer = null;
 function toast(msg) {
   const el = document.getElementById('admin-toast');
   el.innerHTML = `<div class="toast-enter bg-gray-900 text-white text-sm px-5 py-3 rounded-full shadow-lg">${msg}</div>`;
-  setTimeout(() => el.innerHTML = '', 2800);
+  // Cancel the previous message's timer, or it would wipe this newer message early.
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.innerHTML = '', 2800);
 }
 
 /* ── Fix sidebar on desktop ── */
@@ -805,7 +998,6 @@ if (window.innerWidth < 1024) {
     } else {
       localStorage.setItem('theme', 'light');
     }
-    if (typeof window.refreshAnalyticsTheme === 'function') window.refreshAnalyticsTheme();
   }
 
 /* ── Boot ── */

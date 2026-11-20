@@ -1,7 +1,9 @@
 <?php
 
-use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\MyPasswordController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SalesReportController;
@@ -23,10 +25,9 @@ Route::get('/', function () {
 
 // Shop page
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
-// One category per page (phones, earphones, powerbanks, laptops — see config/shop.php)
-Route::get('/shop/{category}', [ShopController::class, 'category'])
-    ->whereIn('category', array_keys(config('shop.categories')))
-    ->name('shop.category');
+// One category per page (/shop/phones, ...). The code is looked up in the categories table by the
+// controller, which answers 404 for an unknown or switched-off code.
+Route::get('/shop/{category}', [ShopController::class, 'category'])->name('shop.category');
 
 // Contact page
 Route::get('/contact', function () {
@@ -80,12 +81,29 @@ Route::middleware('admin')->group(function () {
     Route::post('/admin/brands', [BrandController::class, 'store'])->name('admin-brands.store');
     Route::put('/admin/brands/{brand}', [BrandController::class, 'update'])->name('admin-brands.update');
     Route::delete('/admin/brands/{brand}', [BrandController::class, 'destroy'])->name('admin-brands.destroy');
+    Route::post('/admin/brands/{brand}/logo', [BrandController::class, 'storeLogo'])->name('admin-brands.logo.store');
+    Route::delete('/admin/brands/{brand}/logo', [BrandController::class, 'destroyLogo'])->name('admin-brands.logo.destroy');
+
+    Route::get('/admin/categories', [CategoryController::class, 'index'])->name('admin-categories.index');
+    Route::post('/admin/categories', [CategoryController::class, 'store'])->name('admin-categories.store');
+    Route::put('/admin/categories/{category}', [CategoryController::class, 'update'])->name('admin-categories.update');
+    Route::delete('/admin/categories/{category}', [CategoryController::class, 'destroy'])->name('admin-categories.destroy');
 
     Route::get('/admin/orders', [OrderController::class, 'index'])->name('admin-orders.index');
     Route::put('/admin/orders/{order}', [OrderController::class, 'update'])->name('admin-orders.update');
 
-    Route::get('/admin/analytics/summary', [AnalyticsController::class, 'summary'])->name('admin-analytics.summary');
-
     Route::get('/admin/reports/sales', [SalesReportController::class, 'show'])->name('admin-reports.sales');
     Route::get('/admin/reports/sales/export', [SalesReportController::class, 'export'])->name('admin-reports.sales.export');
+
+    // Every admin (owner or staff) can change their own password.
+    Route::put('/admin/account/password', [MyPasswordController::class, 'update'])->name('admin-account.password');
+
+    // Owner only: staff get 403 here even when they type the address. Only staff can be changed or deleted; owners never.
+    Route::middleware('owner')->group(function () {
+        Route::get('/admin/admins', [AdminAccountController::class, 'index'])->name('admin-admins.index');
+        Route::post('/admin/admins', [AdminAccountController::class, 'store'])->name('admin-admins.store');
+        // whereNumber: MySQL reads "2abc" as 2, which would act on admin 2.
+        Route::put('/admin/admins/{admin}', [AdminAccountController::class, 'update'])->whereNumber('admin')->name('admin-admins.update');
+        Route::delete('/admin/admins/{admin}', [AdminAccountController::class, 'destroy'])->whereNumber('admin')->name('admin-admins.destroy');
+    });
 });

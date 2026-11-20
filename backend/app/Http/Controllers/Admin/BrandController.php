@@ -2,15 +2,23 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\LogoNotSaved;
+use App\Http\Controllers\Admin\Concerns\ValidatesUniqueNames;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
-use Closure;
+use App\Support\BrandLogoStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class BrandController extends Controller
 {
+    use ValidatesUniqueNames;
+
     public function index(): JsonResponse
     {
         $brands = Brand::withCount('products')->get()
@@ -21,25 +29,66 @@ class BrandController extends Controller
         return response()->json($brands);
     }
 
-    public function store(Request $request): JsonResponse
+    /**
+     * Add a brand, with an optional logo (multipart `logo`; a JSON body with just `name` still works).
+     * The row and the file are saved together or not at all: if anything fails after the file was
+     * written, the file is deleted again and the error continues.
+     */
+    public function store(Request $request, BrandLogoStorage $logos): JsonResponse
     {
-        $validated = $request->validate(['name' => $this->nameRules()]);
+        $validated = $request->validate([
+            'name' => $this->nameRules(),
+            'logo' => $this->logoRules(),
+        ], $this->logoMessages());
 
-        $brand = Brand::create($validated);
+        $stored = null;
+        try {
+            $brand = DB::transaction(function () use ($validated, $request, $logos, &$stored) {
+                $brand = Brand::create(['name' => $validated['name']]);
 
-        return response()->json($this->transform($brand->loadCount('products')), 201);
+                if ($request->hasFile('logo')) {
+                    $stored = $this->saveLogo($logos, $request->file('logo'));
+                    $brand->forceFill(['logo' => $stored])->save();
+                }
+
+                return $brand;
+            });
+        } catch (Throwable $e) {
+            $logos->delete($stored);
+            throw $e;
+        }
+
+        // refresh(): a new row gets its column defaults (is_active = true) from the database, not from this object.
+        return response()->json($this->transform($brand->refresh()->loadCount('products')), 201);
     }
 
+    /**
+     * Rename and/or switch ON/OFF. Each field is validated only when it is sent, so the switch
+     * never has to re-send the name (and a rename never touches the switch).
+     */
     public function update(Request $request, Brand $brand): JsonResponse
     {
-        $validated = $request->validate(['name' => $this->nameRules($brand)]);
+        $validated = $request->validate([
+            'name' => ['sometimes', ...$this->nameRules($brand)],
+            'is_active' => ['sometimes', 'boolean'],
+        ]);
 
-        $brand->update($validated);
+        if (! array_key_exists('name', $validated) && ! array_key_exists('is_active', $validated)) {
+            throw ValidationException::withMessages(['name' => 'Send a name or an on/off setting.']);
+        }
+
+        if (array_key_exists('name', $validated)) {
+            $brand->name = $validated['name'];
+        }
+        if (array_key_exists('is_active', $validated)) {
+            $brand->is_active = $validated['is_active'];
+        }
+        $brand->save();
 
         return response()->json($this->transform($brand->loadCount('products')));
     }
 
-    public function destroy(Brand $brand): JsonResponse
+    public function destroy(Brand $brand, BrandLogoStorage $logos): JsonResponse
     {
         $count = $brand->products()->count();
 
@@ -51,33 +100,88 @@ class BrandController extends Controller
         }
 
         $brand->delete();
+        $logos->delete($brand->logo); // after the row: a failed delete must never lose the logo
 
         return response()->json(['ok' => true]);
     }
 
     /**
-     * Rules for a new or renamed brand name. Uniqueness ignores case (and the brand being
-     * renamed) and is checked here with lower(name) so it behaves the same on MySQL and on
-     * the SQLite test database. Rename rules apply to the NEW name only: a legacy name the
-     * migration copied unchanged is never re-validated.
+     * Replace the logo. Order matters: save the new file, point the row at it, and only then delete
+     * the old file, so a failure at any step leaves at worst an orphan file, never a brand whose logo is missing.
      */
+    public function storeLogo(Request $request, Brand $brand, BrandLogoStorage $logos): JsonResponse
+    {
+        $request->validate(['logo' => $this->logoRules(required: true)], $this->logoMessages());
+
+        $old = $brand->logo;
+        $new = $this->saveLogo($logos, $request->file('logo'));
+
+        try {
+            $brand->forceFill(['logo' => $new])->save();
+        } catch (Throwable $e) {
+            $logos->delete($new);
+            throw $e;
+        }
+
+        $logos->delete($old);
+
+        return response()->json($this->transform($brand->loadCount('products')));
+    }
+
+    public function destroyLogo(Brand $brand, BrandLogoStorage $logos): JsonResponse
+    {
+        $old = $brand->logo;
+        $brand->forceFill(['logo' => null])->save();
+        $logos->delete($old);
+
+        return response()->json($this->transform($brand->loadCount('products')));
+    }
+
+    /** Rules for a new or renamed brand name (the shared rule, see ValidatesUniqueNames). */
     private function nameRules(?Brand $ignoring = null): array
     {
-        return [
-            'bail',
-            'required',
-            'string',
-            'max:50',
-            'regex:/^[\p{L}\p{N} .\-]+$/u',
-            function (string $attribute, mixed $value, Closure $fail) use ($ignoring) {
-                $taken = Brand::whereRaw('lower(name) = ?', [mb_strtolower((string) $value)])
-                    ->when($ignoring, fn ($query) => $query->whereKeyNot($ignoring->id))
-                    ->exists();
+        return $this->uniqueNameRules(Brand::class, $ignoring, 'That brand already exists.');
+    }
 
-                if ($taken) {
-                    $fail('That brand already exists.');
-                }
-            },
+    /**
+     * A logo must be a real PNG, JPG or WebP (the type comes from the file's content, not its name),
+     * at most 800 KB (the live nginx refuses request bodies over 1 MB by default) and between
+     * 32 and 4000 pixels each way. SVG is not allowed: it can carry scripts.
+     */
+    private function logoRules(bool $required = false): array
+    {
+        return [$required ? 'required' : 'nullable', 'bail', 'file', 'mimes:png,jpg,jpeg,webp', 'max:800', 'dimensions:min_width=32,min_height=32,max_width=4000,max_height=4000'];
+    }
+
+    /**
+     * Save an uploaded logo. When the server cannot write it (the usual first-day problem on a live
+     * server: public/uploads is missing and public/ is not writable by the web user), answer with a
+     * plain 422 on `logo` that says what to fix, instead of a bare "Server Error".
+     */
+    private function saveLogo(BrandLogoStorage $logos, UploadedFile $file): string
+    {
+        try {
+            return $logos->store($file);
+        } catch (LogoNotSaved $e) {
+            report($e);
+
+            throw ValidationException::withMessages([
+                'logo' => 'The logo could not be saved. The folder public/uploads/brands is not writable on the server.',
+            ]);
+        }
+    }
+
+    private function logoMessages(): array
+    {
+        $refused = 'The logo must be a PNG, JPG or WebP image under 800 KB.';
+
+        return [
+            'logo.required' => 'Choose a logo image first.',
+            'logo.file' => $refused,
+            'logo.uploaded' => $refused, // Laravel's own message when PHP rejected the upload (for example over its size limit)
+            'logo.mimes' => $refused,
+            'logo.max' => $refused,
+            'logo.dimensions' => 'The logo must be between 32 and 4000 pixels wide and tall.',
         ];
     }
 
@@ -87,6 +191,8 @@ class BrandController extends Controller
             'id' => $brand->id,
             'name' => $brand->name,
             'productCount' => $brand->products_count,
+            'isActive' => (bool) $brand->is_active,
+            'logoUrl' => $brand->logo_url,
         ];
     }
 }

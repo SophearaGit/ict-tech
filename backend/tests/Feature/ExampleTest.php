@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    // The page menu lists the shop's categories, so even the home page reads the database.
+    use RefreshDatabase;
+
     /**
      * A basic test example.
      */

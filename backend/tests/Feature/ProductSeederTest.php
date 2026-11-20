@@ -16,11 +16,20 @@ class ProductSeederTest extends TestCase
     {
         $this->seed(ProductSeeder::class);
 
-        $this->assertSame(25, Product::count());
+        $this->assertSame(23, Product::count());
         $this->assertSame(
-            ['Anker', 'Apple', 'Asus', 'Dell', 'Jtrust', 'Samsung', 'Sony', 'Xiaomi'],
+            ['Anker', 'Apple', 'Asus', 'Dell', 'Samsung', 'Sony', 'Xiaomi'],
             Brand::orderBy('name')->pluck('name')->all(),
         );
         $this->assertTrue(Product::with('brand')->get()->every(fn (Product $p) => $p->brand !== null));
+    }
+
+    public function test_running_the_seeder_twice_never_duplicates_a_product(): void
+    {
+        $this->seed(ProductSeeder::class);
+        $this->seed(ProductSeeder::class);
+
+        $this->assertSame(23, Product::count());
+        $this->assertSame(7, Brand::count());
     }
 }

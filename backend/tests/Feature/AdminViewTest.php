@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Admin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\MakesShopData;
 use Tests\TestCase;
@@ -19,9 +20,43 @@ class AdminViewTest extends TestCase
             ->assertSee('id="view-brands"', false)
             ->assertSee('id="m-brand"', false)
             ->assertSee('id="m-category"', false)
-            ->assertSee('<option value="phones">Phones</option>', false)
-            ->assertSee('<option value="powerbanks">Power Banks</option>', false)
+            ->assertSee('id="f-category"', false)
+            // The category options are filled by categories.js from /admin/categories, not written by the server.
+            ->assertDontSee('<option value="phones">Phones</option>', false)
+            ->assertDontSee('<option value="powerbanks">Power Banks</option>', false)
             ->assertDontSee('<option value="Apple">', false);
+    }
+
+    public function test_admin_view_renders_the_categories_page(): void
+    {
+        $response = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('id="nav-categories"', false)
+            ->assertSee("showView('categories')", false)
+            ->assertSee('id="view-categories"', false)
+            ->assertSee('id="category-add-name"', false)
+            ->assertDontSee('id="category-add-icon"', false)
+            ->assertSee('id="categories-tbody"', false)
+            ->assertSee('id="categories-empty"', false)
+            ->assertSee('id="new-category-box"', false)
+            ->assertSee('id="new-category-name"', false)
+            ->assertSee('value="__new__">+ Add new category…</option>', false)
+            ->assertSee('assets/js/categories.js', false)
+            ->assertSeeInOrder([
+                'id="view-categories"', '>Icon</th>', '>Category</th>', '>Code</th>', '>Products</th>', '>Status</th>', '>Actions</th>',
+            ], false);
+    }
+
+    public function test_admin_view_renders_the_brand_switch_and_logo_controls(): void
+    {
+        $response = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('id="brand-add-logo"', false)
+            ->assertSee('id="brand-add-preview"', false)
+            ->assertSee('id="brand-logo-input"', false)
+            ->assertSeeInOrder([
+                'id="view-brands"', '>Logo</th>', '>Brand</th>', '>Products</th>', '>Status</th>', '>Actions</th>',
+            ], false);
     }
 
     public function test_admin_view_renders_the_sales_report_page(): void
@@ -33,12 +68,38 @@ class AdminViewTest extends TestCase
             ->assertSee('id="view-report"', false)
             ->assertSee('id="report-date"', false)
             ->assertSee('id="report-month"', false)
+            ->assertSee('id="report-brand"', false)
+            ->assertSee('aria-label="Report brand"', false)
+            ->assertSee('<option value="">All brands</option>', false)
             ->assertSee('id="report-days-tbody"', false)
             ->assertSee('id="report-orders-tbody"', false)
             ->assertSee('id="report-products-tbody"', false)
             ->assertSee('id="admin-main"', false)
             ->assertSee('@media print', false)
             ->assertSee('assets/js/sales-report.js', false);
+    }
+
+    /**
+     * The dark palette lives in its own stylesheet. It must reach the admin dashboard, only for
+     * screens (a printed report stays plain black on white), and never the customer pages. How it
+     * looks is checked in a real browser (screenshots plus a contrast scan), not here.
+     */
+    public function test_admin_view_loads_the_dark_theme_for_screens_only(): void
+    {
+        $html = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '#<link[^>]*href="[^"]*assets/css/admin-dark\.css"[^>]*media="screen"#',
+            $html,
+            'The dashboard must load admin-dark.css with media="screen" so printing is unaffected.'
+        );
+        $this->assertFileExists(public_path('assets/css/admin-dark.css'));
+    }
+
+    public function test_customer_pages_do_not_load_the_admin_dark_theme(): void
+    {
+        $this->get(route('home'))->assertOk()->assertDontSee('admin-dark.css', false);
+        $this->get(route('shop'))->assertOk()->assertDontSee('admin-dark.css', false);
     }
 
     /**
@@ -68,5 +129,159 @@ class AdminViewTest extends TestCase
         ] as $rule) {
             $this->assertStringContainsString($rule, $print);
         }
+    }
+
+    public function test_an_owners_page_has_the_admins_page_and_shows_the_real_role(): void
+    {
+        $response = $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('id="nav-admins"', false)
+            ->assertSee("showView('admins')", false)
+            ->assertSee('id="view-admins"', false)
+            ->assertSee('id="admin-add-name"', false)
+            ->assertSee('id="admin-add-email"', false)
+            ->assertSee('id="admin-add-password"', false)
+            ->assertSee('id="admin-add-password-toggle"', false)
+            ->assertSee('id="admins-tbody"', false)
+            ->assertSee('assets/js/admins.js', false)
+            ->assertSeeInOrder([
+                'id="view-admins"', '>Name</th>', '>Email</th>', '>Role</th>', '>Last sign-in</th>', '>Status</th>', '>Actions</th>',
+            ], false)
+            ->assertSee('id="admin-role">Owner</p>', false)
+            ->assertDontSee('Super Admin');
+    }
+
+    public function test_a_staff_members_page_has_no_admins_page_and_says_staff(): void
+    {
+        $response = $this->actingAs($this->makeStaff(), 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('id="admin-role">Staff</p>', false)
+            ->assertDontSee('Super Admin')
+            // Everything else is still there (staff can use every other page).
+            ->assertSee('id="nav-products"', false)
+            ->assertSee('id="nav-brands"', false)
+            ->assertSee('id="nav-categories"', false)
+            ->assertSee('id="nav-history"', false)
+            ->assertSee('id="nav-report"', false)
+            ->assertSee('id="view-brands"', false)
+            // The Admins item and page are not even sent to them.
+            ->assertDontSee('id="nav-admins"', false)
+            ->assertDontSee("showView('admins')", false)
+            ->assertDontSee('id="view-admins"', false)
+            ->assertDontSee('id="admin-add-email"', false);
+    }
+
+    public function test_the_products_page_has_the_brand_filter_and_bulk_restock_above_its_table(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+                ->assertSeeInOrder([
+                    'id="view-products"', 'id="products-brand-filter"', 'onclick="showBulkRestock()"', 'id="products-tbody"', 'id="products-empty-title"',
+                ], false)
+                ->assertSee('onchange="setBrandFilter(this.value)"', false)
+                ->assertSee('aria-label="Filter products by brand"', false)
+                // The button says in words that it ignores the brand chosen next to it.
+                ->assertSee('title="Sets every out-of-stock product, of every brand, to 20"', false);
+        }
+    }
+
+    public function test_there_is_no_separate_inventory_page_any_more(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+                ->assertDontSee('id="nav-inventory"', false)
+                ->assertDontSee("showView('inventory')", false)
+                ->assertDontSee('id="view-inventory"', false)
+                ->assertDontSee('id="inventory-', false)
+                ->assertDontSee('Inventory Overview');
+        }
+    }
+
+    public function test_the_low_stock_count_sits_on_the_products_menu_item(): void
+    {
+        $this->actingAs($this->makeAdmin(), 'admin')->get(route('admin-view'))->assertOk()
+            // Nothing sits between the Products and Add Products buttons, so the badge is inside the Products one.
+            ->assertSeeInOrder(['id="nav-products"', 'id="low-stock-badge"', 'id="nav-add"'], false);
+    }
+
+    public function test_the_dashboard_has_a_month_drop_down_three_cards_and_best_sellers(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+                ->assertSee('>Sales Analytics</h3>', false)
+                ->assertDontSee('last 14 days')
+                ->assertSeeInOrder([
+                    'id="view-dashboard"',
+                    'id="sales-month"',
+                    '>Orders</span>', 'id="kpi-orders"', 'id="kpi-orders-note"',
+                    '>Items sold</span>', 'id="kpi-items"', 'id="kpi-items-note"',
+                    '>Average order</span>', 'id="kpi-average"', 'id="kpi-average-note"',
+                    'id="best-sellers-title"', '>Product</th>', '>Sold</th>', '>Revenue</th>',
+                    'id="best-sellers-tbody"', 'id="best-sellers-empty"', 'id="analytics-unavailable"',
+                ], false)
+                // The Revenue card and its "more / less than last month" line were replaced by Items sold.
+                ->assertDontSee('id="kpi-revenue"', false)
+                ->assertDontSee('id="kpi-revenue-change"', false)
+                ->assertDontSee('>Revenue</span>', false)
+                ->assertSee('aria-label="Sales month"', false)
+                ->assertSee('onchange="setDashboardMonth(this.value)"', false);
+        }
+    }
+
+    public function test_the_old_fourteen_day_chart_is_gone(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+            ->assertDontSee('analytics-chart', false)
+            ->assertDontSee('Orders vs Order Value')
+            ->assertDontSee('chart.js', false);
+
+        // Nothing sends the 14-day numbers any more.
+        $this->actingAs($admin, 'admin')->getJson('/admin/analytics/summary')->assertNotFound();
+    }
+
+    public function test_every_admin_has_the_my_password_button_and_window(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk()
+                ->assertSee('id="mypw-btn"', false)
+                ->assertSee('id="mypw-modal"', false)
+                ->assertSee('id="mypw-current"', false)
+                ->assertSee('id="mypw-new"', false)
+                ->assertSee('id="mypw-repeat"', false)
+                ->assertSee('id="mypw-error"', false)
+                ->assertSee('openMyPassword()', false)
+                ->assertSee('assets/js/admins.js', false);
+        }
+    }
+
+    public function test_each_of_the_three_my_password_boxes_has_its_own_show_button(): void
+    {
+        foreach ([$this->makeAdmin(), $this->makeStaff()] as $admin) {
+            $response = $this->actingAs($admin, 'admin')->get(route('admin-view'))->assertOk();
+
+            // Each button sits right after its own box, so Show on one box never opens another.
+            $response->assertSeeInOrder([
+                'id="mypw-current"', 'id="mypw-current-toggle"',
+                'id="mypw-new"', 'id="mypw-new-toggle"',
+                'id="mypw-repeat"', 'id="mypw-repeat-toggle"',
+                'id="mypw-error"',
+            ], false);
+
+            foreach (['current', 'new', 'repeat'] as $box) {
+                $response->assertSee("onclick=\"togglePasswordField('mypw-{$box}', this)\"", false)
+                    ->assertSee("aria-controls=\"mypw-{$box}\"", false);
+            }
+        }
+    }
+
+    public function test_an_admin_name_with_markup_is_shown_as_plain_text_in_the_sidebar(): void
+    {
+        $zed = Admin::create(['name' => '<i>Zed</i>', 'email' => 'zed@example.test', 'password' => 'S3cret-pass!'])->fresh();
+
+        $response = $this->actingAs($zed, 'admin')->get(route('admin-view'))->assertOk();
+
+        $response->assertSee('&lt;i&gt;Zed&lt;/i&gt;', false)->assertDontSee('<i>Zed</i>', false);
     }
 }

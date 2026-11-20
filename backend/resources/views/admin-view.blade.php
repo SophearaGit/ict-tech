@@ -5,6 +5,8 @@
 @section('body-class', 'flex bg-gray-50 dark:bg-neutral-800')
 
 @section('extra-styles')
+{{-- The dark palette (screen only, admin only). Dark-mode colours live in this file, not below. --}}
+<link rel="stylesheet" href="{{ asset('assets/css/admin-dark.css') }}" media="screen">
 <style>
   /* Sidebar */
   .sidebar{transition:transform 0.3s ease;}
@@ -12,7 +14,6 @@
   /* Table row hover */
   .trow{transition:background 0.15s;}
   .trow:hover{background:#f5f6ff;}
-  .dark .trow:hover{background:#525252;}
 
   /* Status badge */
   .badge-in   {background:#dcfce7;color:#16a34a;}
@@ -27,8 +28,6 @@
 
   /* Input focus */
   .form-inp:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.12);}
-  .dark .form-inp{background:#525252;border-color:#525252;color:#fff;}
-  .dark .form-inp::placeholder{color:#a3a3a3;}
 
   /* Toast */
   .toast-enter{animation:toastIn 0.3s ease both;}
@@ -39,9 +38,14 @@
 
   .tab-btn.active-tab{border-bottom:2px solid #6366f1;color:#4f46e5;font-weight:600;margin-bottom:-1px;}
 
+  /* Brand ON/OFF switch (Brands page). Off is a mid grey, On is indigo; both are 3:1 or better on the card. */
+  .brand-switch-track{position:relative;display:inline-block;width:2.25rem;height:1.25rem;border-radius:9999px;background:#6b7280;transition:background 0.15s;}
+  .brand-switch-knob{position:absolute;top:0.125rem;left:0.125rem;width:1rem;height:1rem;border-radius:9999px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.3);transition:transform 0.15s;}
+  .brand-switch.is-on .brand-switch-track{background:#4f46e5;}
+  .brand-switch.is-on .brand-switch-knob{transform:translateX(1rem);}
+
   /* Sidebar nav active state */
   .nav-item.active{background:#1f2937;color:#fff;}
-  .dark .nav-item.active{background:#525252;}
 
   /* Printing (Sales Report): only the report, on plain white, whatever the theme */
   @media print {
@@ -86,10 +90,6 @@
     <button onclick="showView('products')" id="nav-products" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
       Products
-    </button>
-    <button onclick="showView('inventory')" id="nav-inventory" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Inventory
       <span id="low-stock-badge" class="ml-auto bg-amber-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden"></span>
     </button>
     <button onclick="showView('add')" id="nav-add" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
@@ -100,6 +100,17 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
       Brands
     </button>
+    <button onclick="showView('categories')" id="nav-categories" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+      Categories
+    </button>
+    {{-- Only owners are sent the Admins item and page. Staff also get 403 from the server if they type its address. --}}
+    @if (Auth::guard('admin')->user()->isOwner())
+    <button onclick="showView('admins')" id="nav-admins" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      Admins
+    </button>
+    @endif
     <button onclick="showView('messages')" id="nav-messages" class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white dark:focus:bg-neutral-600 dark:active:bg-neutral-900 dark:hover:bg-neutral-600 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-800 focus:text-white focus:bg-gray-800">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       Message
@@ -124,15 +135,21 @@
       <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-600">{{ substr(Auth::guard('admin')->user()->name, 0, 1) }}</div>
       <div>
         <p class="text-xs font-semibold text-gray-800 dark:text-white" id="admin-name">{{ Auth::guard('admin')->user()->name }}</p>
-        <p class="text-[10px] text-gray-400">Super Admin</p>
+        <p class="text-[10px] text-gray-600 dark:text-gray-300" id="admin-role">{{ ucfirst(Auth::guard('admin')->user()->role) }}</p>
       </div>
     </div>
-    <form method="POST" action="{{ route('admin-logout') }}">
-      @csrf
-      <button type="submit" title="Logout" class="glass-icon-btn border border-transparent p-1.5 rounded-lg transition-colors text-gray-400 hover:text-red-500">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+    <div class="flex items-center gap-1">
+      {{-- Every admin, owner or staff, can change their own password. --}}
+      <button type="button" id="mypw-btn" onclick="openMyPassword()" title="My password" aria-label="My password" class="glass-icon-btn border border-transparent p-1.5 rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:text-indigo-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
       </button>
-    </form>
+      <form method="POST" action="{{ route('admin-logout') }}">
+        @csrf
+        <button type="submit" title="Logout" class="glass-icon-btn border border-transparent p-1.5 rounded-lg transition-colors text-gray-400 hover:text-red-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </form>
+    </div>
   </div>
 </aside>
 
@@ -154,10 +171,10 @@
     </div>
     <!-- Right -->
     <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
-      <div id="topbar-search" class="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 gap-2">
-        <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <div id="topbar-search" class="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 gap-2 dark:bg-slate-800/80 dark:border-slate-700 dark:focus-within:border-indigo-400/70 dark:focus-within:ring-2 dark:focus-within:ring-indigo-400/25">
+        <svg class="w-3.5 h-3.5 text-gray-400 dark:text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         <input id="table-search" type="text" placeholder="Search products…" oninput="filterTable(this.value)"
-          class="bg-transparent text-xs text-gray-700 placeholder-gray-400 outline-none w-28 md:w-40"/>
+          class="bg-transparent text-xs text-gray-700 placeholder-gray-400 dark:text-slate-200 dark:placeholder-slate-400 outline-none w-28 md:w-40"/>
       </div>
       <button onclick="showView('add')"
         class="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold px-2.5 sm:px-4 py-2 rounded-xl transition-colors whitespace-nowrap">
@@ -181,57 +198,74 @@
 
     <!-- ──── DASHBOARD VIEW ──── -->
     <div id="view-dashboard">
-      <!-- Sales Analytics -->
+      <!-- Sales Analytics: one month at a time, from the same numbers as the Sales Report page (see analytics.js) -->
       <div class="mb-6">
-        <h3 class="font-display font-bold text-sm text-gray-900 dark:text-white mb-3">Sales Analytics (last 14 days)</h3>
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <h3 class="font-display font-bold text-sm text-gray-900 dark:text-white">Sales Analytics</h3>
+          {{-- The options (this month and the 11 before it) are filled by analytics.js. --}}
+          <select id="sales-month" onchange="setDashboardMonth(this.value)" aria-label="Sales month" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm transition-all cursor-pointer max-w-full">
+            <option value="">This month</option>
+          </select>
+        </div>
 
-        <!-- KPI cards -->
+        <!-- Orders, items sold, average order -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Orders</span>
+              <span class="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Orders</span>
               <div class="w-8 h-8 bg-indigo-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
               </div>
             </div>
             <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-orders">0</p>
-            <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">last 14 days</p>
+            <p id="kpi-orders-note" class="text-xs mt-1 text-gray-500 dark:text-gray-300">&nbsp;</p>
           </div>
           <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Total Order Value</span>
+              <span class="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Items sold</span>
               <div class="w-8 h-8 bg-green-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
               </div>
             </div>
-            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-revenue">$0.00</p>
-            <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">last 14 days</p>
+            <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-items">0</p>
+            <p id="kpi-items-note" class="text-xs mt-1 text-gray-500 dark:text-gray-300">&nbsp;</p>
           </div>
           <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wide">Average Order Value</span>
+              <span class="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Average order</span>
               <div class="w-8 h-8 bg-amber-50 dark:bg-neutral-600 rounded-lg flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
               </div>
             </div>
             <p class="font-display font-bold text-2xl sm:text-3xl text-gray-900 dark:text-white" id="kpi-average">$0.00</p>
-            <p class="text-xs text-gray-400 dark:text-gray-300 mt-1">per order, last 14 days</p>
+            <p id="kpi-average-note" class="text-xs mt-1 text-gray-500 dark:text-gray-300">&nbsp;</p>
           </div>
         </div>
 
-        <!-- Chart -->
-        <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm p-4 sm:p-5">
-          <div class="flex items-center justify-between mb-4">
-            <h4 class="font-display font-bold text-sm text-gray-900 dark:text-white">Orders vs Order Value</h4>
-            <div class="flex items-center gap-3 text-[10px] text-gray-400 dark:text-gray-300">
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>Orders</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Order value ($)</span>
-            </div>
+        <!-- Best sellers: the 5 products with the most units sold in the chosen month -->
+        <div class="glass-panel bg-white dark:bg-neutral-700 rounded-2xl border border-gray-100 dark:border-none shadow-sm overflow-hidden">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-3 px-4 sm:px-5 pt-4 pb-2">
+            <h4 id="best-sellers-title" class="font-display font-bold text-sm text-gray-900 dark:text-white">Best sellers</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-300">Top 5 by quantity sold</p>
           </div>
-          <div class="relative w-full" style="height:280px">
-            <canvas id="analytics-chart"></canvas>
-            <p id="analytics-unavailable" class="hidden absolute inset-0 flex items-center justify-center text-sm text-gray-400 dark:text-gray-300">Analytics unavailable</p>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+                <th class="pl-4 sm:pl-5 pr-2 py-3 text-xs font-semibold text-gray-700 dark:text-white w-10">#</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Product</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white hidden sm:table-cell">Brand</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Sold</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-700 dark:text-white">Revenue</th>
+              </tr></thead>
+              <tbody id="best-sellers-tbody"></tbody>
+            </table>
           </div>
+          <div id="best-sellers-empty" class="hidden text-center py-12">
+            <div class="text-4xl mb-3">🧾</div>
+            <p id="best-sellers-empty-title" class="text-gray-500 dark:text-white font-medium">No sales yet</p>
+            <p class="text-gray-500 dark:text-gray-300 text-sm mt-1">Pick another month to see its best sellers.</p>
+          </div>
+          <p id="analytics-unavailable" class="hidden text-center py-12 text-sm text-gray-500 dark:text-gray-300">Analytics unavailable</p>
         </div>
       </div>
 
@@ -313,11 +347,19 @@
     <!-- ──── PRODUCTS VIEW ──── -->
     <div id="view-products" class="hidden">
       <!-- Tabs -->
-      <div class="flex gap-0 border-b border-gray-200 mb-4">
+      <div class="flex flex-wrap items-end justify-between gap-x-3 border-b border-gray-200 mb-4">
+       <div class="flex gap-0">
         <button onclick="filterByStatus('all')" data-tab="all" class="tab-btn active-tab px-4 py-2.5 text-sm text-indigo-600">All</button>
         <button onclick="filterByStatus('in')" data-tab="in" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">In Stock</button>
         <button onclick="filterByStatus('low')" data-tab="low" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">Low Stock</button>
         <button onclick="filterByStatus('out')" data-tab="out" class="tab-btn px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">Out of Stock</button>
+       </div>
+        <div class="flex flex-wrap items-center gap-2 mb-1.5">
+          {{-- The options are filled by JavaScript from the brand list (see renderBrandFilters in admin.js). --}}
+          <select id="products-brand-filter" onchange="setBrandFilter(this.value)" aria-label="Filter products by brand" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm transition-all cursor-pointer max-w-full sm:max-w-[14rem]"><option value="">All brands</option></select>
+          {{-- Restocks every out-of-stock product of every brand, whatever brand is chosen on the left. --}}
+          <button type="button" onclick="showBulkRestock()" title="Sets every out-of-stock product, of every brand, to 20" class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-100 transition-colors">Bulk Restock All</button>
+        </div>
       </div>
 
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
@@ -337,36 +379,8 @@
         </div>
         <div id="products-empty" class="hidden text-center py-16">
           <div class="text-4xl mb-3">📦</div>
-          <p class="text-gray-500 dark:text-white font-medium">No products found</p>
-          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your filter or search.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ──── INVENTORY VIEW ──── -->
-    <div id="view-inventory" class="hidden">
-      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-600 flex items-center justify-between">
-          <div>
-            <h3 class="font-display font-bold text-gray-900 dark:text-white">Inventory Overview</h3>
-            <p class="text-gray-400 dark:text-gray-300 text-xs mt-0.5">Click "Restock" on any item to update quantity</p>
-          </div>
-          <button onclick="showBulkRestock()" class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">
-            Bulk Restock All
-          </button>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead><tr class="text-left bg-gray-50/50 dark:bg-neutral-700 border-b border-gray-100 dark:border-neutral-600">
-              <th class="px-5 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Product</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide hidden sm:table-cell dark:text-white">Brand</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Current Qty</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Status</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Stock Bar</th>
-              <th class="px-3 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide dark:text-white">Action</th>
-            </tr></thead>
-            <tbody id="inventory-tbody"></tbody>
-          </table>
+          <p id="products-empty-title" class="text-gray-500 dark:text-white font-medium">No products found</p>
+          <p id="products-empty-hint" class="text-gray-400 dark:text-gray-300 text-sm mt-1">Try adjusting your filter or search.</p>
         </div>
       </div>
     </div>
@@ -396,12 +410,16 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1.5">Category *</label>
-            <select id="f-category" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all cursor-pointer">
+            {{-- The options are filled by categories.js from /admin/categories (only categories that are ON). --}}
+            <select id="f-category" onchange="onCategoryChange(this)" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all cursor-pointer">
               <option value="">Select category…</option>
-              @foreach (config('shop.categories') as $slug => $category)
-                <option value="{{ $slug }}">{{ $category['label'] }}</option>
-              @endforeach
+              <option value="__new__">+ Add new category…</option>
             </select>
+            <div id="new-category-box" class="hidden mt-2 flex gap-2">
+              <input id="new-category-name" type="text" maxlength="50" placeholder="New category name" onkeydown="if (event.key === 'Enter') saveNewCategory()" class="form-inp flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm"/>
+              <button type="button" onclick="saveNewCategory()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition-colors">Save</button>
+              <button type="button" onclick="cancelNewCategory()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-colors">Cancel</button>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1.5">Price *</label>
@@ -452,15 +470,27 @@
     <!-- ──── BRANDS VIEW ──── -->
     <div id="view-brands" class="hidden">
       <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
-        <div class="p-5 border-b border-gray-100 dark:border-neutral-600 flex flex-col sm:flex-row gap-3">
+        <div class="p-5 border-b border-gray-100 dark:border-neutral-600 flex flex-col sm:flex-row sm:items-center gap-3">
           <input id="brand-add-name" type="text" maxlength="50" placeholder="New brand name, e.g. Huawei" onkeydown="if (event.key === 'Enter') addBrand()" class="form-inp flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+          {{-- Optional logo: PNG, JPG or WebP under 800 KB. The real input is visually hidden but keyboard-reachable. --}}
+          <label class="brand-logo-picker flex items-center gap-2.5 cursor-pointer rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 focus-within:ring-2 focus-within:ring-indigo-500">
+            <span id="brand-add-preview" class="w-8 h-8 shrink-0 rounded-full bg-gray-200 flex items-center justify-center text-gray-500" aria-hidden="true">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4-4a3 3 0 014 0l4 4m-2-2l1-1a3 3 0 014 0l2 2M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1zm10-11h.01"/></svg>
+            </span>
+            <span id="brand-add-logo-label">Choose logo (optional)</span>
+            <input id="brand-add-logo" type="file" accept="image/png,image/jpeg,image/webp" onchange="previewNewBrandLogo(this)" class="sr-only"/>
+          </label>
           <button onclick="addBrand()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Add Brand</button>
         </div>
+        {{-- One hidden picker shared by every row's "Change logo" button (pickBrandLogo sets the target brand). --}}
+        <input id="brand-logo-input" type="file" accept="image/png,image/jpeg,image/webp" onchange="brandLogoPicked(this)" class="hidden"/>
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
-              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Brand</th>
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Logo</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Brand</th>
               <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
               <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
             </tr></thead>
             <tbody id="brands-tbody"></tbody>
@@ -473,6 +503,67 @@
         </div>
       </div>
     </div>
+
+    <!-- ──── CATEGORIES VIEW ──── -->
+    <div id="view-categories" class="hidden">
+      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="p-5 border-b border-gray-100 dark:border-neutral-600 flex flex-col sm:flex-row sm:items-center gap-3">
+          <input id="category-add-name" type="text" maxlength="50" placeholder="New category name, e.g. Gaming Mice" onkeydown="if (event.key === 'Enter') addCategory()" class="form-inp flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+          {{-- No icon field when adding: a new category gets the default 📦, and the icon can be changed with Edit. --}}
+          <button onclick="addCategory()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Add Category</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Icon</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Category</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Code</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Products</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
+            </tr></thead>
+            <tbody id="categories-tbody"></tbody>
+          </table>
+        </div>
+        <div id="categories-empty" class="hidden text-center py-16">
+          <div class="text-4xl mb-3">🗂️</div>
+          <p class="text-gray-500 dark:text-white font-medium">No categories yet</p>
+          <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Add a category above, then pick it when you add a product.</p>
+        </div>
+      </div>
+    </div>
+
+    {{-- ──── ADMINS VIEW (owners only) ──── --}}
+    @if (Auth::guard('admin')->user()->isOwner())
+    <div id="view-admins" class="hidden">
+      <div class="glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-neutral-700 dark:border-none">
+        <div class="p-5 border-b border-gray-100 dark:border-neutral-600">
+          <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+            <input id="admin-add-name" type="text" maxlength="60" placeholder="Name, e.g. Dara" aria-label="Name" onkeydown="if (event.key === 'Enter') addAdmin()" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+            <input id="admin-add-email" type="email" maxlength="255" placeholder="Email, e.g. dara@example.com" aria-label="Email" autocomplete="off" onkeydown="if (event.key === 'Enter') addAdmin()" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+            <div class="flex min-w-0 flex-1 gap-2">
+              <input id="admin-add-password" type="password" maxlength="72" placeholder="Password (8 or more characters)" aria-label="Password" autocomplete="new-password" onkeydown="if (event.key === 'Enter') addAdmin()" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm transition-all"/>
+              <button type="button" id="admin-add-password-toggle" onclick="toggleAddAdminPassword()" aria-pressed="false" class="shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition-colors">Show</button>
+            </div>
+            <button onclick="addAdmin()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Add Staff</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead><tr class="text-left bg-sky-100 dark:bg-neutral-600">
+              <th class="px-5 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Name</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Email</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Role</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Last sign-in</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Status</th>
+              <th class="px-3 py-3.5 text-xs font-semibold text-gray-700 dark:text-white">Actions</th>
+            </tr></thead>
+            <tbody id="admins-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    @endif
 
     <!-- ──── ORDERS VIEW (element ids keep their old "history" names) ──── -->
     <div id="view-history" class="hidden">
@@ -511,6 +602,10 @@
         </div>
         <input id="report-date" type="date" min="2000-01-01" max="2100-12-31" onchange="loadSalesReport()" aria-label="Report date" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all"/>
         <input id="report-month" type="month" min="2000-01" max="2100-12" onchange="loadSalesReport()" aria-label="Report month" class="hidden form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all"/>
+        {{-- Filled by sales-report.js from the report answer: every brand now and every brand ever sold. --}}
+        <select id="report-brand" onchange="setReportBrand(this.value)" aria-label="Report brand" class="form-inp bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm transition-all cursor-pointer max-w-full sm:max-w-[14rem]">
+          <option value="">All brands</option>
+        </select>
         <div class="flex gap-2 lg:ml-auto">
           <button onclick="downloadSalesReportCsv()" class="bg-gray-900 hover:bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">Download CSV</button>
           <button onclick="printSalesReport()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">Print</button>
@@ -544,7 +639,7 @@
 
       <div id="report-empty" class="hidden glass-panel bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-16 dark:bg-neutral-700 dark:border-none">
         <div class="text-4xl mb-3">🧾</div>
-        <p class="text-gray-500 dark:text-white font-medium">No sales in this period</p>
+        <p id="report-empty-title" class="text-gray-500 dark:text-white font-medium">No sales in this period</p>
         <p class="text-gray-400 dark:text-gray-300 text-sm mt-1">Pick another day, week or month.</p>
       </div>
 
@@ -631,9 +726,6 @@
           <label class="block text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1">Category</label>
           <select id="m-category" class="form-inp w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm cursor-pointer">
             <option value="">Select category…</option>
-            @foreach (config('shop.categories') as $slug => $category)
-              <option value="{{ $slug }}">{{ $category['label'] }}</option>
-            @endforeach
           </select>
         </div>
       </div>
@@ -694,6 +786,46 @@
   </div>
 </div>
 
+<!-- My password modal (every admin) -->
+<div id="mypw-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mypw-title">
+  <div class="modal-card glass-panel bg-white dark:bg-neutral-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-none">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="mypw-title" class="font-display font-bold text-gray-900 dark:text-white">My password</h3>
+      <button type="button" onclick="closeMyPassword()" aria-label="Close" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors">
+        <svg class="w-4 h-4 text-gray-500 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form onsubmit="saveMyPassword(); return false;" class="space-y-3" autocomplete="off">
+      <div>
+        <label for="mypw-current" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1">Current password</label>
+        <div class="flex gap-2">
+          <input id="mypw-current" type="password" maxlength="72" autocomplete="current-password" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+          <button type="button" id="mypw-current-toggle" onclick="togglePasswordField('mypw-current', this)" aria-pressed="false" aria-controls="mypw-current" aria-label="Show current password" class="shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition-colors">Show</button>
+        </div>
+      </div>
+      <div>
+        <label for="mypw-new" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1">New password</label>
+        <div class="flex gap-2">
+          <input id="mypw-new" type="password" maxlength="72" placeholder="8 or more characters" autocomplete="new-password" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+          <button type="button" id="mypw-new-toggle" onclick="togglePasswordField('mypw-new', this)" aria-pressed="false" aria-controls="mypw-new" aria-label="Show new password" class="shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition-colors">Show</button>
+        </div>
+      </div>
+      <div>
+        <label for="mypw-repeat" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1">Repeat new password</label>
+        <div class="flex gap-2">
+          <input id="mypw-repeat" type="password" maxlength="72" autocomplete="new-password" class="form-inp min-w-0 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm"/>
+          <button type="button" id="mypw-repeat-toggle" onclick="togglePasswordField('mypw-repeat', this)" aria-pressed="false" aria-controls="mypw-repeat" aria-label="Show repeat new password" class="shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition-colors">Show</button>
+        </div>
+      </div>
+      <p id="mypw-error" role="alert" class="hidden text-sm font-medium text-red-900 dark:text-red-300"></p>
+      <div class="flex gap-3 pt-1">
+        <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">Save password</button>
+        <button type="button" onclick="closeMyPassword()" class="px-4 py-2.5 bg-gray-100 text-gray-700 dark:bg-neutral-600 dark:text-white font-semibold rounded-xl text-sm">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Delete confirm modal -->
 <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
   <div class="modal-card glass-panel bg-white dark:bg-neutral-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-none text-center">
@@ -722,8 +854,9 @@
     overlay.classList.add('hidden');
   }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="{{ asset('assets/js/admin.js') }}"></script>
 <script src="{{ asset('assets/js/analytics.js') }}"></script>
 <script src="{{ asset('assets/js/sales-report.js') }}"></script>
+<script src="{{ asset('assets/js/categories.js') }}"></script>
+<script src="{{ asset('assets/js/admins.js') }}"></script>
 @endsection

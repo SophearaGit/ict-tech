@@ -10,6 +10,15 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 #[Hidden(['password', 'remember_token'])]
 class Admin extends Authenticatable
 {
+    public const ROLE_OWNER = 'owner';
+    public const ROLE_STAFF = 'staff';
+
+    /** `role` is not mass-assignable (see #[Fillable]); it is only ever set with forceFill or the migration. */
+    public function isOwner(): bool
+    {
+        return $this->role === self::ROLE_OWNER;
+    }
+
     /**
      * Get the attributes that should be cast.
      *

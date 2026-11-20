@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\GoogleLogin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -13,6 +15,13 @@ class GoogleAuthController extends Controller
 {
     public function redirect(Request $request)
     {
+        // Checked first: with a setting missing, Google would show its own "Access blocked" page.
+        if (! GoogleLogin::isSetUp()) {
+            Log::warning('Google sign-in is not set up. Missing settings: '.implode(', ', GoogleLogin::missingSettings()).' (set the GOOGLE_* values in .env, then run php artisan config:clear).');
+
+            return redirect()->route('account')->with('auth_error', 'Google sign-in is not available right now. Please use your email and password.');
+        }
+
         $redirect = $request->query('redirect');
         if (is_string($redirect) && preg_match('#^/[\w\-/]*$#', $redirect)) {
             $request->session()->put('post_google_login_redirect', $redirect);

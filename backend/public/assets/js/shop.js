@@ -57,7 +57,7 @@ function productCardHTML(p, index) {
         />
         <!-- Fallback if image fails -->
         <div class="absolute inset-0 hidden items-center justify-center text-6xl bg-gray-50" aria-hidden="true">
-          ${p.category === "phones" ? "📱" : p.category === "earphones" ? "🎧" : p.category === "powerbanks" ? "🔋" : "💻"}
+          ${categoryIconFor(p.category)}
         </div>
       </div>
 
@@ -417,7 +417,7 @@ function buildFilterUI() {
         aria-pressed="false"
         class="cat-tab glass-chip relative z-10 text-sm font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 whitespace-nowrap flex items-center gap-1.5"
       >
-        <span aria-hidden="true">${c.icon}</span>${c.label}
+        <span aria-hidden="true">${escapeHtml(c.icon)}</span>${escapeHtml(c.label)}
       </button>`).join("");
 
     catContainer.innerHTML = hoverPillSpanHTML("cat-hover-pill") + allTab + catTabs;
@@ -427,13 +427,18 @@ function buildFilterUI() {
   // ── Brand pills ────────────────────────────────────────────────
   const brandContainer = document.getElementById("brand-pills");
   if (brandContainer) {
+    // A brand with a logo shows it as a small round picture before its name (decorative: the name is
+    // the label). The address was built by the server from a file name it generated itself.
+    const brandLogo = b => b.logo
+      ? `<img src="${String(b.logo).replace(/"/g, "&quot;")}" alt="" loading="lazy" class="w-5 h-5 rounded-full object-cover shrink-0">`
+      : "";
     const brandPills = BRANDS.map(b => `
       <button
         data-brand="${b.id}"
         onclick="setBrand('${b.id}')"
         aria-pressed="false"
-        class="brand-pill glass-chip relative z-10 text-sm font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 whitespace-nowrap"
-      >${b.label}</button>`).join("");
+        class="brand-pill glass-chip relative z-10 text-sm font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all duration-200 bg-white/50 text-gray-600 dark:text-gray-300 whitespace-nowrap${b.logo ? " inline-flex items-center gap-2" : ""}"
+      >${brandLogo(b)}${b.label}</button>`).join("");
 
     // On a category page the brand row is the main way to narrow the list, so give it an
     // explicit "All brands" reset (setBrand('all') clears the brand filter).
